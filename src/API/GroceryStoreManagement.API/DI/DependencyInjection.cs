@@ -54,6 +54,8 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IFileStorageService, FileStorageService>();
         services.AddScoped<IVoiceToTextService, VoiceToTextService>();
+        services.AddScoped<IUnitConversionService, UnitConversionService>();
+        // NotificationService is registered separately in NotificationServiceRegistration to avoid circular dependency
         
         // Security Services
         services.AddSingleton<IRateLimitService, RateLimitService>();
@@ -81,6 +83,8 @@ public static class DependencyInjection
         // Add Background Services
         services.AddHostedService<OutboxEventPublisher>();
         services.AddHostedService<GroceryStoreManagement.Infrastructure.BackgroundServices.ImportBackgroundWorker>();
+        services.AddHostedService<GroceryStoreManagement.Infrastructure.BackgroundServices.ExpiryScannerService>();
+        services.AddHostedService<GroceryStoreManagement.Infrastructure.BackgroundServices.OutboxPublisher>();
 
         // Add JWT Authentication
         var jwtSecretKey = configuration["JwtSettings:SecretKey"] 

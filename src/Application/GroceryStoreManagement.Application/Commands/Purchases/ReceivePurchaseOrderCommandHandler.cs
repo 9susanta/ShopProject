@@ -67,7 +67,7 @@ public class ReceivePurchaseOrderCommandHandler : IRequestHandler<ReceivePurchas
                 ProductId = i.ProductId,
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice,
-                TotalPrice = i.TotalPrice
+                TotalPrice = i.Quantity * i.UnitPrice
             }).ToList()
         };
     }

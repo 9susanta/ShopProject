@@ -3,11 +3,12 @@ using GroceryStoreManagement.Application.DTOs;
 using GroceryStoreManagement.Application.Interfaces;
 using GroceryStoreManagement.Domain.Entities;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 using InventoryEntity = GroceryStoreManagement.Domain.Entities.Inventory;
 
 namespace GroceryStoreManagement.Application.Queries.Inventory;
 
-public class GetLowStockQueryHandler : IRequestHandler<GetLowStockQuery, List<InventoryDto>>
+public class GetLowStockQueryHandler : IRequestHandler<GetLowStockQuery, List<LowStockProductDto>>
 {
     private readonly IRepository<InventoryEntity> _inventoryRepository;
     private readonly IRepository<Product> _productRepository;
@@ -23,39 +24,37 @@ public class GetLowStockQueryHandler : IRequestHandler<GetLowStockQuery, List<In
         _logger = logger;
     }
 
-    public async Task<List<InventoryDto>> Handle(GetLowStockQuery request, CancellationToken cancellationToken)
+    public async Task<List<LowStockProductDto>> Handle(GetLowStockQuery request, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Fetching low stock products");
+
         var allInventories = await _inventoryRepository.GetAllAsync(cancellationToken);
         var allProducts = await _productRepository.GetAllAsync(cancellationToken);
-        var productDict = allProducts.ToDictionary(p => p.Id);
 
-        var lowStockInventories = allInventories
-            .Where(i => productDict.ContainsKey(i.ProductId))
-            .Where(i =>
+        var lowStockProducts = new List<LowStockProductDto>();
+
+        foreach (var inventory in allInventories)
+        {
+            var product = allProducts.FirstOrDefault(p => p.Id == inventory.ProductId);
+            if (product == null || !product.IsActive)
+                continue;
+
+            var threshold = request.Threshold ?? product.LowStockThreshold;
+            
+            if (inventory.IsLowStock(threshold))
             {
-                var product = productDict[i.ProductId];
-                var threshold = request.Threshold ?? product.LowStockThreshold;
-                return i.IsLowStock(threshold);
-            })
-            .Select(i =>
-            {
-                var product = productDict[i.ProductId];
-                return new InventoryDto
+                lowStockProducts.Add(new LowStockProductDto
                 {
-                    Id = i.Id,
-                    ProductId = i.ProductId,
+                    ProductId = product.Id,
                     ProductName = product.Name,
                     SKU = product.SKU,
-                    QuantityOnHand = i.QuantityOnHand,
-                    ReservedQuantity = i.ReservedQuantity,
-                    AvailableQuantity = i.AvailableQuantity,
-                    IsLowStock = true
-                };
-            })
-            .OrderBy(i => i.AvailableQuantity)
-            .ToList();
+                    AvailableQuantity = inventory.AvailableQuantity,
+                    LowStockThreshold = threshold,
+                    Shortage = threshold - inventory.AvailableQuantity
+                });
+            }
+        }
 
-        return lowStockInventories;
+        return lowStockProducts.OrderBy(p => p.Shortage).ToList();
     }
 }
-

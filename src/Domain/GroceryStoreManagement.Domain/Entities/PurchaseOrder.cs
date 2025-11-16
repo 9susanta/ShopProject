@@ -74,6 +74,15 @@ public class PurchaseOrder : BaseEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void Approve()
+    {
+        if (Status != PurchaseOrderStatus.Pending)
+            throw new InvalidOperationException("Only pending orders can be approved");
+
+        Status = PurchaseOrderStatus.Approved;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Receive(DateTime receivedDate)
     {
         if (Status != PurchaseOrderStatus.Pending)

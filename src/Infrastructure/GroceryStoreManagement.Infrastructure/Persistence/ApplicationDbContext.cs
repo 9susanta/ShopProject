@@ -30,6 +30,12 @@ public class ApplicationDbContext : DbContext
     public DbSet<ImportJob> ImportJobs { get; set; } = null!;
     public DbSet<ImportError> ImportErrors { get; set; } = null!;
     public DbSet<InventoryAdjustment> InventoryAdjustments { get; set; } = null!;
+    public DbSet<InventoryBatch> InventoryBatches { get; set; } = null!;
+    public DbSet<GoodsReceiveNote> GoodsReceiveNotes { get; set; } = null!;
+    public DbSet<GRNItem> GRNItems { get; set; } = null!;
+    public DbSet<InventoryAudit> InventoryAudits { get; set; } = null!;
+    public DbSet<SupplierReturn> SupplierReturns { get; set; } = null!;
+    public DbSet<SupplierReturnItem> SupplierReturnItems { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Entities.AuditEntry> AuditEntries { get; set; } = null!;
     public DbSet<Entities.RefreshToken> RefreshTokens { get; set; } = null!;

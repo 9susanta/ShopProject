@@ -4,7 +4,8 @@ public enum PurchaseOrderStatus
 {
     Draft = 0,
     Pending = 1,
-    Received = 2,
-    Cancelled = 3
+    Approved = 2,
+    Received = 3,
+    Cancelled = 4
 }
 

@@ -60,6 +60,7 @@ builder.Services.AddCors(options =>
 // Add Application and Infrastructure services
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddNotificationService();
 
 var app = builder.Build();
 
@@ -89,8 +90,10 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add SignalR for import progress notifications with CORS policy
+// Add SignalR hubs with CORS policy
 app.MapHub<GroceryStoreManagement.API.Hubs.ImportProgressHub>("/hubs/import-progress")
+   .RequireCors("AllowSignalR");
+app.MapHub<GroceryStoreManagement.API.Hubs.InventoryHub>("/hubs/inventory")
    .RequireCors("AllowSignalR");
 
 app.MapControllers();
