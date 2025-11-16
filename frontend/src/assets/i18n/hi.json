@@ -1,0 +1,64 @@
+{
+  "common": {
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "add": "जोड़ें",
+    "search": "खोजें",
+    "loading": "लोड हो रहा है...",
+    "error": "त्रुटि",
+    "success": "सफल",
+    "warning": "चेतावनी",
+    "info": "जानकारी"
+  },
+  "auth": {
+    "login": "लॉगिन",
+    "logout": "लॉगआउट",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "signIn": "साइन इन करें",
+    "signingIn": "साइन इन हो रहा है..."
+  },
+  "dashboard": {
+    "title": "डैशबोर्ड",
+    "todaySales": "आज की बिक्री",
+    "monthSales": "महीने की बिक्री",
+    "lowStock": "कम स्टॉक वाली वस्तुएं",
+    "totalProducts": "कुल उत्पाद",
+    "recentImports": "हाल की आयात",
+    "viewAll": "सभी देखें"
+  },
+  "products": {
+    "title": "उत्पाद",
+    "newProduct": "नया उत्पाद",
+    "editProduct": "उत्पाद संपादित करें",
+    "productName": "उत्पाद का नाम",
+    "sku": "SKU",
+    "barcode": "बारकोड",
+    "mrp": "MRP",
+    "salePrice": "बिक्री मूल्य",
+    "category": "श्रेणी",
+    "supplier": "आपूर्तिकर्ता"
+  },
+  "imports": {
+    "title": "बल्क आयात",
+    "upload": "अपलोड",
+    "mapping": "मैपिंग",
+    "preview": "पूर्वावलोकन",
+    "options": "विकल्प",
+    "processing": "प्रसंस्करण",
+    "dragDrop": "यहां अपनी फ़ाइल खींचें और छोड़ें",
+    "browseFiles": "फ़ाइलें ब्राउज़ करें"
+  },
+  "pos": {
+    "title": "बिक्री बिंदु",
+    "kiosk": "कियोस्क मोड",
+    "assisted": "सहायक मोड",
+    "addToCart": "कार्ट में जोड़ें",
+    "checkout": "चेकआउट",
+    "total": "कुल",
+    "paymentMethod": "भुगतान विधि"
+  }
+}
+

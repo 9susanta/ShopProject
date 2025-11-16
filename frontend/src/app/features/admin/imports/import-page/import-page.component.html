@@ -1,0 +1,82 @@
+<div class="admin-page-container">
+  <div class="admin-page-header">
+    <h1>Bulk Import Products</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="cancel()" [disabled]="isProcessing()">
+        Cancel
+      </button>
+    </div>
+  </div>
+  <div class="admin-page-content">
+
+  <!-- Progress Steps -->
+  <div class="steps-indicator">
+    <div class="step" [class.active]="currentStep() >= ImportStep.Upload" [class.completed]="currentStep() > ImportStep.Upload">
+      <div class="step-number">1</div>
+      <div class="step-label">Upload</div>
+    </div>
+    <div class="step-line" [class.completed]="currentStep() > ImportStep.Mapping"></div>
+    <div class="step" [class.active]="currentStep() >= ImportStep.Mapping" [class.completed]="currentStep() > ImportStep.Mapping">
+      <div class="step-number">2</div>
+      <div class="step-label">Mapping</div>
+    </div>
+    <div class="step-line" [class.completed]="currentStep() > ImportStep.Preview"></div>
+    <div class="step" [class.active]="currentStep() >= ImportStep.Preview" [class.completed]="currentStep() > ImportStep.Preview">
+      <div class="step-number">3</div>
+      <div class="step-label">Preview</div>
+    </div>
+    <div class="step-line" [class.completed]="currentStep() > ImportStep.Options"></div>
+    <div class="step" [class.active]="currentStep() >= ImportStep.Options" [class.completed]="currentStep() > ImportStep.Options">
+      <div class="step-number">4</div>
+      <div class="step-label">Options</div>
+    </div>
+    <div class="step-line" [class.completed]="currentStep() >= ImportStep.Processing"></div>
+    <div class="step" [class.active]="currentStep() >= ImportStep.Processing">
+      <div class="step-number">5</div>
+      <div class="step-label">Processing</div>
+    </div>
+  </div>
+
+  <!-- Step Content -->
+  <div class="step-content">
+    @switch (currentStep()) {
+      @case (ImportStep.Upload) {
+        <grocery-import-upload
+          (fileUploaded)="onFileUploaded($event)"
+        ></grocery-import-upload>
+      }
+      @case (ImportStep.Mapping) {
+        <grocery-column-mapping
+          [columns]="uploadResponse()?.columns || []"
+          (mappingComplete)="onMappingComplete($event)"
+          (back)="goBack()"
+        ></grocery-column-mapping>
+      }
+      @case (ImportStep.Preview) {
+        <grocery-preview-grid
+          [rows]="previewRows()"
+          [mapping]="columnMapping()"
+          (previewComplete)="onPreviewComplete()"
+          (back)="goBack()"
+        ></grocery-preview-grid>
+      }
+      @case (ImportStep.Options) {
+        <grocery-import-options
+          [options]="importOptions()"
+          (optionsComplete)="onOptionsComplete($event)"
+          (back)="goBack()"
+        ></grocery-import-options>
+      }
+      @case (ImportStep.Processing) {
+        <div class="processing-container">
+          <div class="spinner"></div>
+          <h2>Processing Import...</h2>
+          <p>Your import is being processed. You will be redirected when complete.</p>
+          <p class="job-id">Job ID: {{ jobId() }}</p>
+        </div>
+      }
+    }
+  </div>
+  </div>
+</div>
+

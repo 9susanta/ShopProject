@@ -59,29 +59,29 @@
     </main>
 
     <!-- Cart Sidebar -->
-    <aside class="w-96 flex flex-col sidebar-gradient">
-      <div class="p-6" style="border-bottom: 1px solid var(--gray-200);">
-        <h2 class="text-xl font-semibold mb-4" style="color: var(--gray-900);">
+    <aside class="cart-sidebar">
+      <div class="cart-header">
+        <h2 class="cart-title">
           Cart 
-          <span class="badge-gradient px-2 py-1 rounded-full text-sm">{{ cartItemCount() }}</span>
+          <span class="cart-badge">{{ cartItemCount() }}</span>
         </h2>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-2" style="color: var(--gray-900);">Customer Phone (Optional)</label>
+        <div class="customer-phone-section">
+          <label class="customer-phone-label">Customer Phone (Optional)</label>
           <input
             type="tel"
             [value]="customerPhone()"
             (input)="customerPhone.set($any($event.target).value)"
             placeholder="Enter phone number"
-            class="input-field"
+            class="customer-phone-input"
             [attr.aria-label]="'Customer phone number'"
           />
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto p-6">
-        <div *ngIf="cart().length === 0" class="text-center py-12" style="color: var(--gray-600);">
-          <span class="material-icons text-6xl mb-4" style="color: var(--gray-200);">shopping_cart</span>
-          <p>Cart is empty</p>
+      <div class="cart-items-container">
+        <div *ngIf="cart().length === 0" class="cart-empty-state">
+          <span class="material-icons cart-empty-icon">shopping_cart</span>
+          <p class="cart-empty-text">Cart is empty</p>
         </div>
 
         <div *ngIf="cart().length > 0" class="space-y-4">
@@ -93,7 +93,7 @@
             <div class="flex items-start justify-between mb-2">
               <div class="flex-1">
                 <h3 class="font-medium" style="color: var(--gray-900);">{{ item.product.name }}</h3>
-                <p class="text-sm" style="color: var(--gray-600);">₹{{ item.product.price | number: '1.2-2' }} each</p>
+                <p class="text-sm" style="color: var(--gray-600);">₹{{ item.product.salePrice | number: '1.2-2' }} each</p>
               </div>
               <button
                 class="px-2 py-1 rounded transition-colors"
@@ -107,7 +107,7 @@
             <div class="flex items-center justify-between">
               <grocery-quantity-picker
                 [min]="1"
-                [max]="item.product.stock"
+                [max]="item.product.availableQuantity ?? UNLIMITED_QUANTITY"
                 [initialValue]="item.quantity"
                 (valueChange)="onQuantityChange(item, $event)"
               ></grocery-quantity-picker>
@@ -120,13 +120,13 @@
       </div>
 
       <!-- Cart Summary -->
-      <div class="p-6" style="border-top: 1px solid var(--gray-200); background: linear-gradient(to bottom, var(--gray-50), var(--gray-100));">
-        <div class="flex items-center justify-between mb-4">
-          <span class="text-lg font-semibold" style="color: var(--gray-900);">Total:</span>
-          <span class="text-2xl font-bold" style="color: var(--vivid-pink);">₹{{ cartTotal() | number: '1.2-2' }}</span>
+      <div class="cart-summary">
+        <div class="cart-total-row">
+          <span class="cart-total-label">Total:</span>
+          <span class="cart-total-amount">₹{{ cartTotal() | number: '1.2-2' }}</span>
         </div>
         <button
-          class="w-full checkout-gradient py-3 text-lg font-semibold rounded-lg"
+          class="checkout-button"
           (click)="checkout()"
           [disabled]="cart().length === 0 || isProcessingSale()"
           [attr.aria-label]="'Checkout'"

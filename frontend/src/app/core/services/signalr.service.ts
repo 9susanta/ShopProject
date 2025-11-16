@@ -70,7 +70,7 @@ export class SignalRService {
           return 30000;
         },
       })
-      .configureLogging(LogLevel.Information)
+      .configureLogging(environment.production ? LogLevel.Error : LogLevel.Warning)
       .build();
 
     this.setupEventHandlers();
@@ -86,17 +86,25 @@ export class SignalRService {
 
     // Connection state changes
     this.hubConnection.onclose((error) => {
-      console.warn('SignalR connection closed', error);
+      // Only log in development and if it's not a connection refused error
+      if (!environment.production && error) {
+        console.debug('SignalR connection closed');
+      }
       this.connectionStateSubject.next(HubConnectionState.Disconnected);
     });
 
     this.hubConnection.onreconnecting((error) => {
-      console.log('SignalR reconnecting...', error);
+      // Only log in development
+      if (!environment.production) {
+        console.debug('SignalR reconnecting...');
+      }
       this.connectionStateSubject.next(HubConnectionState.Reconnecting);
     });
 
     this.hubConnection.onreconnected((connectionId) => {
-      console.log('SignalR reconnected:', connectionId);
+      if (!environment.production) {
+        console.log('SignalR reconnected');
+      }
       this.connectionStateSubject.next(HubConnectionState.Connected);
     });
 
@@ -128,12 +136,27 @@ export class SignalRService {
     this.isStarting = true;
     try {
       await this.hubConnection.start();
-      console.log('SignalR connection started');
+      if (!environment.production) {
+        console.log('SignalR connection started');
+      }
       this.connectionStateSubject.next(HubConnectionState.Connected);
-    } catch (error) {
-      console.error('Error starting SignalR connection:', error);
+    } catch (error: any) {
+      // Silently handle connection refused errors (backend not running)
+      if (error?.message?.includes('Failed to fetch') || 
+          error?.message?.includes('ERR_CONNECTION_REFUSED') ||
+          error?.message?.includes('Failed to complete negotiation')) {
+        // Backend is not available - this is expected in development
+        if (!environment.production) {
+          console.debug('SignalR: Backend not available, connection will retry automatically');
+        }
+      } else {
+        // Other errors should be logged
+        if (!environment.production) {
+          console.warn('SignalR connection error:', error);
+        }
+      }
       this.connectionStateSubject.next(HubConnectionState.Disconnected);
-      throw error;
+      // Don't throw - let automatic reconnect handle it
     } finally {
       this.isStarting = false;
     }

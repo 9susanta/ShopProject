@@ -1,0 +1,86 @@
+<div class="modal-overlay" (click)="cancel.emit()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Checkout</h2>
+      <button class="close-btn" (click)="cancel.emit()" aria-label="Close">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Order Summary -->
+      <div class="order-summary">
+        <h3>Order Summary</h3>
+        <div class="summary-items">
+          @for (item of cart; track item.productId) {
+            <div class="summary-item">
+              <span>{{ item.productName }} × {{ item.quantity }}</span>
+              <span>{{ formatCurrency(item.subtotal) }}</span>
+            </div>
+          }
+        </div>
+        <div class="summary-total">
+          <span>Total:</span>
+          <span>{{ formatCurrency(total) }}</span>
+        </div>
+      </div>
+
+      <!-- Customer Info -->
+      <div class="form-section">
+        <label for="phone" class="form-label">Customer Phone (Optional)</label>
+        <input
+          id="phone"
+          type="tel"
+          class="form-control"
+          [value]="customerPhone()"
+          (input)="customerPhone.set($any($event.target).value)"
+          placeholder="Enter phone number"
+        />
+      </div>
+
+      <!-- Payment Method -->
+      <div class="form-section">
+        <label for="paymentMethod" class="form-label">Payment Method</label>
+        <select
+          id="paymentMethod"
+          class="form-control"
+          [value]="paymentMethod()"
+          (change)="paymentMethod.set($any($event.target).value)">
+          <option [value]="PaymentMethod.Cash">Cash</option>
+          <option [value]="PaymentMethod.UPI">UPI</option>
+          <option [value]="PaymentMethod.Card">Card</option>
+          <option [value]="PaymentMethod.PayLater">Pay Later</option>
+        </select>
+      </div>
+
+      <!-- Pay Later Option -->
+      <div class="form-section">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [checked]="enablePayLater()"
+            (change)="enablePayLater.set($any($event.target).checked)"
+          />
+          <span>Enable Pay Later</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cancel.emit()" [disabled]="isProcessing()">
+        Cancel
+      </button>
+      <button
+        class="btn btn-primary"
+        (click)="onCheckout()"
+        [disabled]="isProcessing() || cart.length === 0">
+        @if (isProcessing()) {
+          Processing...
+        } @else {
+          Complete Sale
+        }
+      </button>
+    </div>
+  </div>
+</div>
+

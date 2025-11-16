@@ -1,0 +1,111 @@
+/* Shared admin page styles are in global styles.css */
+
+.upload-container {
+  width: 100%;
+}
+
+.upload-area {
+  border: 2px dashed var(--gray-300);
+  border-radius: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  background: var(--gray-50);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.upload-area.dragging {
+  border-color: var(--primary);
+  background: rgba(25, 118, 210, 0.05);
+}
+
+.upload-area.uploading {
+  border-color: var(--primary);
+  background: rgba(25, 118, 210, 0.05);
+  cursor: wait;
+}
+
+.upload-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.upload-icon {
+  font-size: 64px;
+  color: var(--gray-400);
+  margin-bottom: 8px;
+}
+
+.upload-prompt h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.upload-prompt p {
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: var(--gray-500);
+  margin-top: 16px;
+}
+
+.file-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-selected .material-icons {
+  font-size: 48px;
+  color: var(--success);
+}
+
+.file-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.file-size {
+  font-size: 14px;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.upload-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.upload-status p {
+  color: var(--gray-700);
+  font-weight: 500;
+}
+
+.error-message {
+  margin-top: 20px;
+  padding: 12px;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.error-message .material-icons {
+  font-size: 20px;
+}
+

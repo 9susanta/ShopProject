@@ -29,14 +29,13 @@
     </p>
     <div class="flex items-center justify-between mb-3">
       <span class="text-2xl font-bold" style="color: var(--vivid-pink);">
-        ₹{{ product().price | number: '1.2-2' }}
+        ₹{{ product().salePrice | number: '1.2-2' }}
       </span>
-      <span class="text-sm" style="color: var(--gray-600);">Stock: {{ product().stock }}</span>
     </div>
     <div *ngIf="showQuantityPicker()" class="mb-3">
       <grocery-quantity-picker
         [min]="1"
-        [max]="product().stock"
+        [max]="product().availableQuantity ?? UNLIMITED_QUANTITY"
         [initialValue]="quantity()"
         (valueChange)="onQuantityChange($event)"
       ></grocery-quantity-picker>
@@ -44,11 +43,11 @@
     <button
       class="w-full btn-gradient-primary py-2 px-4 rounded-lg font-medium"
       (click)="onAddToCart()"
-      [disabled]="product().stock === 0"
+      [disabled]="product().availableQuantity === 0"
       [attr.aria-label]="'Add ' + product().name + ' to cart'"
     >
-      <span *ngIf="product().stock > 0">Add to Cart</span>
-      <span *ngIf="product().stock === 0">Out of Stock</span>
+      <span *ngIf="product().availableQuantity === 0">Out of Stock</span>
+      <span *ngIf="product().availableQuantity !== 0">Add to Cart</span>
     </button>
   </div>
 </div>

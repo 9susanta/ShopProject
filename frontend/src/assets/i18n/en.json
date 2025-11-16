@@ -1,28 +1,63 @@
 {
   "common": {
-    "loading": "Loading...",
-    "error": "An error occurred",
-    "success": "Success",
-    "cancel": "Cancel",
     "save": "Save",
+    "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
-    "close": "Close"
+    "add": "Add",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign In",
+    "signingIn": "Signing in..."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "todaySales": "Today's Sales",
+    "monthSales": "Month Sales",
+    "lowStock": "Low Stock Items",
+    "totalProducts": "Total Products",
+    "recentImports": "Recent Imports",
+    "viewAll": "View All"
+  },
+  "products": {
+    "title": "Products",
+    "newProduct": "New Product",
+    "editProduct": "Edit Product",
+    "productName": "Product Name",
+    "sku": "SKU",
+    "barcode": "Barcode",
+    "mrp": "MRP",
+    "salePrice": "Sale Price",
+    "category": "Category",
+    "supplier": "Supplier"
+  },
+  "imports": {
+    "title": "Bulk Import",
+    "upload": "Upload",
+    "mapping": "Mapping",
+    "preview": "Preview",
+    "options": "Options",
+    "processing": "Processing",
+    "dragDrop": "Drag & Drop your file here",
+    "browseFiles": "Browse Files"
   },
   "pos": {
     "title": "Point of Sale",
-    "search": "Search products...",
-    "cart": "Cart",
+    "kiosk": "Kiosk Mode",
+    "assisted": "Assisted Mode",
+    "addToCart": "Add to Cart",
     "checkout": "Checkout",
     "total": "Total",
-    "emptyCart": "Cart is empty"
-  },
-  "admin": {
-    "title": "Admin Dashboard",
-    "dashboard": "Dashboard",
-    "imports": "Imports",
-    "products": "Products"
+    "paymentMethod": "Payment Method"
   }
 }
-
-

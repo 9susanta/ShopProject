@@ -1,0 +1,62 @@
+<div class="preview-container">
+  <h2>Preview Data</h2>
+  <p class="subtitle">Review the first 50 rows of your import data</p>
+
+  @if (rows.length === 0) {
+    <div class="empty-state">
+      <span class="material-icons">info</span>
+      <p>No preview data available</p>
+    </div>
+  } @else {
+    <div class="preview-table-wrapper">
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th>Row</th>
+            @for (column of getMappedColumns(); track column) {
+              <th>{{ column }}</th>
+            }
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows; track row.rowNumber) {
+            <tr [class.has-error]="hasErrors(row)">
+              <td class="row-number">{{ row.rowNumber }}</td>
+              @for (column of getMappedColumns(); track column) {
+                <td>{{ getCellValue(row, column) }}</td>
+              }
+              <td class="status-cell">
+                @if (hasErrors(row)) {
+                  <span class="error-badge" [title]="row.errors?.join(', ')">
+                    <span class="material-icons">error</span>
+                    Errors
+                  </span>
+                } @else {
+                  <span class="success-badge">
+                    <span class="material-icons">check_circle</span>
+                    Valid
+                  </span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="preview-summary">
+      <p>
+        <strong>Total rows:</strong> {{ rows.length }} |
+        <strong>Valid:</strong> {{ getValidRowsCount() }} |
+        <strong>With errors:</strong> {{ getErrorRowsCount() }}
+      </p>
+    </div>
+  }
+
+  <div class="actions">
+    <button class="btn btn-secondary" (click)="onBack()">Back</button>
+    <button class="btn btn-primary" (click)="onNext()">Next: Options</button>
+  </div>
+</div>
+

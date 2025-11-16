@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiService } from '../core/services/api.service';
+import { map } from 'rxjs/operators';
+import { ApiService } from '../core/api/api.service';
 import { Product, Category, SaleRequest, SaleResponse } from '../core/models/product.model';
 
 @Injectable({
@@ -47,12 +48,20 @@ export class PosService {
 
   /**
    * Get product by barcode
-   * Calls GET /products/barcode/{barcode}
+   * Calls GET /products/search?barcode={barcode}
    */
   getProductByBarcode(barcode: string): Observable<Product> {
-    return this.api.get<Product>(`products/barcode/${encodeURIComponent(barcode)}`, {
+    return this.api.get<Product[]>('products/search', {
+      params: { barcode: barcode },
       cache: false,
-    });
+    }).pipe(
+      map(products => {
+        if (products && products.length > 0) {
+          return products[0]; // Return first matching product
+        }
+        throw new Error('Product not found');
+      })
+    );
   }
 
   /**

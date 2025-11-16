@@ -1,18 +1,4 @@
-export interface ImportJob {
-  id: string;
-  status: ImportStatus;
-  fileName: string;
-  totalRows: number;
-  processedRows: number;
-  successRows: number;
-  errorRows: number;
-  errors?: string[];
-  createdAt: string;
-  completedAt?: string;
-  startedAt?: string;
-}
-
-export enum ImportStatus {
+export enum ImportJobStatus {
   Pending = 'Pending',
   Processing = 'Processing',
   Completed = 'Completed',
@@ -20,25 +6,66 @@ export enum ImportStatus {
   Cancelled = 'Cancelled',
 }
 
+export enum UpdateExistingBy {
+  None = 'None',
+  Barcode = 'Barcode',
+  SKU = 'SKU',
+}
+
+export interface ImportJob {
+  id: string;
+  fileName: string;
+  fileType: string;
+  status: ImportJobStatus;
+  totalRows: number;
+  processedRows: number;
+  successfulRows: number;
+  failedRows: number;
+  errorReportPath?: string;
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  errorMessage?: string;
+}
+
 export interface ImportUploadResponse {
   jobId: string;
   fileName: string;
   totalRows: number;
-  previewRows: any[][];
-  headers: string[];
-}
-
-export interface ImportMapping {
-  [key: string]: string; // column name -> product field name
+  columns: string[];
 }
 
 export interface ImportStartRequest {
-  mapping: ImportMapping;
+  columnMapping: Record<string, string>;
+  options: ImportOptions;
 }
 
-export interface ImportStatusResponse {
-  job: ImportJob;
-  progress: number; // 0-100
+export interface ImportOptions {
+  createMissingCategories: boolean;
+  updateExistingBy: UpdateExistingBy;
+  generateBarcodeIfMissing: boolean;
+  ignoreDuplicates: boolean;
+  chunkSize: number;
 }
 
+export interface ImportProgressEvent {
+  jobId: string;
+  processedRows: number;
+  totalRows: number;
+  successfulRows: number;
+  failedRows: number;
+  status: ImportJobStatus;
+  message?: string;
+}
 
+export interface ImportError {
+  rowNumber: number;
+  payload: string;
+  errorMessage: string;
+}
+
+export interface ImportPreviewRow {
+  rowNumber: number;
+  data: Record<string, any>;
+  errors?: string[];
+}

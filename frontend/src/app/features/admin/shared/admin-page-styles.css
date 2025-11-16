@@ -1,0 +1,66 @@
+/* Standardized Admin Page Styles */
+
+/* Page Container - consistent across all admin pages */
+.admin-page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0;
+  width: 100%;
+}
+
+/* Page Header - consistent header styling */
+.admin-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding: 0;
+}
+
+.admin-page-header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.admin-page-header .header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Page Content - consistent content area */
+.admin-page-content {
+  padding: 0;
+}
+
+/* Card Container - for cards/sections */
+.admin-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--gray-200);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .admin-page-header h1 {
+    font-size: 24px;
+  }
+
+  .admin-page-header .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+

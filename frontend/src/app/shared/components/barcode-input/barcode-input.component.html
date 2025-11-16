@@ -7,13 +7,13 @@
       (input)="barcode.set($any($event.target).value)"
       (keyup.enter)="onBarcodeEntered()"
       placeholder="Scan or enter barcode"
-      class="flex-1 input-field"
+      class="barcode-input-field"
       [attr.aria-label]="'Barcode input'"
       autocomplete="off"
     />
     <button
       type="button"
-      class="btn-primary"
+      class="barcode-scan-button"
       (click)="onBarcodeEntered()"
       [attr.aria-label]="'Submit barcode'"
     >

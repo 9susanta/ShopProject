@@ -65,5 +65,3 @@ export interface DashboardData {
   recentImports: RecentImport[];
   lowStockProducts: LowStockProduct[];
 }
-
-

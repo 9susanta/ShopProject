@@ -24,7 +24,6 @@ export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
   user: User;
-  expiresIn: number;
 }
 
 export interface RefreshTokenRequest {
@@ -34,7 +33,7 @@ export interface RefreshTokenRequest {
 export interface RefreshTokenResponse {
   accessToken: string;
   refreshToken?: string;
-  expiresIn: number;
+  user: User;
 }
 
 export interface OtpRequest {
@@ -50,7 +49,4 @@ export interface OtpVerifyResponse {
   accessToken: string;
   refreshToken: string;
   customer: User;
-  expiresIn: number;
 }
-
-

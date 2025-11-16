@@ -1,0 +1,59 @@
+<div class="mapping-container">
+  <h2>Map Columns to Product Fields</h2>
+  <p class="subtitle">Match your file columns to the product fields below</p>
+
+  <div class="mapping-table">
+    <div class="table-header">
+      <div class="header-cell">Product Field</div>
+      <div class="header-cell">File Column</div>
+      <div class="header-cell">Required</div>
+    </div>
+
+    @for (field of productFields; track field.value) {
+      <div class="table-row">
+        <div class="cell field-label">
+          <span>{{ field.label }}</span>
+          @if (field.required) {
+            <span class="required-badge">*</span>
+          }
+        </div>
+        <div class="cell">
+          <select
+            class="form-control"
+            [value]="getMappedColumn(field.value)"
+            (change)="updateMapping(field.value, $any($event.target).value)">
+            <option value="">-- Select Column --</option>
+            @for (column of columns; track column) {
+              <option [value]="column">{{ column }}</option>
+            }
+          </select>
+        </div>
+        <div class="cell">
+          @if (field.required) {
+            <span class="required-indicator">Required</span>
+          } @else {
+            <span class="optional-indicator">Optional</span>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (!requiredFieldsMapped()) {
+    <div class="warning-message" role="alert">
+      <span class="material-icons">warning</span>
+      Please map all required fields before continuing.
+    </div>
+  }
+
+  <div class="actions">
+    <button class="btn btn-secondary" (click)="onBack()">Back</button>
+    <button
+      class="btn btn-primary"
+      (click)="onNext()"
+      [disabled]="!requiredFieldsMapped()">
+      Next: Preview
+    </button>
+  </div>
+</div>
+

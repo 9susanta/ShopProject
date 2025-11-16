@@ -1,0 +1,97 @@
+<div class="admin-page-container">
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Loading product details...</p>
+    </div>
+  }
+
+  @if (!isLoading() && product()) {
+    <div class="admin-page-header">
+      <h1>{{ product()!.name }}</h1>
+      <div class="header-actions">
+        <a routerLink="/admin/products" class="btn btn-secondary">
+          <span class="material-icons">arrow_back</span>
+          Back to Products
+        </a>
+        <a [routerLink]="['/admin/products/edit', product()!.id]" class="btn btn-primary">
+          <span class="material-icons">edit</span>
+          Edit Product
+        </a>
+      </div>
+    </div>
+    <div class="admin-page-content">
+
+    <div class="product-details">
+      <div class="product-image">
+        @if (product()!.imageUrl) {
+          <img [src]="product()!.imageUrl" [alt]="product()!.name" />
+        } @else {
+          <div class="no-image">
+            <span class="material-icons">image</span>
+            <p>No image</p>
+          </div>
+        }
+      </div>
+
+      <div class="product-info">
+        <h1>{{ product()!.name }}</h1>
+        
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">SKU:</span>
+            <span class="value">{{ product()!.sku }}</span>
+          </div>
+          
+          @if (product()!.barcode) {
+            <div class="info-item">
+              <span class="label">Barcode:</span>
+              <span class="value">{{ product()!.barcode }}</span>
+            </div>
+          }
+
+          <div class="info-item">
+            <span class="label">MRP:</span>
+            <span class="value">{{ formatCurrency(product()!.mrp) }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Sale Price:</span>
+            <span class="value price">{{ formatCurrency(product()!.salePrice) }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">GST Rate:</span>
+            <span class="value">{{ product()!.gstRate }}%</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Category:</span>
+            <span class="value">{{ product()!.categoryName || product()!.categoryId }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Unit:</span>
+            <span class="value">{{ product()!.unitName || product()!.unitId }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Status:</span>
+            <span class="value" [class.active]="product()!.isActive" [class.inactive]="!product()!.isActive">
+              {{ product()!.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+
+        @if (product()!.description) {
+          <div class="description">
+            <h3>Description</h3>
+            <p>{{ product()!.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+    </div>
+  }
+</div>
+

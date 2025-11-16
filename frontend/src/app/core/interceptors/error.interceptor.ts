@@ -1,5 +1,6 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 // Functional interceptor (Angular 20 style)
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
@@ -42,13 +43,22 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       }
 
-      // Log error for debugging
-      console.error('HTTP Error:', {
-        url: req.url,
-        status: error.status,
-        message: errorMessage,
-        error: error.error,
-      });
+      // Suppress console errors for connection refused (backend not running)
+      // Status 0 typically means connection refused or network error
+      if (error.status === 0) {
+        // Only log in development mode with debug level
+        if (!environment.production) {
+          console.debug('API connection refused (backend may not be running):', req.url);
+        }
+      } else {
+        // Log other errors normally
+        console.error('HTTP Error:', {
+          url: req.url,
+          status: error.status,
+          message: errorMessage,
+          error: error.error,
+        });
+      }
 
       // Return formatted error
       const formattedError = {

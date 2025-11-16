@@ -12,7 +12,7 @@ import { FormsModule } from '@angular/forms';
 export class QuantityPickerComponent implements OnInit {
   // Signal-based inputs with defaults
   min = input<number>(1);
-  max = input<number>(999);
+  max = input<number>(Number.MAX_SAFE_INTEGER); // Default to very large number (effectively unlimited)
   initialValue = input<number>(1);
 
   // Internal state signal
@@ -39,7 +39,8 @@ export class QuantityPickerComponent implements OnInit {
 
   increment(): void {
     const current = this.valueSignal();
-    if (current < this.max()) {
+    const maxValue = this.max();
+    if (current < maxValue) {
       const newValue = current + 1;
       this.valueSignal.set(newValue);
       this.valueChange.emit(newValue);
@@ -58,11 +59,12 @@ export class QuantityPickerComponent implements OnInit {
   onInputChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     let newValue = parseInt(input.value, 10);
+    const maxValue = this.max();
 
     if (isNaN(newValue) || newValue < this.min()) {
       newValue = this.min();
-    } else if (newValue > this.max()) {
-      newValue = this.max();
+    } else if (newValue > maxValue) {
+      newValue = maxValue;
     }
 
     this.valueSignal.set(newValue);

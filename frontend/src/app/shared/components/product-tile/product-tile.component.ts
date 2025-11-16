@@ -11,6 +11,9 @@ import { QuantityPickerComponent } from '../quantity-picker/quantity-picker.comp
   styleUrls: ['./product-tile.component.css'],
 })
 export class ProductTileComponent {
+  // Constant for unlimited quantity (when stock data not available)
+  readonly UNLIMITED_QUANTITY = 999999;
+
   // Signal-based inputs (Angular 20 feature)
   product = input.required<Product>();
   showQuantityPicker = input<boolean>(false);
@@ -29,7 +32,7 @@ export class ProductTileComponent {
     const product = this.product();
     return (
       product.lowStockThreshold !== undefined &&
-      product.stock <= product.lowStockThreshold
+      product.lowStockThreshold > 0
     );
   });
 

@@ -1,161 +1,258 @@
-# Grocery Store Management System - Angular Frontend
+# Grocery Store Management System - Frontend
 
-A production-ready Angular 20 web application for managing a grocery store, featuring Point of Sale (POS), Admin Dashboard, and Product Import functionality.
+Production-ready Angular 20 application for managing a grocery store with Admin, POS, and Customer Touchscreen interfaces.
 
-## Features
+## Tech Stack
 
-- **Point of Sale (POS)**: Tile-based product grid, shopping cart, barcode scanning, voice commands, and checkout
-- **Admin Dashboard**: KPIs, recent imports, low stock alerts
-- **Product Import**: Excel/JSON file upload with column mapping and progress tracking
-- **Authentication**: JWT-based auth with refresh token flow (Admin/Staff and Customer OTP)
-- **Caching**: Memory + localStorage caching with TTL
-- **SignalR**: Real-time import progress updates
-- **Responsive UI**: Modern design with Tailwind CSS and Angular Material
-- **Accessibility**: Keyboard navigation, ARIA attributes, large touch targets
+- **Angular 20** (Strict Mode)
+- **TypeScript 5.4**
+- **RxJS** for reactive programming
+- **NgRx** for state management (optional, used for complex features)
+- **Angular Material** for UI components
+- **ag-Grid** for data tables
+- **Chart.js** (ng2-charts) for dashboard widgets
+- **SignalR** for real-time updates
+- **SheetJS (xlsx)** for Excel parsing
+- **zxing-ngx-scanner** for barcode scanning
+- **jsbarcode** for barcode generation
+- **ngx-translate** for localization (English, Hindi)
 
 ## Prerequisites
 
-- Node.js 20+ and npm
-- Angular CLI 20+
-- Backend API running at `http://localhost:5000/api` (configurable via environment files)
+- Node.js 18+ and npm 9+
+- Angular CLI 20
+- Backend API running (or use mock server)
 
 ## Installation
 
-1. Install dependencies:
 ```bash
+# Install dependencies
 npm install
-```
 
-2. Configure environment (optional):
-   - Edit `src/environments/environment.ts` for development
-   - Edit `src/environments/environment.prod.ts` for production
+# If using mock server, install in-memory-web-api
+npm install --save-dev angular-in-memory-web-api
+```
 
 ## Development
 
-Start the development server:
 ```bash
+# Start development server
 npm start
+
+# Application will be available at http://localhost:4200
 ```
 
-The application will be available at `http://localhost:4200`
+## Environment Configuration
 
-## Building for Production
+Create environment files in `src/environments/`:
 
-Build the application:
-```bash
-npm run build
+### `environment.ts` (default)
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:5000/api',
+  signalRHub: 'http://localhost:5000/hubs/imports',
+  enableSignalR: true,
+  enableMockServer: false,
+  enablePWA: false
+};
 ```
 
-The production build will be in `dist/grocery-store-ui/`
-
-## Testing
-
-Run unit tests:
-```bash
-npm test
-```
-
-## Linting and Formatting
-
-Lint the code:
-```bash
-npm run lint
-```
-
-Format the code:
-```bash
-npm run format
+### `environment.prod.ts`
+```typescript
+export const environment = {
+  production: true,
+  apiUrl: 'https://api.yourdomain.com/api',
+  signalRHub: 'https://api.yourdomain.com/hubs/imports',
+  enableSignalR: true,
+  enableMockServer: false,
+  enablePWA: true
+};
 ```
 
 ## Project Structure
 
 ```
-frontend/
-├── src/
-│   ├── app/
-│   │   ├── core/           # Core services, guards, interceptors, models
-│   │   ├── shared/          # Shared components and modules
-│   │   ├── admin/           # Admin module (dashboard, imports)
-│   │   ├── pos/             # POS module
-│   │   └── app.module.ts    # Root module
-│   ├── environments/        # Environment configuration
-│   └── main.ts              # Application entry point
-├── angular.json             # Angular CLI configuration
-├── package.json             # Dependencies and scripts
-├── tsconfig.json            # TypeScript configuration
-└── tailwind.config.js       # Tailwind CSS configuration
+src/
+├── app/
+│   ├── core/              # Core services, guards, interceptors
+│   │   ├── auth/          # Authentication & authorization
+│   │   ├── api/           # HTTP client wrapper
+│   │   ├── signalr/       # SignalR hub service
+│   │   ├── models/        # Shared interfaces/models
+│   │   └── settings/      # Environment config
+│   ├── shared/            # Shared components & utilities
+│   │   ├── ui/           # Common UI components
+│   │   ├── form-controls/ # Reusable form controls
+│   │   └── validators/   # Custom validators
+│   └── features/         # Feature modules
+│       ├── admin/        # Admin dashboard & management
+│       ├── pos/          # Point of Sale (Kiosk & Assisted)
+│       ├── inventory/    # Inventory management
+│       ├── reports/      # Reports & analytics
+│       └── settings/     # Application settings
+├── assets/               # Static assets
+├── environments/         # Environment configs
+└── styles.css           # Global styles
 ```
 
-## Key Backend Endpoints
+## Key Features
 
-The application expects the following backend endpoints:
+### 1. Authentication
+- JWT-based authentication for Admin/Staff
+- OTP-based phone login for Customers
+- Role-based access control (SuperAdmin, Admin, Staff, Customer)
+- Token refresh mechanism
+- Secure token storage
 
-### Authentication
-- `POST /api/auth/login` - Admin/Staff login
-- `POST /api/auth/otp` - Request OTP for customer
-- `POST /api/auth/otp/verify` - Verify OTP
-- `POST /api/auth/refresh` - Refresh access token
+### 2. Admin Dashboard
+- Sales overview widgets with charts
+- Inventory summary (low stock, expiry alerts)
+- Recent imports list
+- Fast-moving products table
+- Real-time updates via SignalR
 
-### Products
-- `GET /api/products?paged=false` - Get all products
-- `GET /api/products?search={term}` - Search products
-- `GET /api/products/barcode/{barcode}` - Get product by barcode
+### 3. Bulk Import
+- Drag & drop file upload (.xlsx, .json)
+- Client-side preview (first 50 rows)
+- Column mapping UI
+- Import options (createMissingCategories, updateBy, etc.)
+- Real-time progress via SignalR
+- Error report download (CSV)
+- Retry failed rows
 
-### Categories
-- `GET /api/categories` - Get all categories
+### 4. Product Management
+- Product list with filters and pagination
+- Create/Edit product form
+- Barcode scanning (camera + keyboard-wedge)
+- Quick create from barcode scan
+- Image upload
+- Bulk actions
 
-### Sales
-- `POST /api/sales` - Create sale
+### 5. POS (Point of Sale)
+- **Kiosk Mode**: Customer touchscreen interface
+  - Large product tiles
+  - Category navigation
+  - Search with typeahead
+  - Voice commands
+  - Cart management
+  - Checkout flow
+- **Assisted Mode**: Sales staff interface
+  - Keyboard shortcuts
+  - Barcode input
+  - Quick discounts
+  - Packing screen
 
-### Admin
-- `GET /api/admin/dashboard` - Get dashboard KPIs
-- `POST /api/admin/imports/upload` - Upload import file
-- `POST /api/admin/imports/{jobId}/start` - Start import job
-- `GET /api/admin/imports/{jobId}/status` - Get import status
+### 6. Inventory Management
+- Inventory list with filters
+- Manual adjustments with audit trail
+- Expiry management
+- Bulk actions
 
-### SignalR
-- Hub URL: `http://localhost:5000/hubs/import`
-- Event: `ImportProgressUpdated`
+### 7. Reports
+- Daily sales report
+- GST summary
+- Fast-moving products
+- Low stock alerts
+- Export to Excel/PDF
 
-## Environment Variables
+## Running Tests
 
-Configure in `src/environments/environment.ts`:
+```bash
+# Unit tests (Jest)
+npm test
 
-- `apiUrl`: Backend API base URL
-- `signalRHub`: SignalR hub URL
-- `enableSignalR`: Enable/disable SignalR
-- `cacheTTL`: Cache time-to-live in milliseconds
+# Watch mode
+npm run test:watch
 
-## Security Notes
+# Coverage
+npm run test:coverage
 
-- Access tokens are stored in memory (not localStorage) for better security
-- Refresh tokens are stored in localStorage (consider secure storage in production)
-- In production, consider using httpOnly cookies for tokens
-- Implement proper CORS configuration on the backend
+# E2E tests (Cypress)
+npm run e2e
+
+# E2E interactive
+npm run e2e:open
+```
+
+## Building for Production
+
+```bash
+# Build
+npm run build
+
+# Output will be in dist/grocery-store/
+```
+
+## Mock Server (Development)
+
+If backend is not ready, enable mock server:
+
+1. Set `enableMockServer: true` in `environment.ts`
+2. Mock data is provided in `src/app/core/mock-data/`
+3. API calls will be intercepted by InMemoryWebApi
+
+## PWA Support
+
+To enable PWA:
+
+1. Set `enablePWA: true` in environment
+2. Service worker will be registered automatically
+3. Offline mode available for POS
+
+## Localization
+
+- Default: English
+- Supported: Hindi (optional: Odia)
+- Translation files in `src/assets/i18n/`
+- Use `translate` pipe or `TranslateService` in components
+
+## Accessibility
+
+- ARIA labels on all interactive elements
+- Keyboard navigation support
+- High contrast mode
+- Screen reader friendly
+
+## Security
+
+- JWT tokens stored securely
+- XSS protection (Angular sanitization)
+- CSRF protection
+- Input validation
+- Secure HTTP (HTTPS in production)
 
 ## Browser Support
 
-- Chrome (latest)
+- Chrome/Edge (latest)
 - Firefox (latest)
 - Safari (latest)
-- Edge (latest)
+- Mobile browsers (iOS Safari, Chrome Mobile)
 
 ## Troubleshooting
 
 ### SignalR Connection Issues
-- Ensure the backend SignalR hub is running
-- Check CORS configuration
-- Verify `signalRHub` URL in environment files
+- Check `signalRHub` URL in environment
+- Verify CORS settings on backend
+- Check browser console for errors
 
-### CORS Errors
-- Configure CORS on the backend to allow requests from `http://localhost:4200`
+### Barcode Scanner Not Working
+- Ensure camera permissions granted
+- Check browser compatibility (HTTPS required for camera)
+- For keyboard-wedge scanners, ensure focus is on input field
 
-### Build Errors
-- Clear `node_modules` and reinstall: `rm -rf node_modules && npm install`
-- Clear Angular cache: `ng cache clean`
+### Import Preview Not Loading
+- Check file size (max 50MB)
+- Verify file format (.xlsx or .json)
+- Check browser console for errors
+
+## Contributing
+
+1. Follow Angular Style Guide
+2. Write unit tests for new features
+3. Update documentation
+4. Follow Git commit conventions
 
 ## License
 
 Proprietary - All rights reserved
-
-

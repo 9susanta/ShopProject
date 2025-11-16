@@ -1,11 +1,43 @@
 .barcode-input {
   width: 100%;
+  min-width: 300px;
 }
 
-.barcode-input button {
+.barcode-input .flex {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.barcode-input-field {
+  flex: 1;
+  min-width: 200px;
+  height: 40px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  background: white;
+  color: var(--gray-900);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.barcode-input-field:focus {
+  outline: none;
+  border-color: var(--vivid-pink);
+  box-shadow: 0 0 0 3px var(--light-pink);
+}
+
+.barcode-input-field::placeholder {
+  color: var(--gray-400);
+}
+
+.barcode-scan-button {
   background: var(--vivid-pink);
   color: white;
   border: none;
+  border-radius: 6px;
   transition: all 0.3s ease;
   padding: 10px 14px;
   min-width: 48px;
@@ -13,16 +45,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
-.barcode-input button:hover:not(:disabled) {
+.barcode-scan-button:hover:not(:disabled) {
   background: var(--hot-pink);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.barcode-input button:focus {
+.barcode-scan-button:focus {
   outline: 2px solid var(--vivid-pink);
   outline-offset: 2px;
+}
+
+.barcode-scan-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 

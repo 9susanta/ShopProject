@@ -1,0 +1,127 @@
+<div class="admin-page-container">
+  <div class="admin-page-header">
+    <h1>Dashboard</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="refresh()" [disabled]="isLoading()">
+        <span class="material-icons">refresh</span>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading dashboard data...</p>
+    </div>
+  }
+
+  @if (!isLoading() && dashboardData() && dashboardData()?.kpis) {
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-sales">
+        <div class="kpi-icon">
+          <span class="material-icons">currency_rupee</span>
+        </div>
+        <div class="kpi-content">
+          <p class="kpi-label">Today's Sales</p>
+          <p class="kpi-value">{{ todaySalesFormatted() }}</p>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-month">
+        <div class="kpi-icon">
+          <span class="material-icons">trending_up</span>
+        </div>
+        <div class="kpi-content">
+          <p class="kpi-label">Month Sales</p>
+          <p class="kpi-value">{{ monthSalesFormatted() }}</p>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-stock">
+        <div class="kpi-icon">
+          <span class="material-icons">warning</span>
+        </div>
+        <div class="kpi-content">
+          <p class="kpi-label">Low Stock Items</p>
+          <p class="kpi-value">{{ dashboardData()?.kpis?.lowStockCount ?? 0 }}</p>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-products">
+        <div class="kpi-icon">
+          <span class="material-icons">inventory_2</span>
+        </div>
+        <div class="kpi-content">
+          <p class="kpi-label">Total Products</p>
+          <p class="kpi-value">{{ dashboardData()?.kpis?.totalProducts ?? 0 }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Imports and Low Stock -->
+    <div class="dashboard-grid">
+      <!-- Recent Imports -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h2>Recent Imports</h2>
+          <a routerLink="/admin/imports" class="btn-link">View All</a>
+        </div>
+        @if (!dashboardData()?.recentImports || dashboardData()!.recentImports.length === 0) {
+          <div class="empty-state">
+            <span class="material-icons">upload_file</span>
+            <p>No recent imports</p>
+          </div>
+        } @else {
+          <div class="imports-list">
+            @for (import of dashboardData()!.recentImports; track import.id) {
+              <div class="import-item" [routerLink]="['/admin/imports', import.id]">
+                <div class="import-info">
+                  <p class="import-name">{{ import.fileName }}</p>
+                  <p class="import-meta">
+                    {{ import.totalRows }} rows • {{ import.successRows }} successful
+                  </p>
+                </div>
+                <div class="import-status" [class]="'status-' + import.status.toLowerCase()">
+                  {{ import.status }}
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Low Stock Products -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h2>Low Stock Products</h2>
+          <a routerLink="/admin/inventory" class="btn-link">View All</a>
+        </div>
+        @if (!dashboardData()?.lowStockProducts || dashboardData()!.lowStockProducts.length === 0) {
+          <div class="empty-state">
+            <span class="material-icons">check_circle</span>
+            <p>No low stock items</p>
+          </div>
+        } @else {
+          <div class="products-list">
+            @for (product of dashboardData()!.lowStockProducts; track product.id) {
+              <div class="product-item">
+                <div class="product-info">
+                  <p class="product-name">{{ product.name }}</p>
+                  <p class="product-meta">
+                    Stock: {{ product.stock }} / Threshold: {{ product.lowStockThreshold }}
+                  </p>
+                </div>
+                <div class="product-alert">
+                  <span class="material-icons">warning</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+

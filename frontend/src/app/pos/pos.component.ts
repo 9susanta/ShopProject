@@ -9,6 +9,7 @@ import { PosService } from './pos.service';
 import { VoiceToTextService, VoiceCommand } from '../core/services/voice-to-text.service';
 import { CacheService } from '../core/services/cache.service';
 import { Product, Category, CartItem, SaleRequest } from '../core/models/product.model';
+import { SaleResponse } from '../core/models/product.model';
 import { ProductTileComponent } from '../shared/components/product-tile/product-tile.component';
 import { BarcodeInputComponent } from '../shared/components/barcode-input/barcode-input.component';
 import { QuantityPickerComponent } from '../shared/components/quantity-picker/quantity-picker.component';
@@ -29,6 +30,9 @@ import { CategoryMultiselectComponent } from '../shared/components/category-mult
   styleUrls: ['./pos.component.css'],
 })
 export class PosComponent implements OnInit, OnDestroy {
+  // Constant for unlimited quantity (when stock data not available)
+  readonly UNLIMITED_QUANTITY = 999999;
+
   // Using inject() instead of constructor (Angular 20 feature)
   private posService = inject(PosService);
   private voiceService = inject(VoiceToTextService);
@@ -191,7 +195,7 @@ export class PosComponent implements OnInit, OnDestroy {
         const updatedItem = {
           ...existingItem,
           quantity: existingItem.quantity + event.quantity,
-          subtotal: existingItem.product.price * (existingItem.quantity + event.quantity),
+          subtotal: existingItem.product.salePrice * (existingItem.quantity + event.quantity),
         };
         return [
           ...currentCart.slice(0, existingItemIndex),
@@ -204,7 +208,7 @@ export class PosComponent implements OnInit, OnDestroy {
           {
             product: event.product,
             quantity: event.quantity,
-            subtotal: event.product.price * event.quantity,
+            subtotal: event.product.salePrice * event.quantity,
           },
         ];
       }
@@ -222,7 +226,7 @@ export class PosComponent implements OnInit, OnDestroy {
           const updatedItem = {
             ...currentCart[index],
             quantity: quantity,
-            subtotal: item.product.price * quantity,
+            subtotal: item.product.salePrice * quantity,
           };
           return [
             ...currentCart.slice(0, index),
@@ -287,13 +291,19 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   onBarcodeScanned(barcode: string): void {
+    if (!barcode || barcode.trim().length === 0) {
+      return;
+    }
+
     this.subscriptions.add(
-      this.posService.getProductByBarcode(barcode).subscribe({
+      this.posService.getProductByBarcode(barcode.trim()).subscribe({
         next: (product) => {
           this.onAddToCart({ product, quantity: 1 });
         },
         error: (error) => {
           console.error('Barcode scan failed:', error);
+          // Show error to user (you can add toast notification here)
+          alert('Product not found for barcode: ' + barcode);
         },
       })
     );
@@ -307,14 +317,18 @@ export class PosComponent implements OnInit, OnDestroy {
 
     this.isProcessingSale.set(true);
 
+    // Generate invoice number (format: INV-YYYYMMDD-HHMMSS)
+    const now = new Date();
+    const invoiceNumber = `INV-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+
     const saleRequest: SaleRequest = {
+      invoiceNumber: invoiceNumber,
       items: currentCart.map((item) => ({
         productId: item.product.id,
         quantity: item.quantity,
-        price: item.product.price,
+        unitPrice: item.product.salePrice,
       })),
-      customerPhone: this.customerPhone() || undefined,
-      paymentMethod: 'cash',
+      discountAmount: 0,
     };
 
     try {
@@ -327,6 +341,8 @@ export class PosComponent implements OnInit, OnDestroy {
       }
     } catch (error: any) {
       console.error('Checkout failed:', error);
+      // Show error to user (you can add toast notification here)
+      alert('Checkout failed: ' + (error.error?.message || error.message || 'Unknown error'));
     } finally {
       this.isProcessingSale.set(false);
     }

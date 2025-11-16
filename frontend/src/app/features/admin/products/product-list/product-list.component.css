@@ -1,0 +1,216 @@
+/* Shared admin page styles are in global styles.css */
+
+.filters-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--gray-200);
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  align-items: end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--gray-600);
+}
+
+.table-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--gray-200);
+}
+
+.products-table {
+  width: 100%;
+  /* Ensure table header is stable and doesn't re-render */
+  table-layout: fixed;
+}
+
+/* Keep header completely static during data updates */
+.products-table mat-header-row {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+  /* Prevent header from re-rendering */
+  will-change: auto;
+}
+
+/* Ensure header cells don't re-render */
+.products-table mat-header-cell {
+  /* Prevent re-rendering of header cells */
+  contain: layout style paint;
+}
+
+.products-table th {
+  background: linear-gradient(to bottom, var(--gray-50), var(--light-pink));
+  color: var(--gray-900);
+  font-weight: 600;
+  padding: 16px;
+  border-bottom: 2px solid var(--vivid-pink);
+}
+
+.products-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.products-table tr:hover {
+  background: var(--light-pink);
+}
+
+.product-link {
+  color: var(--vivid-pink);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.product-link:hover {
+  color: var(--hot-pink);
+  text-decoration: underline;
+}
+
+.status-active {
+  color: var(--success-500);
+  font-weight: 500;
+}
+
+.status-inactive {
+  color: var(--danger-500);
+  font-weight: 500;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-link {
+  color: var(--vivid-pink);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-link:hover {
+  background: var(--light-pink);
+  color: var(--hot-pink);
+}
+
+.btn-link.btn-danger {
+  color: var(--danger-500);
+}
+
+.btn-link.btn-danger:hover {
+  background: var(--light-pink);
+  color: var(--danger-600);
+}
+
+.btn-link mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.no-data-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--gray-600);
+  text-align: center;
+}
+
+.no-data-message mat-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  color: var(--gray-400);
+  margin-bottom: 16px;
+}
+
+.no-data-message p {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Material Table Overrides */
+::ng-deep .mat-mdc-paginator {
+  background: linear-gradient(to bottom, var(--gray-50), var(--light-pink));
+  border-top: 2px solid var(--vivid-pink);
+}
+
+::ng-deep .mat-mdc-paginator .mat-mdc-paginator-container {
+  padding: 12px 16px;
+}
+
+::ng-deep .mat-mdc-paginator .mat-mdc-icon-button {
+  color: var(--vivid-pink);
+}
+
+::ng-deep .mat-mdc-paginator .mat-mdc-icon-button:hover:not(:disabled) {
+  background: var(--light-pink);
+}
+
+::ng-deep .mat-sort-header-arrow {
+  color: var(--vivid-pink);
+}
+
+::ng-deep .mat-sort-header-pointer-left .mat-sort-header-indicator {
+  color: var(--vivid-pink);
+}
+
+@media (max-width: 768px) {
+  .product-list-container {
+    padding: 16px;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .products-table {
+    font-size: 14px;
+  }
+
+  .products-table th,
+  .products-table td {
+    padding: 12px 8px;
+  }
+}

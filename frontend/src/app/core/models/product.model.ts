@@ -1,33 +1,73 @@
 export interface Product {
   id: string;
   name: string;
-  description?: string;
-  price: number;
-  cost?: number;
-  stock: number;
-  categoryId?: string;
+  sku: string;
+  barcode?: string;
+  mrp: number;
+  salePrice: number;
+  gstRate: number;
+  categoryId: string;
   categoryName?: string;
   supplierId?: string;
   supplierName?: string;
-  barcode?: string;
+  unitId: string;
+  unitName?: string;
+  description?: string;
   imageUrl?: string;
-  sku?: string;
-  unit?: string;
-  lowStockThreshold?: number;
+  lowStockThreshold: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  // Optional: Available stock quantity (if inventory data is included)
+  availableQuantity?: number;
+}
+
+export interface ProductCreateRequest {
+  name: string;
+  sku: string;
+  barcode?: string;
+  mrp: number;
+  salePrice: number;
+  gstRate: number;
+  categoryId: string;
+  supplierId?: string;
+  unitId: string;
+  description?: string;
+  image?: File;
+  lowStockThreshold: number;
+}
+
+export interface ProductUpdateRequest extends Partial<ProductCreateRequest> {
+  id: string;
+}
+
+export interface ProductListResponse {
+  items: Product[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface ProductFilters {
+  search?: string;
+  categoryId?: string;
+  supplierId?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  lowStock?: boolean;
+  isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  pageNumber?: number;
+  pageSize?: number;
 }
 
 export interface Category {
   id: string;
   name: string;
   description?: string;
-}
-
-export interface Supplier {
-  id: string;
-  name: string;
-  contact?: string;
-  phone?: string;
-  email?: string;
+  parentId?: string;
 }
 
 export interface CartItem {
@@ -37,22 +77,21 @@ export interface CartItem {
 }
 
 export interface SaleRequest {
+  invoiceNumber?: string;
+  customerId?: string;
+  customerPhone?: string;
+  discountAmount?: number;
   items: Array<{
     productId: string;
     quantity: number;
-    price: number;
+    unitPrice: number;
   }>;
-  customerPhone?: string;
   paymentMethod?: string;
-  notes?: string;
 }
 
 export interface SaleResponse {
   id: string;
-  total: number;
-  invoiceUrl?: string;
-  pdfUrl?: string;
-  createdAt: string;
+  invoiceNumber: string;
+  totalAmount: number;
+  saleDate: string;
 }
-
-

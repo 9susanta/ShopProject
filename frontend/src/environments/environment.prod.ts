@@ -1,8 +1,16 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:5000/api', // Replace with production API URL
-  signalRHub: 'http://localhost:5000/hubs/import', // Replace with production SignalR hub URL
+  apiUrl: 'https://api.yourdomain.com/api',
+  signalRHub: 'https://api.yourdomain.com/hubs/imports',
   enableSignalR: true,
-  cacheTTL: 300000, // 5 minutes in milliseconds
-  defaultPageSize: 20,
+  enableMockServer: false,
+  enablePWA: true,
+  cacheTTL: 300000,
+  defaultLanguage: 'en',
+  supportedLanguages: ['en', 'hi'],
+  maxUploadSize: 50 * 1024 * 1024,
+  chunkSize: 1024 * 1024,
+  barcodeScannerTimeout: 5000,
+  voiceCommandEnabled: true,
+  autoRefreshInterval: 30000,
 };

@@ -1,0 +1,86 @@
+<div class="jobs-list-container">
+  <div class="header">
+    <h1>Import Jobs</h1>
+    <a routerLink="/admin/imports" class="btn btn-primary">
+      <span class="material-icons">add</span>
+      New Import
+    </a>
+  </div>
+
+  <!-- Status Filters -->
+  <div class="filters">
+    <button
+      class="filter-btn"
+      [class.active]="selectedStatus() === undefined"
+      (click)="filterByStatus()">
+      All
+    </button>
+    @for (status of [ImportJobStatus.Pending, ImportJobStatus.Processing, ImportJobStatus.Completed, ImportJobStatus.Failed]; track status) {
+      <button
+        class="filter-btn"
+        [class.active]="selectedStatus() === status"
+        (click)="filterByStatus(status)">
+        {{ status }}
+      </button>
+    }
+  </div>
+
+  <!-- Jobs Table -->
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Loading jobs...</p>
+    </div>
+  } @else if (jobs().length === 0) {
+    <div class="empty-state">
+      <span class="material-icons">inbox</span>
+      <p>No import jobs found</p>
+    </div>
+  } @else {
+    <div class="jobs-table">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>File Name</th>
+            <th>Status</th>
+            <th>Progress</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (job of jobs(); track job.id) {
+            <tr>
+              <td>{{ job.fileName }}</td>
+              <td>
+                <span class="status-badge {{ getStatusClass(job.status) }}">
+                  {{ job.status }}
+                </span>
+              </td>
+              <td>
+                <div class="progress-info">
+                  <span>{{ job.processedRows }} / {{ job.totalRows }}</span>
+                  <div class="progress-bar">
+                    <div
+                      class="progress-fill"
+                      [style.width.%]="(job.processedRows / job.totalRows) * 100">
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ formatDate(job.createdAt) }}</td>
+              <td>
+                <a
+                  [routerLink]="['/admin/imports/jobs', job.id]"
+                  class="btn-link">
+                  View Details
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+

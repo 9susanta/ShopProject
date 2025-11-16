@@ -1,0 +1,122 @@
+<div class="job-details-container">
+  <div class="header">
+    <button class="btn btn-secondary" (click)="goBack()">
+      <span class="material-icons">arrow_back</span>
+      Back to Jobs
+    </button>
+    <h1>Import Job Details</h1>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Loading job details...</p>
+    </div>
+  }
+
+  @if (!isLoading() && job()) {
+    <div class="job-card">
+      <!-- Job Info -->
+      <div class="job-info">
+        <div class="info-row">
+          <span class="label">File Name:</span>
+          <span class="value">{{ job()!.fileName }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Status:</span>
+          <span class="status-badge {{ getStatusClass(job()!.status) }}">
+            {{ job()!.status }}
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="label">Created:</span>
+          <span class="value">{{ formatDate(job()!.createdAt) }}</span>
+        </div>
+        @if (job()!.startedAt) {
+          <div class="info-row">
+            <span class="label">Started:</span>
+            <span class="value">{{ formatDate(job()!.startedAt) }}</span>
+          </div>
+        }
+        @if (job()!.completedAt) {
+          <div class="info-row">
+            <span class="label">Completed:</span>
+            <span class="value">{{ formatDate(job()!.completedAt) }}</span>
+          </div>
+        }
+        @if (job()!.errorMessage) {
+          <div class="error-message">
+            <span class="material-icons">error</span>
+            <span>{{ job()!.errorMessage }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-section">
+        <div class="progress-header">
+          <h3>Progress</h3>
+          <span class="progress-percentage">{{ getProgressPercentage() }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            [style.width.%]="getProgressPercentage()">
+          </div>
+        </div>
+        <div class="progress-stats">
+          <div class="stat">
+            <span class="stat-label">Total Rows:</span>
+            <span class="stat-value">{{ job()!.totalRows }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Processed:</span>
+            <span class="stat-value">{{ job()!.processedRows }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Successful:</span>
+            <span class="stat-value success">{{ job()!.successfulRows }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Failed:</span>
+            <span class="stat-value error">{{ job()!.failedRows }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions-section">
+        @if (job()!.status === ImportJobStatus.Processing || job()!.status === ImportJobStatus.Pending) {
+          <button
+            class="btn btn-secondary"
+            (click)="cancelJob()">
+            <span class="material-icons">cancel</span>
+            Cancel Job
+          </button>
+        }
+        @if (job()!.failedRows > 0 && job()!.status === ImportJobStatus.Completed) {
+          <button
+            class="btn btn-primary"
+            (click)="retryFailedRows()">
+            <span class="material-icons">refresh</span>
+            Retry Failed Rows
+          </button>
+        }
+        @if (job()!.failedRows > 0 && job()!.errorReportPath) {
+          <button
+            class="btn btn-primary"
+            (click)="downloadErrorReport()"
+            [disabled]="isDownloading()">
+            <span class="material-icons">download</span>
+            @if (isDownloading()) {
+              Downloading...
+            } @else {
+              Download Error Report
+            }
+          </button>
+        }
+      </div>
+    </div>
+  }
+</div>
+

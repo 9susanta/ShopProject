@@ -1,0 +1,75 @@
+<div class="options-container">
+  <h2>Import Options</h2>
+  <p class="subtitle">Configure how your import should be processed</p>
+
+  <div class="options-form">
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [checked]="localOptions().createMissingCategories"
+          (change)="updateOption('createMissingCategories', $any($event.target).checked)"
+        />
+        <span>Create missing categories automatically</span>
+      </label>
+      <p class="hint">If a category doesn't exist, it will be created automatically</p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Update Existing Products By</label>
+      <select
+        class="form-control"
+        [value]="localOptions().updateExistingBy"
+        (change)="updateOption('updateExistingBy', $any($event.target).value)">
+        @for (option of updateByOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+      <p class="hint">How to identify and update existing products</p>
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [checked]="localOptions().generateBarcodeIfMissing"
+          (change)="updateOption('generateBarcodeIfMissing', $any($event.target).checked)"
+        />
+        <span>Generate barcode if missing</span>
+      </label>
+      <p class="hint">Automatically generate barcodes for products without one</p>
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [checked]="localOptions().ignoreDuplicates"
+          (change)="updateOption('ignoreDuplicates', $any($event.target).checked)"
+        />
+        <span>Ignore duplicate entries</span>
+      </label>
+      <p class="hint">Skip rows that would create duplicate products</p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Chunk Size</label>
+      <input
+        type="number"
+        class="form-control"
+        [value]="localOptions().chunkSize"
+        (input)="updateOption('chunkSize', +$any($event.target).value)"
+        min="50"
+        max="500"
+        step="50"
+      />
+      <p class="hint">Number of rows to process in each batch (50-500)</p>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-secondary" (click)="onBack()">Back</button>
+    <button class="btn btn-primary" (click)="onStart()">Start Import</button>
+  </div>
+</div>
+

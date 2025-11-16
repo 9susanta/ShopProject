@@ -1,0 +1,20 @@
+.admin-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--gray-50);
+}
+
+.admin-content {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+}
+
+/* Responsive padding */
+@media (max-width: 768px) {
+  .admin-content {
+    padding: 16px;
+  }
+}
+

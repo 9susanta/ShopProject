@@ -1,0 +1,58 @@
+<div class="admin-page-container">
+  <div class="admin-page-header">
+    <h1>Import Products</h1>
+  </div>
+  <div class="admin-page-content">
+    <div class="upload-container">
+  <div
+    class="upload-area"
+    [class.dragging]="isDragging()"
+    [class.uploading]="isUploading()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)">
+    
+    @if (isUploading()) {
+      <div class="upload-status">
+        <div class="spinner"></div>
+        <p>Uploading file...</p>
+      </div>
+    } @else if (selectedFile()) {
+      <div class="file-selected">
+        <span class="material-icons">check_circle</span>
+        <p class="file-name">{{ selectedFile()!.name }}</p>
+        <p class="file-size">{{ formatFileSize(selectedFile()!.size) }}</p>
+      </div>
+    } @else {
+      <div class="upload-prompt">
+        <span class="material-icons upload-icon">cloud_upload</span>
+        <h3>Drag & Drop your file here</h3>
+        <p>or</p>
+        <label for="file-input" class="btn btn-primary">
+          <span class="material-icons">folder_open</span>
+          Browse Files
+        </label>
+        <input
+          id="file-input"
+          type="file"
+          accept=".xlsx,.xls,.json"
+          (change)="onFileSelected($event)"
+          style="display: none;"
+        />
+        <p class="upload-hint">
+          Supported formats: Excel (.xlsx, .xls) or JSON<br>
+          Maximum file size: {{ maxFileSize / 1024 / 1024 }}MB
+        </p>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="error-message" role="alert">
+        <span class="material-icons">error</span>
+        {{ error() }}
+      </div>
+    }
+  </div>
+  </div>
+</div>
+
