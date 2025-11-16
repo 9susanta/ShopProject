@@ -1,0 +1,160 @@
+<div class="pos-container h-screen flex flex-col">
+  <!-- Header -->
+  <header class="header-gradient shadow-sm px-6 py-4" style="border-bottom: 1px solid var(--gray-200);">
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-bold" style="color: white;">Point of Sale</h1>
+      <div class="flex items-center gap-4">
+        <grocery-barcode-input (barcodeScanned)="onBarcodeScanned($event)"></grocery-barcode-input>
+        <button
+          class="btn-gradient-secondary px-4 py-2 rounded-lg"
+          [class.badge-gradient-notification]="isVoiceListening()"
+          (click)="toggleVoiceListening()"
+          [attr.aria-label]="isVoiceListening() ? 'Stop voice commands' : 'Start voice commands'"
+        >
+          <span class="material-icons mr-2">{{ isVoiceListening() ? 'mic' : 'mic_off' }}</span>
+          {{ isVoiceListening() ? 'Listening...' : 'Voice' }}
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex-1 flex overflow-hidden">
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-6">
+      <!-- Search and Filters -->
+      <div class="mb-6">
+        <div class="flex gap-4 mb-4 items-center">
+          <input
+            type="text"
+            [value]="searchTerm()"
+            (input)="onSearchChange($any($event.target).value)"
+            placeholder="Search products..."
+            class="pos-search-input flex-1"
+            [attr.aria-label]="'Search products'"
+          />
+          <mat-form-field appearance="outline" class="pos-category-select" [style.height.px]="40">
+            <mat-label>Category</mat-label>
+            <mat-select [value]="selectedCategoryId()" (selectionChange)="onCategoryChange($event.value)">
+              <mat-option [value]="null">All Categories</mat-option>
+              <mat-option *ngFor="let category of categories()" [value]="category.id">
+                {{ category.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <grocery-product-tile
+          *ngFor="let product of filteredProducts()"
+          [product]="product"
+          [showQuantityPicker]="true"
+          [quantity]="1"
+          (addToCart)="onAddToCart($event)"
+          [attr.aria-label]="'Product: ' + product.name"
+        ></grocery-product-tile>
+      </div>
+
+      <div *ngIf="filteredProducts().length === 0" class="text-center py-12" style="color: var(--gray-600);">
+        <p class="text-lg">No products found</p>
+      </div>
+    </main>
+
+    <!-- Cart Sidebar -->
+    <aside class="w-96 flex flex-col sidebar-gradient">
+      <div class="p-6" style="border-bottom: 1px solid var(--gray-200);">
+        <h2 class="text-xl font-semibold mb-4" style="color: var(--gray-900);">
+          Cart 
+          <span class="badge-gradient px-2 py-1 rounded-full text-sm">{{ cartItemCount() }}</span>
+        </h2>
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-2" style="color: var(--gray-900);">Customer Phone (Optional)</label>
+          <input
+            type="tel"
+            [value]="customerPhone()"
+            (input)="customerPhone.set($any($event.target).value)"
+            placeholder="Enter phone number"
+            class="input-field"
+            [attr.aria-label]="'Customer phone number'"
+          />
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-6">
+        <div *ngIf="cart().length === 0" class="text-center py-12" style="color: var(--gray-600);">
+          <span class="material-icons text-6xl mb-4" style="color: var(--gray-200);">shopping_cart</span>
+          <p>Cart is empty</p>
+        </div>
+
+        <div *ngIf="cart().length > 0" class="space-y-4">
+          <div
+            *ngFor="let item of cart()"
+            class="cart-item-gradient rounded-lg p-4"
+            [attr.aria-label]="'Cart item: ' + item.product.name"
+          >
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex-1">
+                <h3 class="font-medium" style="color: var(--gray-900);">{{ item.product.name }}</h3>
+                <p class="text-sm" style="color: var(--gray-600);">₹{{ item.product.price | number: '1.2-2' }} each</p>
+              </div>
+              <button
+                class="px-2 py-1 rounded transition-colors"
+                style="color: var(--hot-red);"
+                (click)="removeFromCart(item)"
+                [attr.aria-label]="'Remove ' + item.product.name + ' from cart'"
+              >
+                <span class="material-icons">close</span>
+              </button>
+            </div>
+            <div class="flex items-center justify-between">
+              <grocery-quantity-picker
+                [min]="1"
+                [max]="item.product.stock"
+                [initialValue]="item.quantity"
+                (valueChange)="onQuantityChange(item, $event)"
+              ></grocery-quantity-picker>
+              <span class="text-lg font-semibold" style="color: var(--gray-900);">
+                ₹{{ item.subtotal | number: '1.2-2' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cart Summary -->
+      <div class="p-6" style="border-top: 1px solid var(--gray-200); background: linear-gradient(to bottom, var(--gray-50), var(--gray-100));">
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-lg font-semibold" style="color: var(--gray-900);">Total:</span>
+          <span class="text-2xl font-bold" style="color: var(--vivid-pink);">₹{{ cartTotal() | number: '1.2-2' }}</span>
+        </div>
+        <button
+          class="w-full checkout-gradient py-3 text-lg font-semibold rounded-lg"
+          (click)="checkout()"
+          [disabled]="cart().length === 0 || isProcessingSale()"
+          [attr.aria-label]="'Checkout'"
+        >
+          <span *ngIf="!isProcessingSale()">Checkout</span>
+          <span *ngIf="isProcessingSale()">Processing...</span>
+        </button>
+
+        <!-- Sale Confirmation -->
+        <div *ngIf="lastSaleResponse()" class="mt-4 p-4 rounded-lg" style="background: linear-gradient(135deg, var(--light-pink), var(--gray-100)); border: 1px solid var(--vivid-pink);">
+          <p class="text-sm font-medium mb-2" style="color: white;">Sale completed successfully!</p>
+          <p class="text-xs mb-2" style="color: white;">Sale ID: {{ lastSaleResponse()!.id }}</p>
+          <button
+            *ngIf="lastSaleResponse()!.pdfUrl"
+            class="text-sm underline"
+            style="color: var(--vivid-pink);"
+            (click)="downloadInvoice()"
+            [attr.aria-label]="'Download invoice'"
+          >
+            Download Invoice
+          </button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+

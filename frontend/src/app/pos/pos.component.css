@@ -1,0 +1,145 @@
+.pos-container {
+  height: 100vh;
+  overflow: hidden;
+  background: var(--gray-50);
+}
+
+/* Search input styling */
+.pos-search-input {
+  max-width: 500px;
+  height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.pos-search-input:focus {
+  outline: none;
+  border: 2px solid var(--vivid-pink);
+  box-shadow: 0 0 0 3px var(--light-pink);
+}
+
+.pos-search-input::placeholder {
+  color: var(--gray-400);
+}
+
+/* Category dropdown styling - Compact size */
+.pos-category-select {
+  width: 200px !important;
+  height: 40px !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+}
+
+.pos-category-select .mat-mdc-form-field-wrapper {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+  height: 40px !important;
+}
+
+.pos-category-select .mat-mdc-text-field-wrapper {
+  height: 40px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.pos-category-select .mat-mdc-text-field-wrapper .mat-mdc-form-field-flex {
+  align-items: center !important;
+  height: 40px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+}
+
+.pos-category-select .mat-mdc-form-field-infix {
+  padding: 0 12px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  border-top: none !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+
+.pos-category-select .mat-mdc-select {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.pos-category-select .mat-mdc-select-trigger {
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.pos-category-select .mat-mdc-select-value {
+  padding: 0 !important;
+  line-height: 1.5 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.pos-category-select .mat-mdc-select-value-text {
+  line-height: 1.5 !important;
+}
+
+.pos-category-select .mat-mdc-form-field-subscript-wrapper {
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.pos-category-select .mat-mdc-form-field-hint-wrapper,
+.pos-category-select .mat-mdc-form-field-error-wrapper {
+  display: none !important;
+  height: 0 !important;
+}
+
+/* Override Material's default spacing and outline */
+.pos-category-select .mdc-notched-outline {
+  height: 40px !important;
+  top: 0 !important;
+}
+
+.pos-category-select .mdc-notched-outline__leading,
+.pos-category-select .mdc-notched-outline__notch,
+.pos-category-select .mdc-notched-outline__trailing {
+  height: 40px !important;
+  top: 0 !important;
+}
+
+.pos-category-select .mdc-notched-outline__notch {
+  padding: 0 !important;
+}
+
+/* Label positioning */
+.pos-category-select .mat-mdc-floating-label {
+  top: 20px !important;
+  transform: translateY(-50%) scale(0.75) !important;
+}
+
+.pos-category-select.mat-form-field-should-float .mat-mdc-floating-label {
+  top: 20px !important;
+  transform: translateY(-50%) scale(0.75) !important;
+}
+
+/* Ensure large touch targets for POS */
+grocery-product-tile {
+  min-height: 280px;
+}
+
+/* Keyboard navigation for product tiles */
+grocery-product-tile:focus {
+  outline: 2px solid var(--vivid-pink);
+  outline-offset: 4px;
+}
