@@ -50,223 +50,263 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
     {
         _logger.LogInformation("Creating POS sale for customer: {CustomerPhone}", request.CustomerPhone);
 
-        // Get or create customer
-        Customer? customer = null;
-        if (request.CustomerId.HasValue)
+        // Use transaction with serializable isolation to prevent inventory race conditions
+        await _unitOfWork.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+        
+        try
         {
-            customer = await _customerRepository.GetByIdAsync(request.CustomerId.Value, cancellationToken);
-        }
-        else if (!string.IsNullOrWhiteSpace(request.CustomerPhone))
-        {
-            var customers = await _customerRepository.FindAsync(c => c.Phone == request.CustomerPhone, cancellationToken);
-            customer = customers.FirstOrDefault();
+            // Get or create customer
+            Customer? customer = null;
+            if (request.CustomerId.HasValue)
+            {
+                customer = await _customerRepository.GetByIdAsync(request.CustomerId.Value, cancellationToken);
+            }
+            else if (!string.IsNullOrWhiteSpace(request.CustomerPhone))
+            {
+                var customers = await _customerRepository.FindAsync(c => c.Phone == request.CustomerPhone, cancellationToken);
+                customer = customers.FirstOrDefault();
+                
+                if (customer == null)
+                {
+                    // Create guest customer
+                    customer = new Customer("Guest", request.CustomerPhone);
+                    await _customerRepository.AddAsync(customer, cancellationToken);
+                }
+            }
+
+            // Generate invoice number
+            var invoiceNumber = $"INV-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
+            var sale = new Sale(invoiceNumber, customer?.Id, request.CustomerPhone, request.DiscountAmount);
+
+            // Get store settings for packing charges
+            var storeSettingsList = await _storeSettingsRepository.GetAllAsync(cancellationToken);
+            var storeSettings = storeSettingsList.FirstOrDefault();
+            if (storeSettings != null && request.PackingCharges == 0)
+            {
+                sale.SetPackingCharges(storeSettings.PackingCharges);
+            }
+            else if (request.PackingCharges > 0)
+            {
+                sale.SetPackingCharges(request.PackingCharges);
+            }
+
+            // Process items and validate inventory within transaction
+            var inventoryChecks = new List<(InventoryEntity inventory, int quantity)>();
             
-            if (customer == null)
+            foreach (var itemRequest in request.Items)
             {
-                // Create guest customer
-                customer = new Customer("Guest", request.CustomerPhone);
-                await _customerRepository.AddAsync(customer, cancellationToken);
-            }
-        }
+                Product? product = null;
 
-        // Generate invoice number
-        var invoiceNumber = $"INV-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
-        var sale = new Sale(invoiceNumber, customer?.Id, request.CustomerPhone, request.DiscountAmount);
+                // Find product by ID or barcode
+                if (itemRequest.ProductId != Guid.Empty)
+                {
+                    product = await _productRepository.GetByIdAsync(itemRequest.ProductId, cancellationToken);
+                }
+                else if (!string.IsNullOrWhiteSpace(itemRequest.Barcode))
+                {
+                    var products = await _productRepository.FindAsync(p => p.Barcode == itemRequest.Barcode, cancellationToken);
+                    product = products.FirstOrDefault();
+                }
 
-        // Get store settings for packing charges
-        var storeSettingsList = await _storeSettingsRepository.GetAllAsync(cancellationToken);
-        var storeSettings = storeSettingsList.FirstOrDefault();
-        if (storeSettings != null && request.PackingCharges == 0)
-        {
-            sale.SetPackingCharges(storeSettings.PackingCharges);
-        }
-        else if (request.PackingCharges > 0)
-        {
-            sale.SetPackingCharges(request.PackingCharges);
-        }
+                if (product == null)
+                {
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    throw new InvalidOperationException($"Product not found for item: {itemRequest.ProductId} or barcode: {itemRequest.Barcode}");
+                }
 
-        // Process items
-        foreach (var itemRequest in request.Items)
-        {
-            Product? product = null;
+                // Check inventory within transaction (prevents race condition)
+                var inventoryList = await _inventoryRepository.FindAsync(i => i.ProductId == product.Id, cancellationToken);
+                var inventory = inventoryList.FirstOrDefault();
+                if (inventory == null || inventory.AvailableQuantity < itemRequest.Quantity)
+                {
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    throw new InvalidOperationException($"Insufficient stock for product {product.Name}. Available: {inventory?.AvailableQuantity ?? 0}, Requested: {itemRequest.Quantity}");
+                }
+                
+                // Store inventory check for later reduction
+                inventoryChecks.Add((inventory, itemRequest.Quantity));
 
-            // Find product by ID or barcode
-            if (itemRequest.ProductId != Guid.Empty)
-            {
-                product = await _productRepository.GetByIdAsync(itemRequest.ProductId, cancellationToken);
-            }
-            else if (!string.IsNullOrWhiteSpace(itemRequest.Barcode))
-            {
-                var products = await _productRepository.FindAsync(p => p.Barcode == itemRequest.Barcode, cancellationToken);
-                product = products.FirstOrDefault();
-            }
+                // Get unit price (override if provided)
+                var unitPrice = itemRequest.OverridePrice ?? product.SalePrice;
 
-            if (product == null)
-                throw new InvalidOperationException($"Product not found for item: {itemRequest.ProductId} or barcode: {itemRequest.Barcode}");
+                // Get GST rates from product's tax slab
+                var cgstRate = product.TaxSlab?.CGSTRate ?? 0;
+                var sgstRate = product.TaxSlab?.SGSTRate ?? 0;
 
-            // Check inventory
-            var inventoryList = await _inventoryRepository.FindAsync(i => i.ProductId == product.Id, cancellationToken);
-            var inventory = inventoryList.FirstOrDefault();
-            if (inventory == null || inventory.AvailableQuantity < itemRequest.Quantity)
-                throw new InvalidOperationException($"Insufficient stock for product {product.Name}. Available: {inventory?.AvailableQuantity ?? 0}, Requested: {itemRequest.Quantity}");
+                // Check for applicable offers
+                decimal discountAmount = 0;
+                Guid? offerId = null;
+                var allOffers = await _offerRepository.GetAllAsync(cancellationToken);
+                var offers = allOffers.Where(o => 
+                    (o.ProductId == product.Id || o.CategoryId == product.CategoryId) && 
+                    o.IsValid()).ToList();
 
-            // Get unit price (override if provided)
-            var unitPrice = itemRequest.OverridePrice ?? product.SalePrice;
+                var applicableOffer = offers.FirstOrDefault();
+                if (applicableOffer != null)
+                {
+                    var itemTotal = itemRequest.Quantity * unitPrice;
+                    discountAmount = applicableOffer.CalculateDiscount(itemTotal, itemRequest.Quantity);
+                    offerId = applicableOffer.Id;
+                }
 
-            // Get GST rates from product's tax slab
-            var cgstRate = product.TaxSlab?.CGSTRate ?? 0;
-            var sgstRate = product.TaxSlab?.SGSTRate ?? 0;
-
-            // Check for applicable offers
-            decimal discountAmount = 0;
-            Guid? offerId = null;
-            var allOffers = await _offerRepository.GetAllAsync(cancellationToken);
-            var offers = allOffers.Where(o => 
-                (o.ProductId == product.Id || o.CategoryId == product.CategoryId) && 
-                o.IsValid()).ToList();
-
-            var applicableOffer = offers.FirstOrDefault();
-            if (applicableOffer != null)
-            {
-                var itemTotal = itemRequest.Quantity * unitPrice;
-                discountAmount = applicableOffer.CalculateDiscount(itemTotal, itemRequest.Quantity);
-                offerId = applicableOffer.Id;
+                // Add item to sale
+                sale.AddItem(product.Id, itemRequest.Quantity, unitPrice);
+                
+                // Apply GST and discount to the last added item
+                var saleItem = sale.Items.Last();
+                saleItem.SetGSTRates(cgstRate, sgstRate);
+                if (discountAmount > 0)
+                {
+                    saleItem.ApplyDiscount(discountAmount, offerId);
+                }
             }
 
-            // Add item to sale
-            sale.AddItem(product.Id, itemRequest.Quantity, unitPrice);
-            
-            // Apply GST and discount to the last added item
-            var saleItem = sale.Items.Last();
-            saleItem.SetGSTRates(cgstRate, sgstRate);
-            if (discountAmount > 0)
+            // Apply loyalty points redemption
+            if (customer != null && request.LoyaltyPointsToRedeem > 0)
             {
-                saleItem.ApplyDiscount(discountAmount, offerId);
+                if (customer.LoyaltyPoints < (int)request.LoyaltyPointsToRedeem)
+                {
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    throw new InvalidOperationException($"Insufficient loyalty points. Available: {customer.LoyaltyPoints}, Requested: {request.LoyaltyPointsToRedeem}");
+                }
+
+                // Convert points to rupees (1 point = ₹1)
+                sale.RedeemLoyaltyPoints(request.LoyaltyPointsToRedeem);
+                customer.RedeemLoyaltyPoints((int)request.LoyaltyPointsToRedeem);
             }
-        }
 
-        // Apply loyalty points redemption
-        if (customer != null && request.LoyaltyPointsToRedeem > 0)
-        {
-            if (customer.LoyaltyPoints < (int)request.LoyaltyPointsToRedeem)
-                throw new InvalidOperationException($"Insufficient loyalty points. Available: {customer.LoyaltyPoints}, Requested: {request.LoyaltyPointsToRedeem}");
-
-            // Convert points to rupees (1 point = ₹1)
-            sale.RedeemLoyaltyPoints(request.LoyaltyPointsToRedeem);
-            customer.RedeemLoyaltyPoints((int)request.LoyaltyPointsToRedeem);
-        }
-
-        // Set home delivery
-        if (request.IsHomeDelivery)
-        {
-            var deliveryCharges = storeSettings?.HomeDeliveryCharges ?? 0;
-            sale.SetHomeDelivery(true, deliveryCharges, request.DeliveryAddress);
-        }
-
-        // Set payment method
-        sale.SetPaymentMethod(request.PaymentMethod, request.CashAmount, request.UPIAmount, request.CardAmount, request.PayLaterAmount);
-
-        // Complete sale
-        sale.Complete();
-
-        await _saleRepository.AddAsync(sale, cancellationToken);
-
-        // Create invoice
-        var invoice = new Invoice(
-            sale.Id,
-            sale.InvoiceNumber,
-            sale.SubTotal,
-            sale.TotalGSTAmount,
-            sale.DiscountAmount,
-            sale.TotalAmount);
-
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        // Raise domain events
-        var items = sale.Items.Select(i => new SaleCompletedEvent.SaleItem(i.ProductId, i.Quantity, i.UnitPrice)).ToList();
-        var saleCompletedEvent = new SaleCompletedEvent(
-            sale.Id,
-            sale.InvoiceNumber,
-            sale.SaleDate,
-            sale.TotalAmount,
-            items);
-
-        await _mediator.Publish(saleCompletedEvent, cancellationToken);
-
-        // Raise loyalty points event if customer exists
-        if (customer != null && sale.TotalAmount > 0)
-        {
-            var pointsPerHundred = storeSettings?.PointsPerHundredRupees ?? 1;
-            var pointsEarned = (int)(sale.TotalAmount / 100) * pointsPerHundred;
-            
-            if (pointsEarned > 0)
+            // Set home delivery
+            if (request.IsHomeDelivery)
             {
-                customer.AddLoyaltyPoints(pointsEarned);
-                var loyaltyEvent = new LoyaltyPointsEarnedEvent(
+                var deliveryCharges = storeSettings?.HomeDeliveryCharges ?? 0;
+                sale.SetHomeDelivery(true, deliveryCharges, request.DeliveryAddress);
+            }
+
+            // Set payment method
+            sale.SetPaymentMethod(request.PaymentMethod, request.CashAmount, request.UPIAmount, request.CardAmount, request.PayLaterAmount);
+
+            // Complete sale
+            sale.Complete();
+
+            await _saleRepository.AddAsync(sale, cancellationToken);
+
+            // Create invoice
+            var invoice = new Invoice(
+                sale.Id,
+                sale.InvoiceNumber,
+                sale.SubTotal,
+                sale.TotalGSTAmount,
+                sale.DiscountAmount,
+                sale.TotalAmount);
+
+            // Reduce inventory atomically within transaction (prevents race condition)
+            foreach (var (inventory, quantity) in inventoryChecks)
+            {
+                // Re-check inventory right before reduction (double-check pattern)
+                if (inventory.AvailableQuantity < quantity)
+                {
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    throw new InvalidOperationException($"Insufficient stock. Available: {inventory.AvailableQuantity}, Requested: {quantity}");
+                }
+                
+                inventory.RemoveStock(quantity);
+                await _inventoryRepository.UpdateAsync(inventory, cancellationToken);
+            }
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
+
+            // Raise domain events (inventory already reduced in transaction above)
+            // Note: UpdateStockOnSaleCompletedHandler will still run but should be idempotent
+            var items = sale.Items.Select(i => new SaleCompletedEvent.SaleItem(i.ProductId, i.Quantity, i.UnitPrice)).ToList();
+            var saleCompletedEvent = new SaleCompletedEvent(
+                sale.Id,
+                sale.InvoiceNumber,
+                sale.SaleDate,
+                sale.TotalAmount,
+                items);
+
+            await _mediator.Publish(saleCompletedEvent, cancellationToken);
+
+            // Raise loyalty points event if customer exists
+            if (customer != null && sale.TotalAmount > 0)
+            {
+                var pointsPerHundred = storeSettings?.PointsPerHundredRupees ?? 1;
+                var pointsEarned = (int)(sale.TotalAmount / 100) * pointsPerHundred;
+                
+                if (pointsEarned > 0)
+                {
+                    customer.AddLoyaltyPoints(pointsEarned);
+                    var loyaltyEvent = new LoyaltyPointsEarnedEvent(
+                        customer.Id,
+                        customer.Phone,
+                        sale.Id,
+                        sale.InvoiceNumber,
+                        pointsEarned,
+                        customer.LoyaltyPoints);
+
+                    await _mediator.Publish(loyaltyEvent, cancellationToken);
+                }
+            }
+
+            // Raise pay later event if used
+            if (request.PayLaterAmount > 0 && customer != null)
+            {
+                customer.AddPayLaterBalance(request.PayLaterAmount);
+                var payLaterEvent = new PayLaterUsedEvent(
                     customer.Id,
                     customer.Phone,
                     sale.Id,
                     sale.InvoiceNumber,
-                    pointsEarned,
-                    customer.LoyaltyPoints);
+                    request.PayLaterAmount,
+                    customer.PayLaterBalance);
 
-                await _mediator.Publish(loyaltyEvent, cancellationToken);
+                await _mediator.Publish(payLaterEvent, cancellationToken);
             }
-        }
 
-        // Raise pay later event if used
-        if (request.PayLaterAmount > 0 && customer != null)
-        {
-            customer.AddPayLaterBalance(request.PayLaterAmount);
-            var payLaterEvent = new PayLaterUsedEvent(
-                customer.Id,
-                customer.Phone,
-                sale.Id,
-                sale.InvoiceNumber,
-                request.PayLaterAmount,
-                customer.PayLaterBalance);
-
-            await _mediator.Publish(payLaterEvent, cancellationToken);
-        }
-
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        // Invalidate customer cache if customer exists
-        if (customer != null)
-        {
-            await _cacheService.RemoveAsync($"customer:phone:{customer.Phone}", cancellationToken);
-            await _cacheService.RemoveByPatternAsync("repo:Customer:*", cancellationToken);
-        }
-
-        // Invalidate inventory caches for products sold
-        foreach (var item in sale.Items)
-        {
-            await _cacheService.RemoveByPatternAsync($"inventory:product:{item.ProductId}*", cancellationToken);
-        }
-
-        _logger.LogInformation("POS sale created successfully: {SaleId}, Invoice: {InvoiceNumber}", sale.Id, sale.InvoiceNumber);
-
-        return new SaleDto
-        {
-            Id = sale.Id,
-            InvoiceNumber = sale.InvoiceNumber,
-            CustomerId = sale.CustomerId,
-            CustomerName = customer?.Name,
-            Status = sale.Status.ToString(),
-            SaleDate = sale.SaleDate,
-            SubTotal = sale.SubTotal,
-            TaxAmount = sale.TotalGSTAmount,
-            DiscountAmount = sale.DiscountAmount,
-            TotalAmount = sale.TotalAmount,
-            Items = sale.Items.Select(i => new SaleItemDto
+            // Invalidate customer cache if customer exists
+            if (customer != null)
             {
-                Id = i.Id,
-                ProductId = i.ProductId,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                TotalPrice = i.TotalPrice
-            }).ToList()
-        };
+                await _cacheService.RemoveAsync($"customer:phone:{customer.Phone}", cancellationToken);
+                await _cacheService.RemoveByPatternAsync("repo:Customer:*", cancellationToken);
+            }
+
+            // Invalidate inventory caches for products sold
+            foreach (var item in sale.Items)
+            {
+                await _cacheService.RemoveByPatternAsync($"inventory:product:{item.ProductId}*", cancellationToken);
+            }
+
+            _logger.LogInformation("POS sale created successfully: {SaleId}, Invoice: {InvoiceNumber}", sale.Id, sale.InvoiceNumber);
+
+            return new SaleDto
+            {
+                Id = sale.Id,
+                InvoiceNumber = sale.InvoiceNumber,
+                CustomerId = sale.CustomerId,
+                CustomerName = customer?.Name,
+                Status = sale.Status.ToString(),
+                SaleDate = sale.SaleDate,
+                SubTotal = sale.SubTotal,
+                TaxAmount = sale.TotalGSTAmount,
+                DiscountAmount = sale.DiscountAmount,
+                TotalAmount = sale.TotalAmount,
+                Items = sale.Items.Select(i => new SaleItemDto
+                {
+                    Id = i.Id,
+                    ProductId = i.ProductId,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice,
+                    TotalPrice = i.TotalPrice
+                }).ToList()
+            };
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+            _logger.LogError(ex, "Error creating POS sale for customer: {CustomerPhone}", request.CustomerPhone);
+            throw;
+        }
     }
 }
 

@@ -6,10 +6,11 @@ namespace GroceryStoreManagement.Infrastructure.Services;
 /// <summary>
 /// In-memory rate limiting service using sliding window algorithm
 /// </summary>
-public class RateLimitService : IRateLimitService
+public class RateLimitService : IRateLimitService, IDisposable
 {
     private readonly ConcurrentDictionary<string, RateLimitWindow> _windows = new();
     private readonly Timer _cleanupTimer;
+    private bool _disposed = false;
 
     public RateLimitService()
     {
@@ -112,6 +113,16 @@ public class RateLimitService : IRateLimitService
             var cutoff = now.Subtract(Window);
             Requests.RemoveAll(r => r < cutoff);
             LastAccess = now;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            _cleanupTimer?.Dispose();
+            _windows.Clear();
+            _disposed = true;
         }
     }
 }

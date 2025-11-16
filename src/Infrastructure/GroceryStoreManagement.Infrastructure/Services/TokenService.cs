@@ -36,12 +36,21 @@ public class TokenService : ITokenService
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(_secretKey);
 
+        // Map enum value to role name for JWT claims
+        var roleName = user.Role switch
+        {
+            UserRole.SuperAdmin => "SuperAdmin",
+            UserRole.Admin => "Admin",
+            UserRole.Staff => "Staff",
+            _ => user.Role.ToString()
+        };
+
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, user.Name),
-            new Claim(ClaimTypes.Role, user.Role.ToString()),
+            new Claim(ClaimTypes.Role, roleName),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
         };

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SignalRService } from './core/services/signalr.service';
 import { AuthService } from './core/services/auth.service';
@@ -11,7 +11,7 @@ import { environment } from '../environments/environment';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   // Using signals for reactive state
   title = signal('Grocery Store Management System');
   isSignalRConnected = signal(false);
@@ -29,6 +29,15 @@ export class AppComponent implements OnInit {
           console.warn('SignalR connection failed:', error);
           this.isSignalRConnected.set(false);
         });
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Cleanup SignalR connection when app is destroyed
+    if (environment.enableSignalR) {
+      this.signalRService.dispose().catch((error) => {
+        console.warn('Error disposing SignalR service:', error);
+      });
     }
   }
 }

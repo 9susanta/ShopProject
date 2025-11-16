@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Data;
 using GroceryStoreManagement.Application.DTOs.Auth;
 using GroceryStoreManagement.Application.Interfaces;
 using GroceryStoreManagement.Domain.Entities;
@@ -135,54 +136,80 @@ public class AuthService : IAuthService
     {
         var refreshTokenHash = HashRefreshToken(request.RefreshToken);
 
-        var refreshToken = await _context.Set<RefreshToken>()
-            .FirstOrDefaultAsync(rt => rt.TokenHash == refreshTokenHash, cancellationToken);
-
-        if (refreshToken == null || !refreshToken.IsActive)
+        // Use a database transaction with serializable isolation to prevent race conditions
+        // This ensures only one refresh operation can succeed for the same token
+        using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+        
+        try
         {
-            _logger.LogWarning("Invalid or expired refresh token attempt from IP: {Ip}", clientIp);
-            throw new UnauthorizedAccessException("Invalid or expired refresh token");
+            // Re-query within transaction to get latest state (prevents race condition)
+            var refreshToken = await _context.Set<RefreshToken>()
+                .FirstOrDefaultAsync(rt => rt.TokenHash == refreshTokenHash, cancellationToken);
+
+            if (refreshToken == null || !refreshToken.IsActive)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogWarning("Invalid or expired refresh token attempt from IP: {Ip}", clientIp);
+                throw new UnauthorizedAccessException("Invalid or expired refresh token");
+            }
+
+            // Get user
+            var user = await _context.Users.FindAsync(new object[] { refreshToken.UserId }, cancellationToken);
+            if (user == null || !user.IsActive)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogWarning("Refresh token for inactive user: {UserId}", refreshToken.UserId);
+                throw new UnauthorizedAccessException("User not found or inactive");
+            }
+
+            // Revoke old token (atomic operation within transaction)
+            refreshToken.RevokedAt = DateTime.UtcNow;
+            refreshToken.RevokedByIp = clientIp;
+            refreshToken.RevocationReason = "Replaced by new token";
+
+            // Generate new tokens
+            var newAccessToken = _tokenService.GenerateAccessToken(user);
+            var newRefreshTokenPlaintext = _tokenService.GenerateRefreshToken();
+            var newRefreshTokenHash = HashRefreshToken(newRefreshTokenPlaintext);
+
+            // Create new refresh token
+            var newRefreshToken = new RefreshToken
+            {
+                UserId = user.Id,
+                TokenHash = newRefreshTokenHash,
+                ExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
+                CreatedByIp = clientIp,
+                ReplacedByTokenId = refreshToken.Id
+            };
+
+            await _context.Set<RefreshToken>().AddAsync(newRefreshToken, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            _logger.LogInformation("Token refreshed for user {Email}", user.Email);
+
+            return new RefreshTokenResponseDto
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshTokenPlaintext,
+                User = new UserDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    Name = user.Name,
+                    Role = user.Role,
+                    Phone = user.Phone,
+                    IsActive = user.IsActive,
+                    LastLoginAt = user.LastLoginAt
+                }
+            };
         }
-
-        // Get user
-        var user = await _context.Users.FindAsync(new object[] { refreshToken.UserId }, cancellationToken);
-        if (user == null || !user.IsActive)
+        catch (Exception ex)
         {
-            _logger.LogWarning("Refresh token for inactive user: {UserId}", refreshToken.UserId);
-            throw new UnauthorizedAccessException("User not found or inactive");
+            await transaction.RollbackAsync(cancellationToken);
+            _logger.LogError(ex, "Error refreshing token for IP: {Ip}", clientIp);
+            throw;
         }
-
-        // Revoke old token
-        refreshToken.RevokedAt = DateTime.UtcNow;
-        refreshToken.RevokedByIp = clientIp;
-        refreshToken.RevocationReason = "Replaced by new token";
-
-        // Generate new tokens
-        var newAccessToken = _tokenService.GenerateAccessToken(user);
-        var newRefreshTokenPlaintext = _tokenService.GenerateRefreshToken();
-        var newRefreshTokenHash = HashRefreshToken(newRefreshTokenPlaintext);
-
-        // Create new refresh token
-        var newRefreshToken = new RefreshToken
-        {
-            UserId = user.Id,
-            TokenHash = newRefreshTokenHash,
-            ExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
-            CreatedByIp = clientIp,
-            ReplacedByTokenId = refreshToken.Id
-        };
-
-        await _context.Set<RefreshToken>().AddAsync(newRefreshToken, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        _logger.LogInformation("Token refreshed for user {Email}", user.Email);
-
-        return new RefreshTokenResponseDto
-        {
-            AccessToken = newAccessToken,
-            RefreshToken = newRefreshTokenPlaintext,
-            ExpiresIn = 15 * 60
-        };
     }
 
     public async Task RevokeTokenAsync(string refreshToken, string? clientIp, string? reason = "Logout", CancellationToken cancellationToken = default)

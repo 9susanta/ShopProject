@@ -25,10 +25,21 @@ export class ApiService {
   ) {}
 
   /**
+   * Build full URL from base URL and endpoint
+   */
+  private buildUrl(endpoint: string): string {
+    // Remove leading slash from endpoint if present
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+    // Remove trailing slash from baseUrl if present
+    const cleanBaseUrl = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
+    return `${cleanBaseUrl}/${cleanEndpoint}`;
+  }
+
+  /**
    * GET request with optional caching
    */
   get<T>(endpoint: string, options?: ApiOptions): Observable<T> {
-    const url = `${this.baseUrl}/${endpoint}`;
+    const url = this.buildUrl(endpoint);
     const cacheKey = options?.cacheKey || `get_${endpoint}`;
 
     // Check cache first
@@ -64,7 +75,7 @@ export class ApiService {
    * POST request
    */
   post<T>(endpoint: string, body: any, options?: ApiOptions): Observable<T> {
-    const url = `${this.baseUrl}/${endpoint}`;
+    const url = this.buildUrl(endpoint);
     const httpOptions = {
       headers: options?.headers,
       params: options?.params,
@@ -82,7 +93,7 @@ export class ApiService {
    * PUT request
    */
   put<T>(endpoint: string, body: any, options?: ApiOptions): Observable<T> {
-    const url = `${this.baseUrl}/${endpoint}`;
+    const url = this.buildUrl(endpoint);
     const httpOptions = {
       headers: options?.headers,
       params: options?.params,
@@ -100,7 +111,7 @@ export class ApiService {
    * DELETE request
    */
   delete<T>(endpoint: string, options?: ApiOptions): Observable<T> {
-    const url = `${this.baseUrl}/${endpoint}`;
+    const url = this.buildUrl(endpoint);
     const httpOptions = {
       headers: options?.headers,
       params: options?.params,
@@ -118,7 +129,7 @@ export class ApiService {
    * File upload (multipart/form-data)
    */
   uploadFile<T>(endpoint: string, file: File, additionalData?: { [key: string]: any }): Observable<T> {
-    const url = `${this.baseUrl}/${endpoint}`;
+    const url = this.buildUrl(endpoint);
     const formData = new FormData();
     formData.append('file', file);
 
@@ -140,7 +151,7 @@ export class ApiService {
    * Download file
    */
   downloadFile(endpoint: string, filename?: string): Observable<Blob> {
-    const url = `${this.baseUrl}/${endpoint}`;
+    const url = this.buildUrl(endpoint);
     return this.http.get(url, { responseType: 'blob' }).pipe(
       map((blob) => {
         if (filename) {

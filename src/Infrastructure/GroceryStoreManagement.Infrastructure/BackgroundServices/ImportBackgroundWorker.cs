@@ -1,3 +1,4 @@
+using System.Data;
 using GroceryStoreManagement.Application.Interfaces;
 using GroceryStoreManagement.Application.Validation;
 using GroceryStoreManagement.Domain.Entities;
@@ -156,61 +157,77 @@ public class ImportBackgroundWorker : BackgroundService
         {
             var batch = rows.Skip(i).Take(BatchSize).ToList();
 
-            foreach (var row in batch)
+            // Process batch within transaction to prevent race conditions
+            await unitOfWork.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+            
+            try
             {
-                processedRows++;
-                var rowNumber = i + batch.IndexOf(row) + 2; // +2 for header row and 0-based index
-
-                try
+                foreach (var row in batch)
                 {
-                    // Validate row
-                    var validationResult = await validator.ValidateAsync(row, cancellationToken);
-                    if (!validationResult.IsValid)
+                    // Check cancellation token periodically
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
+                    processedRows++;
+                    var rowNumber = i + batch.IndexOf(row) + 2; // +2 for header row and 0-based index
+
+                    try
                     {
-                        var errorMessage = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
+                        // Validate row
+                        var validationResult = await validator.ValidateAsync(row, cancellationToken);
+                        if (!validationResult.IsValid)
+                        {
+                            var errorMessage = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
+                            errors.Add(new ImportErrorData
+                            {
+                                RowNumber = rowNumber,
+                                Payload = System.Text.Json.JsonSerializer.Serialize(row),
+                                ErrorMessage = errorMessage
+                            });
+                            failedRows++;
+                            continue;
+                        }
+
+                        // Create or update product (within transaction to prevent duplicates)
+                        await CreateOrUpdateProductAsync(
+                            row,
+                            job,
+                            productRepository,
+                            categoryRepository,
+                            inventoryRepository,
+                            unitRepository,
+                            taxSlabRepository,
+                            unitOfWork,
+                            masterDataCache,
+                            mediator,
+                            cancellationToken);
+
+                        successfulRows++;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error processing row {RowNumber} in job {JobId}", rowNumber, job.Id);
                         errors.Add(new ImportErrorData
                         {
                             RowNumber = rowNumber,
                             Payload = System.Text.Json.JsonSerializer.Serialize(row),
-                            ErrorMessage = errorMessage
+                            ErrorMessage = ex.Message
                         });
                         failedRows++;
-                        continue;
                     }
-
-                    // Create or update product
-                    await CreateOrUpdateProductAsync(
-                        row,
-                        job,
-                        productRepository,
-                        categoryRepository,
-                        inventoryRepository,
-                        unitRepository,
-                        taxSlabRepository,
-                        unitOfWork,
-                        masterDataCache,
-                        mediator,
-                        cancellationToken);
-
-                    successfulRows++;
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error processing row {RowNumber} in job {JobId}", rowNumber, job.Id);
-                    errors.Add(new ImportErrorData
-                    {
-                        RowNumber = rowNumber,
-                        Payload = System.Text.Json.JsonSerializer.Serialize(row),
-                        ErrorMessage = ex.Message
-                    });
-                    failedRows++;
-                }
+
+                // Update progress
+                job.UpdateProgress(processedRows, successfulRows, failedRows);
+                await importJobRepository.UpdateAsync(job, cancellationToken);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+                await unitOfWork.CommitTransactionAsync(cancellationToken);
             }
-
-            // Update progress
-            job.UpdateProgress(processedRows, successfulRows, failedRows);
-            await importJobRepository.UpdateAsync(job, cancellationToken);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            catch (Exception ex)
+            {
+                await unitOfWork.RollbackTransactionAsync(cancellationToken);
+                _logger.LogError(ex, "Error processing batch in job {JobId}", job.Id);
+                throw;
+            }
         }
 
         // Generate error report if there are errors

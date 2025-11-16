@@ -15,7 +15,13 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Add services
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Ensure camelCase property names for JSON serialization (matches frontend expectations)
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.WriteIndented = false;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -33,11 +39,21 @@ builder.Services.AddSignalR();
 // Add CORS
 builder.Services.AddCors(options =>
 {
+    // Policy for API requests (no credentials needed)
     options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
               .AllowAnyMethod()
               .AllowAnyHeader();
+    });
+
+    // Policy for SignalR (requires credentials for auth)
+    options.AddPolicy("AllowSignalR", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials(); // Required for SignalR with auth
     });
 });
 
@@ -57,6 +73,9 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseHttpsRedirection();
+
+// CORS must be early in pipeline for preflight requests
+// Use default policy for API, SignalR will override with RequireCors
 app.UseCors("AllowAll");
 
 // Security & Audit Middleware (order matters - audit first to capture all requests)
@@ -70,8 +89,9 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add SignalR for import progress notifications
-app.MapHub<GroceryStoreManagement.API.Hubs.ImportProgressHub>("/hubs/import-progress");
+// Add SignalR for import progress notifications with CORS policy
+app.MapHub<GroceryStoreManagement.API.Hubs.ImportProgressHub>("/hubs/import-progress")
+   .RequireCors("AllowSignalR");
 
 app.MapControllers();
 

@@ -14,10 +14,28 @@ export class CacheService {
   private memoryCache = new Map<string, CacheEntry<any>>();
   private readonly defaultTTL = environment.cacheTTL;
   private readonly useLocalStorage = true; // Can be configured via environment
+  private cleanupIntervalId?: number; // Track cleanup interval for disposal
 
   constructor() {
     // Clean up expired entries on initialization
     this.cleanup();
+    
+    // Set up periodic cleanup (every 5 minutes)
+    this.cleanupIntervalId = window.setInterval(() => {
+      this.cleanup();
+    }, 5 * 60 * 1000); // 5 minutes
+  }
+
+  /**
+   * Cleanup and dispose resources
+   * Should be called when service is no longer needed
+   */
+  dispose(): void {
+    if (this.cleanupIntervalId) {
+      clearInterval(this.cleanupIntervalId);
+      this.cleanupIntervalId = undefined;
+    }
+    this.memoryCache.clear();
   }
 
   /**

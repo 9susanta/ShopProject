@@ -25,6 +25,14 @@ public class RateLimitMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // Check if rate limiting is enabled
+        var isEnabled = _configuration.GetValue<bool>("RateLimit:Enabled", true);
+        if (!isEnabled)
+        {
+            await _next(context);
+            return;
+        }
+
         // Only apply rate limiting to sensitive endpoints
         var path = context.Request.Path.Value?.ToLower() ?? "";
         if (!IsSensitiveEndpoint(path))
@@ -35,8 +43,8 @@ public class RateLimitMiddleware
 
         // Get client identifier (IP address or user ID)
         var clientId = GetClientIdentifier(context);
-        var maxRequests = _configuration.GetValue<int>("RateLimit:MaxRequests", 5);
-        var windowMinutes = _configuration.GetValue<int>("RateLimit:WindowMinutes", 15);
+        var maxRequests = _configuration.GetValue<int>("RateLimit:MaxRequests", 100);
+        var windowMinutes = _configuration.GetValue<int>("RateLimit:WindowMinutes", 1);
         var window = TimeSpan.FromMinutes(windowMinutes);
 
         if (!_rateLimitService.IsAllowed(clientId, maxRequests, window))

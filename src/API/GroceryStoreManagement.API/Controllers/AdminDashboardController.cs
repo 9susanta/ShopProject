@@ -10,7 +10,7 @@ namespace GroceryStoreManagement.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/admin/dashboard")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,SuperAdmin")]
 public class AdminDashboardController : ControllerBase
 {
     private readonly IMediator _mediator;

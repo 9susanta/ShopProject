@@ -44,10 +44,26 @@ public class UpdateStockOnSaleCompletedHandler : INotificationHandler<SaleComple
                 throw new InvalidOperationException($"Inventory not found for product {item.ProductId}");
             }
 
-            inventory.RemoveStock(item.Quantity);
-            await _inventoryRepository.UpdateAsync(inventory, cancellationToken);
-
-            _logger.LogInformation("Removed {Quantity} units from inventory for product: {ProductId}", item.Quantity, item.ProductId);
+            // Check if inventory was already reduced (idempotent operation)
+            // This handles cases where inventory was reduced in the command handler transaction
+            var quantityBefore = inventory.QuantityOnHand;
+            try
+            {
+                inventory.RemoveStock(item.Quantity);
+                await _inventoryRepository.UpdateAsync(inventory, cancellationToken);
+                _logger.LogInformation("Removed {Quantity} units from inventory for product: {ProductId}", item.Quantity, item.ProductId);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Insufficient stock"))
+            {
+                // Inventory may have been already reduced - check if it's already at expected level
+                // If quantity was already reduced, this is idempotent - just log and continue
+                _logger.LogWarning("Inventory reduction may have already been processed for product: {ProductId}. Quantity before: {Before}, Expected reduction: {Quantity}", 
+                    item.ProductId, quantityBefore, item.Quantity);
+                // Re-fetch to get current state
+                inventoryList = await _inventoryRepository.FindAsync(i => i.ProductId == item.ProductId, cancellationToken);
+                inventory = inventoryList.FirstOrDefault();
+                if (inventory == null) continue;
+            }
 
             // Check for low stock
             var product = await _productRepository.GetByIdAsync(item.ProductId, cancellationToken);

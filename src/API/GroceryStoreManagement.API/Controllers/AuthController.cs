@@ -1,6 +1,7 @@
 using GroceryStoreManagement.Application.DTOs.Auth;
 using GroceryStoreManagement.Application.Interfaces;
 using GroceryStoreManagement.API.Middlewares;
+using GroceryStoreManagement.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -15,11 +16,16 @@ namespace GroceryStoreManagement.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IRepository<User> _userRepository;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(IAuthService authService, ILogger<AuthController> logger)
+    public AuthController(
+        IAuthService authService,
+        IRepository<User> userRepository,
+        ILogger<AuthController> logger)
     {
         _authService = authService;
+        _userRepository = userRepository;
         _logger = logger;
     }
 
@@ -113,20 +119,29 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<ActionResult<UserDto>> GetCurrentUser(CancellationToken cancellationToken = default)
     {
-        // This would typically come from the token claims, but for completeness:
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId))
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
         {
             return Unauthorized();
         }
 
-        // Return user info from token claims (or fetch from DB if needed)
+        // Fetch user from database to get complete information
+        var user = await _userRepository.GetByIdAsync(userGuid, cancellationToken);
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        // Return complete user information
         return Ok(new UserDto
         {
-            Id = Guid.Parse(userId),
-            Email = User.FindFirst(ClaimTypes.Email)?.Value ?? "",
-            Name = User.FindFirst(ClaimTypes.Name)?.Value ?? "",
-            Role = Enum.Parse<GroceryStoreManagement.Domain.Enums.UserRole>(User.FindFirst(ClaimTypes.Role)?.Value ?? "Staff")
+            Id = user.Id,
+            Email = user.Email,
+            Name = user.Name,
+            Role = user.Role,
+            Phone = user.Phone,
+            IsActive = user.IsActive,
+            LastLoginAt = user.LastLoginAt
         });
     }
 }

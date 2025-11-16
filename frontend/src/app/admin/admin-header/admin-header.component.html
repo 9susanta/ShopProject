@@ -1,0 +1,77 @@
+<header class="admin-header">
+  <div class="header-content">
+    <!-- Logo/Brand -->
+    <div class="header-brand">
+      <a routerLink="/admin/dashboard" class="brand-link">
+        <span class="material-icons brand-icon">store</span>
+        <span class="brand-text">Grocery Store</span>
+      </a>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="header-nav">
+      @for (item of menuItems(); track item.route) {
+        <a 
+          [routerLink]="item.route" 
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: item.route === '/admin/dashboard'}"
+          class="nav-link">
+          <span class="material-icons nav-icon">{{ item.icon }}</span>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <!-- User Profile Section -->
+    <div class="header-profile">
+      <div class="profile-container" (click)="toggleProfileMenu()">
+        <div class="profile-avatar">
+          <span class="material-icons">account_circle</span>
+        </div>
+        <div class="profile-info">
+          <span class="profile-name">{{ userName() }}</span>
+          <span class="profile-role">{{ userRole() }}</span>
+        </div>
+        <span class="material-icons dropdown-icon" [class.rotated]="isProfileMenuOpen()">
+          keyboard_arrow_down
+        </span>
+      </div>
+
+      <!-- Profile Dropdown Menu -->
+      @if (isProfileMenuOpen()) {
+        <div class="profile-menu" (click)="$event.stopPropagation()">
+          <div class="profile-menu-header">
+            <div class="profile-menu-avatar">
+              <span class="material-icons">account_circle</span>
+            </div>
+            <div class="profile-menu-info">
+              <div class="profile-menu-name">{{ userName() }}</div>
+              <div class="profile-menu-email">{{ userEmail() }}</div>
+              <div class="profile-menu-role">{{ userRole() }}</div>
+            </div>
+          </div>
+          <div class="profile-menu-divider"></div>
+          <button class="profile-menu-item" (click)="navigateToProfile()">
+            <span class="material-icons">person</span>
+            <span>My Profile</span>
+          </button>
+          <button class="profile-menu-item" (click)="navigateToProfile()">
+            <span class="material-icons">settings</span>
+            <span>Account Settings</span>
+          </button>
+          <div class="profile-menu-divider"></div>
+          <button class="profile-menu-item logout" (click)="logout()">
+            <span class="material-icons">logout</span>
+            <span>Logout</span>
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</header>
+
+<!-- Click outside to close menu -->
+@if (isProfileMenuOpen()) {
+  <div class="menu-overlay" (click)="closeProfileMenu()"></div>
+}
+

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, firstValueFrom } from 'rxjs';
+import { Subject, Subscription, debounceTime, distinctUntilChanged, firstValueFrom, switchMap, catchError, of } from 'rxjs';
 import { PosService } from './pos.service';
 import { VoiceToTextService, VoiceCommand } from '../core/services/voice-to-text.service';
 import { CacheService } from '../core/services/cache.service';
@@ -133,25 +133,32 @@ export class PosComponent implements OnInit, OnDestroy {
   private setupSearch(): void {
     this.subscriptions.add(
       this.searchSubject
-        .pipe(debounceTime(300), distinctUntilChanged())
-        .subscribe((term) => {
-          if (term.trim()) {
-            this.posService.searchProducts(term).subscribe({
-              next: (products) => {
-                // Update filtered products
-                this.products.update(current => {
-                  // Merge search results with current products
-                  return products;
-                });
-              },
-              error: (error) => {
-                console.error('Search failed:', error);
-              },
-            });
-          } else {
-            // Reload all products when search is cleared
-            this.loadProducts();
-          }
+        .pipe(
+          debounceTime(300),
+          distinctUntilChanged(),
+          switchMap((term) => {
+            if (term.trim()) {
+              // Use switchMap to cancel previous requests and prevent race conditions
+              return this.posService.searchProducts(term).pipe(
+                catchError((error) => {
+                  console.error('Search failed:', error);
+                  return of([]); // Return empty array on error
+                })
+              );
+            } else {
+              // Reload all products when search is cleared
+              return this.posService.getProducts().pipe(
+                catchError((error) => {
+                  console.error('Failed to reload products:', error);
+                  return of([]);
+                })
+              );
+            }
+          })
+        )
+        .subscribe((products) => {
+          // Update filtered products (results are already in correct order due to switchMap)
+          this.products.set(products);
         })
     );
   }
@@ -174,14 +181,23 @@ export class PosComponent implements OnInit, OnDestroy {
 
   onAddToCart(event: { product: Product; quantity: number }): void {
     this.cart.update(currentCart => {
-      const existingItem = currentCart.find(
+      const existingItemIndex = currentCart.findIndex(
         (item) => item.product.id === event.product.id
       );
 
-      if (existingItem) {
-        existingItem.quantity += event.quantity;
-        existingItem.subtotal = existingItem.product.price * existingItem.quantity;
-        return [...currentCart];
+      if (existingItemIndex > -1) {
+        // Create a new array with the updated item (immutable update)
+        const existingItem = currentCart[existingItemIndex];
+        const updatedItem = {
+          ...existingItem,
+          quantity: existingItem.quantity + event.quantity,
+          subtotal: existingItem.product.price * (existingItem.quantity + event.quantity),
+        };
+        return [
+          ...currentCart.slice(0, existingItemIndex),
+          updatedItem,
+          ...currentCart.slice(existingItemIndex + 1),
+        ];
       } else {
         return [
           ...currentCart,
@@ -202,10 +218,19 @@ export class PosComponent implements OnInit, OnDestroy {
       this.cart.update(currentCart => {
         const index = currentCart.indexOf(item);
         if (index > -1) {
-          currentCart[index].quantity = quantity;
-          currentCart[index].subtotal = item.product.price * quantity;
+          // Create a new array with the updated item (immutable update)
+          const updatedItem = {
+            ...currentCart[index],
+            quantity: quantity,
+            subtotal: item.product.price * quantity,
+          };
+          return [
+            ...currentCart.slice(0, index),
+            updatedItem,
+            ...currentCart.slice(index + 1),
+          ];
         }
-        return [...currentCart];
+        return currentCart; // No change if item not found
       });
     }
   }

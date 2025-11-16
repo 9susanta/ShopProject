@@ -168,6 +168,30 @@ export class VoiceToTextService {
   getCommandStream(): Observable<VoiceCommand> {
     return this.command$;
   }
+
+  /**
+   * Cleanup and dispose resources
+   * Should be called when service is no longer needed
+   */
+  dispose(): void {
+    // Stop listening if active
+    if (this.isListening) {
+      this.stopListening();
+    }
+
+    // Remove event handlers
+    if (this.recognition) {
+      this.recognition.onresult = null;
+      this.recognition.onerror = null;
+      this.recognition.onend = null;
+    }
+
+    // Complete subject to allow garbage collection
+    this.commandSubject.complete();
+
+    // Clear recognition
+    this.recognition = null;
+  }
 }
 
 

@@ -50,30 +50,59 @@ public class OutboxEventPublisher : BackgroundService
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var eventBus = scope.ServiceProvider.GetRequiredService<IEventBus>();
 
-        var unprocessedEvents = await context.OutboxEvents
-            .Where(e => e.ProcessedAt == null && e.RetryCount < 3)
-            .OrderBy(e => e.CreatedAt)
-            .Take(10)
-            .ToListAsync(cancellationToken);
-
-        foreach (var outboxEvent in unprocessedEvents)
+        // Use database transaction with serializable isolation to prevent concurrent processing
+        // This ensures only one instance can process the same events
+        using var transaction = await context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+        
+        try
         {
-            try
-            {
-                // In a real implementation, we would deserialize and publish to external event bus (RabbitMQ, etc.)
-                _logger.LogInformation("Processing outbox event: {EventType}, {EventId}", outboxEvent.EventType, outboxEvent.Id);
+            // Use SELECT FOR UPDATE (pessimistic locking) to prevent concurrent processing
+            // Note: EF Core doesn't have direct SELECT FOR UPDATE, so we use transaction isolation
+            // In production, consider using raw SQL: SELECT * FROM OutboxEvents WHERE ... FOR UPDATE
+            var unprocessedEvents = await context.OutboxEvents
+                .Where(e => e.ProcessedAt == null && e.RetryCount < 3)
+                .OrderBy(e => e.CreatedAt)
+                .Take(10)
+                .ToListAsync(cancellationToken);
 
-                // For now, we'll just mark as processed
-                // In production, this would publish to RabbitMQ/Kafka/etc.
-                outboxEvent.MarkAsProcessed();
-                await context.SaveChangesAsync(cancellationToken);
-            }
-            catch (Exception ex)
+            foreach (var outboxEvent in unprocessedEvents)
             {
-                _logger.LogError(ex, "Error processing outbox event: {EventId}", outboxEvent.Id);
-                outboxEvent.MarkAsFailed(ex.Message);
-                await context.SaveChangesAsync(cancellationToken);
+                try
+                {
+                    // Re-check within transaction to ensure event is still unprocessed
+                    // (prevents race condition if another instance processed it)
+                    var eventStillUnprocessed = await context.OutboxEvents
+                        .AnyAsync(e => e.Id == outboxEvent.Id && e.ProcessedAt == null, cancellationToken);
+                    
+                    if (!eventStillUnprocessed)
+                    {
+                        _logger.LogWarning("Outbox event {EventId} was already processed by another instance", outboxEvent.Id);
+                        continue;
+                    }
+
+                    // In a real implementation, we would deserialize and publish to external event bus (RabbitMQ, etc.)
+                    _logger.LogInformation("Processing outbox event: {EventType}, {EventId}", outboxEvent.EventType, outboxEvent.Id);
+
+                    // For now, we'll just mark as processed
+                    // In production, this would publish to RabbitMQ/Kafka/etc.
+                    outboxEvent.MarkAsProcessed();
+                    await context.SaveChangesAsync(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing outbox event: {EventId}", outboxEvent.Id);
+                    outboxEvent.MarkAsFailed(ex.Message);
+                    await context.SaveChangesAsync(cancellationToken);
+                }
             }
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            _logger.LogError(ex, "Error in outbox event processing transaction");
+            throw;
         }
     }
 }

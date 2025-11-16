@@ -1,4 +1,5 @@
 export enum UserRole {
+  SuperAdmin = 'SuperAdmin',
   Admin = 'Admin',
   Staff = 'Staff',
   Customer = 'Customer',
@@ -10,6 +11,8 @@ export interface User {
   name: string;
   role: UserRole;
   phone?: string;
+  isActive?: boolean;
+  lastLoginAt?: string;
 }
 
 export interface LoginRequest {

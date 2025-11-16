@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HubConnection, HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr';
 import { Subject, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 
 export interface ImportProgressEvent {
   jobId: string;
@@ -19,6 +20,11 @@ export class SignalRService {
   private hubConnection: HubConnection | null = null;
   private connectionStateSubject = new Subject<HubConnectionState>();
   private importProgressSubject = new Subject<ImportProgressEvent>();
+  private authService = inject(AuthService);
+  
+  // Flags to prevent concurrent start/stop operations
+  private isStarting = false;
+  private isStopping = false;
 
   public connectionState$ = this.connectionStateSubject.asObservable();
   public importProgress$ = this.importProgressSubject.asObservable();
@@ -37,8 +43,18 @@ export class SignalRService {
       return;
     }
 
+    // Get access token for authentication
+    const accessToken = this.authService.getAccessToken();
+    
     this.hubConnection = new HubConnectionBuilder()
-      .withUrl(environment.signalRHub)
+      .withUrl(environment.signalRHub, {
+        accessTokenFactory: () => {
+          // Return the current access token
+          const token = this.authService.getAccessToken();
+          return token || '';
+        },
+        withCredentials: false // We're using token in header, not cookies
+      })
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: (retryContext) => {
           // Exponential backoff: 0s, 2s, 10s, 30s, then 30s intervals
@@ -99,10 +115,17 @@ export class SignalRService {
       return;
     }
 
+    // Prevent concurrent start operations
+    if (this.isStarting) {
+      console.log('SignalR start already in progress');
+      return;
+    }
+
     if (this.hubConnection.state === HubConnectionState.Connected) {
       return;
     }
 
+    this.isStarting = true;
     try {
       await this.hubConnection.start();
       console.log('SignalR connection started');
@@ -111,6 +134,8 @@ export class SignalRService {
       console.error('Error starting SignalR connection:', error);
       this.connectionStateSubject.next(HubConnectionState.Disconnected);
       throw error;
+    } finally {
+      this.isStarting = false;
     }
   }
 
@@ -122,16 +147,33 @@ export class SignalRService {
       return;
     }
 
+    // Prevent concurrent stop operations
+    if (this.isStopping) {
+      console.log('SignalR stop already in progress');
+      return;
+    }
+
     if (this.hubConnection.state === HubConnectionState.Disconnected) {
       return;
     }
 
+    this.isStopping = true;
     try {
+      // Remove event handlers before stopping
+      const handlers = (this.hubConnection as any)._handlers;
+      if (handlers) {
+        this.hubConnection.off('ImportProgressUpdated', handlers.onImportProgress);
+        // Note: onclose, onreconnecting, onreconnected are not removable in SignalR
+        // They will be cleaned up when connection is stopped
+      }
+
       await this.hubConnection.stop();
       console.log('SignalR connection stopped');
       this.connectionStateSubject.next(HubConnectionState.Disconnected);
     } catch (error) {
       console.error('Error stopping SignalR connection:', error);
+    } finally {
+      this.isStopping = false;
     }
   }
 
@@ -157,6 +199,22 @@ export class SignalRService {
    */
   isConnected(): boolean {
     return this.hubConnection?.state === HubConnectionState.Connected;
+  }
+
+  /**
+   * Cleanup and dispose resources
+   * Should be called when application is destroyed
+   */
+  async dispose(): Promise<void> {
+    // Stop connection
+    await this.stop();
+    
+    // Complete subjects to allow garbage collection
+    this.connectionStateSubject.complete();
+    this.importProgressSubject.complete();
+    
+    // Clear hub connection
+    this.hubConnection = null;
   }
 }
 

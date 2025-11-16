@@ -9,7 +9,7 @@
     <p class="mt-4" style="color: var(--gray-600);">Loading dashboard data...</p>
   </div>
 
-  <div *ngIf="!isLoading() && dashboardData()">
+  <div *ngIf="!isLoading() && dashboardData() && dashboardData()?.kpis">
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div class="container-gradient-highlight p-6 rounded-lg">
@@ -17,7 +17,7 @@
           <div>
             <p class="text-sm mb-1" style="color: var(--gray-600);">Today's Sales</p>
             <p class="text-3xl font-bold" style="color: var(--vivid-pink);">
-              ₹{{ dashboardData()!.kpis.todaySales | number: '1.2-2' }}
+              ₹{{ (dashboardData()?.kpis?.todaySales ?? 0) | number: '1.2-2' }}
             </p>
           </div>
           <div class="gradient-badge p-3 rounded-full">
@@ -31,7 +31,7 @@
           <div>
             <p class="text-sm mb-1" style="color: var(--gray-600);">Month Sales</p>
             <p class="text-3xl font-bold" style="color: var(--electric-violet);">
-              ₹{{ dashboardData()!.kpis.monthSales | number: '1.2-2' }}
+              ₹{{ (dashboardData()?.kpis?.monthSales ?? 0) | number: '1.2-2' }}
             </p>
           </div>
           <div class="badge-gradient p-3 rounded-full">
@@ -45,7 +45,7 @@
           <div>
             <p class="text-sm mb-1" style="color: var(--gray-600);">Low Stock Items</p>
             <p class="text-3xl font-bold" style="color: var(--hot-red);">
-              {{ dashboardData()!.kpis.lowStockCount }}
+              {{ dashboardData()?.kpis?.lowStockCount ?? 0 }}
             </p>
           </div>
           <div class="badge-gradient-notification p-3 rounded-full">
@@ -59,7 +59,7 @@
           <div>
             <p class="text-sm mb-1" style="color: var(--gray-600);">Total Products</p>
             <p class="text-3xl font-bold" style="color: var(--gray-900);">
-              {{ dashboardData()!.kpis.totalProducts }}
+              {{ dashboardData()?.kpis?.totalProducts ?? 0 }}
             </p>
           </div>
           <div style="background: linear-gradient(135deg, var(--gray-100), var(--gray-200));" class="p-3 rounded-full">
@@ -83,10 +83,10 @@
             View All
           </button>
         </div>
-        <div *ngIf="dashboardData()!.recentImports.length === 0" class="text-center py-8" style="color: var(--gray-600);">
+        <div *ngIf="!dashboardData()?.recentImports || dashboardData()!.recentImports.length === 0" class="text-center py-8" style="color: var(--gray-600);">
           No recent imports
         </div>
-        <div *ngIf="dashboardData()!.recentImports.length > 0" class="space-y-3">
+        <div *ngIf="dashboardData()?.recentImports && dashboardData()!.recentImports.length > 0" class="space-y-3">
           <div
             *ngFor="let import of dashboardData()!.recentImports"
             class="rounded-lg p-4 cursor-pointer transition-colors"
@@ -119,10 +119,10 @@
       <!-- Low Stock Products -->
       <div class="container-gradient p-6 rounded-lg">
         <h2 class="text-xl font-semibold mb-4" style="color: var(--gray-900);">Low Stock Products</h2>
-        <div *ngIf="dashboardData()!.lowStockProducts.length === 0" class="text-center py-8" style="color: var(--gray-600);">
+        <div *ngIf="!dashboardData()?.lowStockProducts || dashboardData()!.lowStockProducts.length === 0" class="text-center py-8" style="color: var(--gray-600);">
           No low stock items
         </div>
-        <div *ngIf="dashboardData()!.lowStockProducts.length > 0" class="space-y-3">
+        <div *ngIf="dashboardData()?.lowStockProducts && dashboardData()!.lowStockProducts.length > 0" class="space-y-3">
           <div
             *ngFor="let product of dashboardData()!.lowStockProducts"
             class="rounded-lg p-4"

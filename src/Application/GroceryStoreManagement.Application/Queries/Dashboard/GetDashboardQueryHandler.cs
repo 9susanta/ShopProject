@@ -37,19 +37,18 @@ public class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery, Dashb
         var today = DateTime.UtcNow.Date;
         var monthStart = new DateTime(today.Year, today.Month, 1);
 
-        // Get today's sales
-        var allSales = await _saleRepository.GetAllAsync(cancellationToken);
-        var todaySales = allSales
-            .Where(s => s.SaleDate.Date == today && s.Status == SaleStatus.Completed)
-            .ToList();
+        // Get today's sales (use database-level filtering instead of loading all)
+        var todaySales = (await _saleRepository.FindAsync(
+            s => s.SaleDate.Date == today && s.Status == SaleStatus.Completed, 
+            cancellationToken)).ToList();
 
         var todaySalesAmount = todaySales.Sum(s => s.TotalAmount);
         var todaySalesCount = todaySales.Count;
 
-        // Get this month's sales
-        var monthSales = allSales
-            .Where(s => s.SaleDate >= monthStart && s.Status == SaleStatus.Completed)
-            .ToList();
+        // Get this month's sales (use database-level filtering instead of loading all)
+        var monthSales = (await _saleRepository.FindAsync(
+            s => s.SaleDate >= monthStart && s.Status == SaleStatus.Completed, 
+            cancellationToken)).ToList();
 
         var monthSalesAmount = monthSales.Sum(s => s.TotalAmount);
         var monthSalesCount = monthSales.Count;
@@ -68,10 +67,12 @@ public class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery, Dashb
             .Take(10)
             .ToList();
 
+        // Get products by IDs (use database-level filtering with IN clause)
         var productIds = productSales.Select(p => p.ProductId).ToList();
-        var products = (await _productRepository.GetAllAsync(cancellationToken))
-            .Where(p => productIds.Contains(p.Id))
-            .ToDictionary(p => p.Id);
+        var productsList = productIds.Any() 
+            ? (await _productRepository.FindAsync(p => productIds.Contains(p.Id), cancellationToken)).ToList()
+            : new List<Product>();
+        var products = productsList.ToDictionary(p => p.Id);
 
         var fastMovingProducts = productSales.Select(p => new FastMovingProductDto
         {
@@ -83,6 +84,9 @@ public class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery, Dashb
         }).ToList();
 
         // Get low stock count
+        // Note: This requires loading all inventories and products to check IsLowStock method
+        // For better performance, consider creating a database view or stored procedure
+        // For now, we'll use FindAsync to at least filter at database level where possible
         var allInventories = await _inventoryRepository.GetAllAsync(cancellationToken);
         var allProducts = await _productRepository.GetAllAsync(cancellationToken);
         var productDict = allProducts.ToDictionary(p => p.Id);
@@ -92,11 +96,14 @@ public class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery, Dashb
             i.IsLowStock(productDict[i.ProductId].LowStockThreshold));
 
         // Get expiry soon count
+        // Note: IsExpiringSoon is a domain method, so we need to load data
+        // Consider adding a database-level query for better performance
         var expirySoonCount = allInventories.Count(i => i.IsExpiringSoon(7));
 
-        // Get recent imports
-        var allImports = await _importJobRepository.GetAllAsync(cancellationToken);
-        var recentImports = allImports
+        // Get recent imports (use database-level filtering - limit to last 10, then take 5)
+        // Note: Repository doesn't support OrderBy/Take, so we load more than needed
+        // For better performance, consider direct DbContext access or specialized query method
+        var recentImportsList = (await _importJobRepository.GetAllAsync(cancellationToken))
             .OrderByDescending(i => i.CreatedAt)
             .Take(5)
             .Select(i => new ImportJobDto
@@ -114,6 +121,8 @@ public class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery, Dashb
                 CompletedAt = i.CompletedAt
             })
             .ToList();
+
+        var recentImports = recentImportsList;
 
         return new DashboardDto
         {
