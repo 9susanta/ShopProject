@@ -1,0 +1,356 @@
+/* Material Design 3 Gradient Utilities */
+/* All gradients use Material M3 color tokens */
+
+/* Header Gradients */
+.gradient-header {
+  background: linear-gradient(
+    to right,
+    var(--md-sys-color-primary),
+    var(--md-sys-color-secondary)
+  );
+  color: var(--md-sys-color-on-primary);
+}
+
+.gradient-header-subtle {
+  background: linear-gradient(
+    to right,
+    rgba(var(--md-sys-color-primary-rgb, 99, 102, 241), 0.95),
+    rgba(var(--md-sys-color-secondary-rgb, 139, 92, 246), 0.95)
+  );
+  backdrop-filter: blur(10px);
+}
+
+/* Button Gradients */
+.gradient-btn-primary {
+  background: linear-gradient(
+    to right,
+    var(--md-sys-color-primary),
+    var(--md-sys-color-tertiary)
+  );
+  color: var(--md-sys-color-on-primary);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.gradient-btn-primary:hover {
+  background: linear-gradient(
+    to right,
+    var(--md-sys-color-primary-container),
+    var(--md-sys-color-tertiary-container)
+  );
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.gradient-btn-secondary {
+  background: linear-gradient(
+    to right,
+    var(--md-sys-color-secondary),
+    var(--md-sys-color-primary)
+  );
+  color: var(--md-sys-color-on-secondary);
+  border: none;
+}
+
+.gradient-btn-secondary:hover {
+  background: linear-gradient(
+    to right,
+    var(--md-sys-color-secondary-container),
+    var(--md-sys-color-primary-container)
+  );
+}
+
+/* Menu/Navigation Gradients */
+.gradient-menu {
+  background: linear-gradient(
+    to bottom,
+    var(--md-sys-color-surface-container),
+    var(--md-sys-color-primary-container)
+  );
+}
+
+.gradient-menu-item {
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--md-sys-color-primary-container)
+  );
+  transition: all 0.3s ease;
+}
+
+.gradient-menu-item:hover {
+  background: linear-gradient(
+    to right,
+    var(--md-sys-color-primary-container),
+    var(--md-sys-color-secondary-container)
+  );
+}
+
+/* Mobile Drawer Gradient */
+.gradient-drawer {
+  background: linear-gradient(
+    to bottom,
+    var(--md-sys-color-surface-container-low),
+    var(--md-sys-color-surface-container)
+  );
+}
+
+/* Card Gradients */
+.gradient-card {
+  background: linear-gradient(
+    to bottom right,
+    var(--md-sys-color-surface-container-lowest),
+    var(--md-sys-color-surface-container-low)
+  );
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.gradient-card-highlight {
+  background: linear-gradient(
+    to right,
+    var(--md-sys-color-primary),
+    var(--md-sys-color-primary-container)
+  );
+  color: var(--md-sys-color-on-primary);
+}
+
+.gradient-card-kpi {
+  background: linear-gradient(
+    135deg,
+    var(--md-sys-color-primary-container),
+    var(--md-sys-color-surface-container-lowest)
+  );
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* POS Product Tile Gradients */
+.gradient-tile {
+  background: linear-gradient(
+    to bottom,
+    var(--md-sys-color-primary-container),
+    var(--md-sys-color-surface-container-lowest)
+  );
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: all 0.3s ease;
+}
+
+.gradient-tile:hover {
+  background: linear-gradient(
+    to bottom,
+    var(--md-sys-color-secondary-container),
+    var(--md-sys-color-primary-container)
+  );
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Search Bar Gradient */
+.gradient-search-focus {
+  border: 2px solid transparent;
+  background: linear-gradient(
+      var(--md-sys-color-surface),
+      var(--md-sys-color-surface)
+    )
+    padding-box,
+    linear-gradient(
+      to right,
+      var(--md-sys-color-primary),
+      var(--md-sys-color-secondary)
+    ) border-box;
+}
+
+.gradient-search-focus:focus {
+  border-color: var(--md-sys-color-primary);
+}
+
+/* Badge Gradients */
+.gradient-badge {
+  background: linear-gradient(
+    135deg,
+    var(--md-sys-color-tertiary),
+    var(--md-sys-color-primary)
+  );
+  color: var(--md-sys-color-on-primary);
+}
+
+.gradient-badge-notification {
+  background: linear-gradient(
+    135deg,
+    var(--md-sys-color-error),
+    var(--md-sys-color-tertiary)
+  );
+  color: var(--md-sys-color-on-error);
+}
+
+/* Avatar Ring Gradient */
+.gradient-avatar-ring {
+  background: linear-gradient(
+    135deg,
+    var(--md-sys-color-primary),
+    var(--md-sys-color-secondary),
+    var(--md-sys-color-tertiary)
+  );
+  padding: 2px;
+  border-radius: 50%;
+}
+
+/* Import Upload Drop Zone Gradient */
+.gradient-dropzone {
+  background: linear-gradient(
+    135deg,
+    var(--md-sys-color-surface-container),
+    var(--md-sys-color-primary-container)
+  );
+  border: 2px dashed var(--md-sys-color-outline);
+  transition: all 0.3s ease;
+}
+
+.gradient-dropzone:hover,
+.gradient-dropzone.drag-over {
+  background: linear-gradient(
+    135deg,
+    var(--md-sys-color-primary-container),
+    var(--md-sys-color-secondary-container)
+  );
+  border-color: var(--md-sys-color-primary);
+}
+
+/* Checkout Button Gradient */
+.gradient-checkout {
+  background: linear-gradient(
+    to right,
+    var(--md-sys-color-primary),
+    var(--md-sys-color-tertiary),
+    var(--md-sys-color-secondary)
+  );
+  color: var(--md-sys-color-on-primary);
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.gradient-checkout:hover:not(:disabled) {
+  background: linear-gradient(
+    to right,
+    var(--md-sys-color-primary-container),
+    var(--md-sys-color-tertiary-container),
+    var(--md-sys-color-secondary-container)
+  );
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.gradient-checkout:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Login Screen Background Gradient */
+.gradient-login-bg {
+  background: linear-gradient(
+    135deg,
+    var(--md-sys-color-primary),
+    var(--md-sys-color-secondary),
+    var(--md-sys-color-tertiary)
+  );
+  min-height: 100vh;
+}
+
+/* Dashboard Section Gradients */
+.gradient-section {
+  background: linear-gradient(
+    to bottom,
+    var(--md-sys-color-surface-container-low),
+    var(--md-sys-color-surface)
+  );
+}
+
+/* Status Badge Gradients */
+.gradient-status-success {
+  background: linear-gradient(
+    135deg,
+    #4caf50,
+    #81c784
+  );
+  color: white;
+}
+
+.gradient-status-warning {
+  background: linear-gradient(
+    135deg,
+    #ff9800,
+    #ffb74d
+  );
+  color: white;
+}
+
+.gradient-status-error {
+  background: linear-gradient(
+    135deg,
+    var(--md-sys-color-error),
+    #e57373
+  );
+  color: var(--md-sys-color-on-error);
+}
+
+.gradient-status-info {
+  background: linear-gradient(
+    135deg,
+    var(--md-sys-color-primary),
+    var(--md-sys-color-tertiary)
+  );
+  color: var(--md-sys-color-on-primary);
+}
+
+/* Cart Item Gradient */
+.gradient-cart-item {
+  background: linear-gradient(
+    to right,
+    var(--md-sys-color-surface-container-lowest),
+    var(--md-sys-color-surface-container-low)
+  );
+  border-left: 3px solid transparent;
+  border-image: linear-gradient(
+    to bottom,
+    var(--md-sys-color-primary),
+    var(--md-sys-color-secondary)
+  ) 1;
+}
+
+/* Progress Bar Gradient */
+.gradient-progress {
+  background: linear-gradient(
+    to right,
+    var(--md-sys-color-primary),
+    var(--md-sys-color-tertiary),
+    var(--md-sys-color-secondary)
+  );
+}
+
+/* Input Focus Gradient Border */
+.gradient-input-focus {
+  border: 2px solid transparent;
+  background: linear-gradient(
+      var(--md-sys-color-surface),
+      var(--md-sys-color-surface)
+    )
+    padding-box,
+    linear-gradient(
+      to right,
+      var(--md-sys-color-primary),
+      var(--md-sys-color-secondary)
+    ) border-box;
+}
+
+.gradient-input-focus:focus {
+  background: linear-gradient(
+      var(--md-sys-color-surface),
+      var(--md-sys-color-surface)
+    )
+    padding-box,
+    linear-gradient(
+      to right,
+      var(--md-sys-color-secondary),
+      var(--md-sys-color-tertiary)
+    ) border-box;
+}
+

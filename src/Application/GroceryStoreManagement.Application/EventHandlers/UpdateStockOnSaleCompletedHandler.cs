@@ -3,19 +3,20 @@ using GroceryStoreManagement.Application.Interfaces;
 using GroceryStoreManagement.Domain.Entities;
 using GroceryStoreManagement.Domain.Events;
 using Microsoft.Extensions.Logging;
+using InventoryEntity = GroceryStoreManagement.Domain.Entities.Inventory;
 
 namespace GroceryStoreManagement.Application.EventHandlers;
 
 public class UpdateStockOnSaleCompletedHandler : INotificationHandler<SaleCompletedEvent>
 {
-    private readonly IRepository<Inventory> _inventoryRepository;
+    private readonly IRepository<InventoryEntity> _inventoryRepository;
     private readonly IRepository<Product> _productRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMediator _mediator;
     private readonly ILogger<UpdateStockOnSaleCompletedHandler> _logger;
 
     public UpdateStockOnSaleCompletedHandler(
-        IRepository<Inventory> inventoryRepository,
+        IRepository<InventoryEntity> inventoryRepository,
         IRepository<Product> productRepository,
         IUnitOfWork unitOfWork,
         IMediator mediator,

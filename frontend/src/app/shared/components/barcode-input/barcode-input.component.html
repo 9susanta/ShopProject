@@ -1,0 +1,25 @@
+<div class="barcode-input">
+  <div class="flex items-center gap-2">
+    <input
+      #barcodeInput
+      type="text"
+      [value]="barcode()"
+      (input)="barcode.set($any($event.target).value)"
+      (keyup.enter)="onBarcodeEntered()"
+      placeholder="Scan or enter barcode"
+      class="flex-1 input-field"
+      [attr.aria-label]="'Barcode input'"
+      autocomplete="off"
+    />
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="onBarcodeEntered()"
+      [attr.aria-label]="'Submit barcode'"
+    >
+      <span class="material-icons">qr_code_scanner</span>
+    </button>
+  </div>
+</div>
+
+

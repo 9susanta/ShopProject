@@ -5,6 +5,7 @@ using GroceryStoreManagement.Domain.Entities;
 using GroceryStoreManagement.Domain.Events;
 using GroceryStoreManagement.Domain.Enums;
 using Microsoft.Extensions.Logging;
+using InventoryEntity = GroceryStoreManagement.Domain.Entities.Inventory;
 
 namespace GroceryStoreManagement.Application.Commands.Sales;
 
@@ -13,7 +14,7 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
     private readonly IRepository<Sale> _saleRepository;
     private readonly IRepository<Customer> _customerRepository;
     private readonly IRepository<Product> _productRepository;
-    private readonly IRepository<Inventory> _inventoryRepository;
+    private readonly IRepository<InventoryEntity> _inventoryRepository;
     private readonly IRepository<Offer> _offerRepository;
     private readonly IRepository<StoreSettings> _storeSettingsRepository;
     private readonly IMediator _mediator;
@@ -25,7 +26,7 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
         IRepository<Sale> saleRepository,
         IRepository<Customer> customerRepository,
         IRepository<Product> productRepository,
-        IRepository<Inventory> inventoryRepository,
+        IRepository<InventoryEntity> inventoryRepository,
         IRepository<Offer> offerRepository,
         IRepository<StoreSettings> storeSettingsRepository,
         IMediator mediator,

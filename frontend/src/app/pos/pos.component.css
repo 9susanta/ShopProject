@@ -4,9 +4,18 @@
   background: var(--gray-50);
 }
 
-/* Search input styling */
+/* Search and filter container */
+.pos-search-filter-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+}
+
+/* Search input styling - 75% width */
 .pos-search-input {
-  max-width: 500px;
+  flex: 0 0 75%;
+  width: 75%;
   height: 40px;
   padding: 8px 16px;
   border: 1px solid var(--gray-300);
@@ -15,6 +24,7 @@
   color: var(--gray-900);
   font-size: 14px;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .pos-search-input:focus {
@@ -27,110 +37,42 @@
   color: var(--gray-400);
 }
 
-/* Category dropdown styling - Compact size */
-.pos-category-select {
-  width: 200px !important;
-  height: 40px !important;
-  margin: 0 !important;
-  line-height: 1 !important;
+/* Category dropdown styling - Native select for reliability - 25% width */
+.pos-category-select-native {
+  flex: 0 0 25%;
+  width: 25%;
+  height: 40px;
+  padding: 8px 32px 8px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
-.pos-category-select .mat-mdc-form-field-wrapper {
-  padding-bottom: 0 !important;
-  margin-bottom: 0 !important;
-  height: 40px !important;
+.pos-category-select-native:hover {
+  border-color: var(--vivid-pink);
 }
 
-.pos-category-select .mat-mdc-text-field-wrapper {
-  height: 40px !important;
-  padding: 0 !important;
-  margin: 0 !important;
+.pos-category-select-native:focus {
+  outline: none;
+  border: 2px solid var(--vivid-pink);
+  box-shadow: 0 0 0 3px var(--light-pink);
 }
 
-.pos-category-select .mat-mdc-text-field-wrapper .mat-mdc-form-field-flex {
-  align-items: center !important;
-  height: 40px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  min-height: 40px !important;
-  max-height: 40px !important;
-}
-
-.pos-category-select .mat-mdc-form-field-infix {
-  padding: 0 12px !important;
-  min-height: 40px !important;
-  max-height: 40px !important;
-  border-top: none !important;
-  height: 40px !important;
-  display: flex !important;
-  align-items: center !important;
-  box-sizing: border-box !important;
-}
-
-.pos-category-select .mat-mdc-select {
-  font-size: 14px !important;
-  line-height: 1.5 !important;
-  height: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-.pos-category-select .mat-mdc-select-trigger {
-  height: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-.pos-category-select .mat-mdc-select-value {
-  padding: 0 !important;
-  line-height: 1.5 !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-.pos-category-select .mat-mdc-select-value-text {
-  line-height: 1.5 !important;
-}
-
-.pos-category-select .mat-mdc-form-field-subscript-wrapper {
-  display: none !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.pos-category-select .mat-mdc-form-field-hint-wrapper,
-.pos-category-select .mat-mdc-form-field-error-wrapper {
-  display: none !important;
-  height: 0 !important;
-}
-
-/* Override Material's default spacing and outline */
-.pos-category-select .mdc-notched-outline {
-  height: 40px !important;
-  top: 0 !important;
-}
-
-.pos-category-select .mdc-notched-outline__leading,
-.pos-category-select .mdc-notched-outline__notch,
-.pos-category-select .mdc-notched-outline__trailing {
-  height: 40px !important;
-  top: 0 !important;
-}
-
-.pos-category-select .mdc-notched-outline__notch {
-  padding: 0 !important;
-}
-
-/* Label positioning */
-.pos-category-select .mat-mdc-floating-label {
-  top: 20px !important;
-  transform: translateY(-50%) scale(0.75) !important;
-}
-
-.pos-category-select.mat-form-field-should-float .mat-mdc-floating-label {
-  top: 20px !important;
-  transform: translateY(-50%) scale(0.75) !important;
+.pos-category-select-native option {
+  padding: 8px;
+  background: var(--gray-50);
+  color: var(--gray-900);
 }
 
 /* Ensure large touch targets for POS */

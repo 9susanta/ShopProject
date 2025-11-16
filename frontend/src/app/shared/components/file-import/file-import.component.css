@@ -1,0 +1,21 @@
+.file-import {
+  width: 100%;
+}
+
+.preview-container {
+  margin-top: 1rem;
+}
+
+table {
+  font-size: 0.875rem;
+}
+
+table th,
+table td {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+

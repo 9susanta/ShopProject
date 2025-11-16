@@ -4,6 +4,7 @@ using GroceryStoreManagement.Application.Interfaces;
 using GroceryStoreManagement.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using UnitEntity = GroceryStoreManagement.Domain.Entities.Unit;
+using InventoryEntity = GroceryStoreManagement.Domain.Entities.Inventory;
 
 namespace GroceryStoreManagement.Application.Commands.Products;
 
@@ -13,7 +14,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
     private readonly IRepository<Category> _categoryRepository;
     private readonly IRepository<UnitEntity> _unitRepository;
     private readonly IRepository<TaxSlab> _taxSlabRepository;
-    private readonly IRepository<Inventory> _inventoryRepository;
+    private readonly IRepository<InventoryEntity> _inventoryRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cacheService;
     private readonly ILogger<CreateProductCommandHandler> _logger;
@@ -23,7 +24,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         IRepository<Category> categoryRepository,
         IRepository<UnitEntity> unitRepository,
         IRepository<TaxSlab> taxSlabRepository,
-        IRepository<Inventory> inventoryRepository,
+        IRepository<InventoryEntity> inventoryRepository,
         IUnitOfWork unitOfWork,
         ICacheService cacheService,
         ILogger<CreateProductCommandHandler> logger)
@@ -72,7 +73,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         await _productRepository.AddAsync(product, cancellationToken);
 
         // Create initial inventory
-        var inventory = new Inventory(product.Id, 0);
+        var inventory = new InventoryEntity(product.Id, 0);
         await _inventoryRepository.AddAsync(inventory, cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

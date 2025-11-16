@@ -1,0 +1,85 @@
+<div class="category-multiselect" #dropdown>
+  <button
+    type="button"
+    class="category-multiselect-trigger"
+    (click)="toggleDropdown()"
+    [attr.aria-expanded]="isOpen()"
+    [attr.aria-label]="'Category filter'"
+  >
+    <span class="category-multiselect-text">{{ getDisplayText() }}</span>
+    <span class="category-multiselect-arrow" [class.open]="isOpen()">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M6 9L1 4H11L6 9Z" fill="currentColor"/>
+      </svg>
+    </span>
+  </button>
+
+  <div class="category-multiselect-dropdown" *ngIf="isOpen()">
+    <!-- Search Box -->
+    <div class="category-multiselect-search">
+      <input
+        type="text"
+        [value]="searchTerm()"
+        (input)="onSearchChange($any($event.target).value)"
+        placeholder="Search categories..."
+        class="category-multiselect-search-input"
+        (click)="$event.stopPropagation()"
+        [attr.aria-label]="'Search categories'"
+      />
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="category-multiselect-actions">
+      <button
+        type="button"
+        class="category-multiselect-action-btn"
+        (click)="selectAll()"
+        [attr.aria-label]="'Select all filtered categories'"
+      >
+        Select All
+      </button>
+      <button
+        type="button"
+        class="category-multiselect-action-btn"
+        (click)="clearSelection()"
+        [attr.aria-label]="'Clear selection'"
+      >
+        Clear
+      </button>
+    </div>
+
+    <!-- Category List with Checkboxes -->
+    <div class="category-multiselect-list">
+      <div
+        *ngFor="let category of filteredCategories()"
+        class="category-multiselect-item"
+        (click)="toggleCategory(category.id)"
+        [class.selected]="isSelected(category.id)"
+        [attr.aria-label]="'Toggle ' + category.name"
+        role="checkbox"
+        [attr.aria-checked]="isSelected(category.id)"
+      >
+        <div class="category-multiselect-checkbox">
+          <input
+            type="checkbox"
+            [checked]="isSelected(category.id)"
+            (change)="toggleCategory(category.id)"
+            (click)="$event.stopPropagation()"
+            [attr.aria-label]="category.name"
+          />
+          <span class="category-multiselect-checkmark" *ngIf="isSelected(category.id)">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+        <span class="category-multiselect-label">{{ category.name }}</span>
+      </div>
+
+      <div *ngIf="filteredCategories().length === 0" class="category-multiselect-empty">
+        <p>No categories found</p>
+      </div>
+    </div>
+  </div>
+</div>
+

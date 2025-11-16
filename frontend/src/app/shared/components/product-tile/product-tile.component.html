@@ -1,0 +1,56 @@
+<div
+  class="product-tile rounded-lg shadow-md overflow-hidden transition-shadow duration-200"
+  [attr.aria-label]="product().name"
+  tabindex="0"
+  role="button"
+  (keydown.enter)="onAddToCart()"
+  (keydown.space)="onAddToCart()"
+>
+  <div class="relative">
+    <img
+      [src]="imageUrl()"
+      [alt]="product().name"
+      class="w-full h-48 object-cover"
+      loading="lazy"
+    />
+    <div
+      *ngIf="isLowStock()"
+      class="absolute top-2 right-2 text-white text-xs px-2 py-1 rounded badge-gradient-notification"
+    >
+      Low Stock
+    </div>
+  </div>
+  <div class="p-4">
+    <h3 class="text-lg font-semibold mb-1 line-clamp-2" style="color: var(--gray-900);" [title]="product().name">
+      {{ product().name }}
+    </h3>
+    <p *ngIf="product().categoryName" class="text-sm mb-2" style="color: var(--gray-600);">
+      {{ product().categoryName }}
+    </p>
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-2xl font-bold" style="color: var(--vivid-pink);">
+        ₹{{ product().price | number: '1.2-2' }}
+      </span>
+      <span class="text-sm" style="color: var(--gray-600);">Stock: {{ product().stock }}</span>
+    </div>
+    <div *ngIf="showQuantityPicker()" class="mb-3">
+      <grocery-quantity-picker
+        [min]="1"
+        [max]="product().stock"
+        [initialValue]="quantity()"
+        (valueChange)="onQuantityChange($event)"
+      ></grocery-quantity-picker>
+    </div>
+    <button
+      class="w-full btn-gradient-primary py-2 px-4 rounded-lg font-medium"
+      (click)="onAddToCart()"
+      [disabled]="product().stock === 0"
+      [attr.aria-label]="'Add ' + product().name + ' to cart'"
+    >
+      <span *ngIf="product().stock > 0">Add to Cart</span>
+      <span *ngIf="product().stock === 0">Out of Stock</span>
+    </button>
+  </div>
+</div>
+
+

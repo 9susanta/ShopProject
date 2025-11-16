@@ -4,6 +4,7 @@ using GroceryStoreManagement.Application.Interfaces;
 using GroceryStoreManagement.Domain.Entities;
 using GroceryStoreManagement.Domain.Events;
 using Microsoft.Extensions.Logging;
+using InventoryEntity = GroceryStoreManagement.Domain.Entities.Inventory;
 
 namespace GroceryStoreManagement.Application.Commands.Sales;
 
@@ -12,7 +13,7 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, SaleD
     private readonly IRepository<Sale> _saleRepository;
     private readonly IRepository<Customer> _customerRepository;
     private readonly IRepository<Product> _productRepository;
-    private readonly IRepository<Inventory> _inventoryRepository;
+    private readonly IRepository<InventoryEntity> _inventoryRepository;
     private readonly IMediator _mediator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CreateSaleCommandHandler> _logger;
@@ -21,7 +22,7 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, SaleD
         IRepository<Sale> saleRepository,
         IRepository<Customer> customerRepository,
         IRepository<Product> productRepository,
-        IRepository<Inventory> inventoryRepository,
+        IRepository<InventoryEntity> inventoryRepository,
         IMediator mediator,
         IUnitOfWork unitOfWork,
         ILogger<CreateSaleCommandHandler> logger)

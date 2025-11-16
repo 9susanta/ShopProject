@@ -23,24 +23,21 @@
     <main class="flex-1 overflow-y-auto p-6">
       <!-- Search and Filters -->
       <div class="mb-6">
-        <div class="flex gap-4 mb-4 items-center">
+        <div class="pos-search-filter-container">
           <input
             type="text"
             [value]="searchTerm()"
             (input)="onSearchChange($any($event.target).value)"
             placeholder="Search products..."
-            class="pos-search-input flex-1"
+            class="pos-search-input"
             [attr.aria-label]="'Search products'"
           />
-          <mat-form-field appearance="outline" class="pos-category-select" [style.height.px]="40">
-            <mat-label>Category</mat-label>
-            <mat-select [value]="selectedCategoryId()" (selectionChange)="onCategoryChange($event.value)">
-              <mat-option [value]="null">All Categories</mat-option>
-              <mat-option *ngFor="let category of categories()" [value]="category.id">
-                {{ category.name }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <grocery-category-multiselect
+            [categories]="categories()"
+            [selectedCategoryIds]="selectedCategoryIds()"
+            placeholder="All Categories"
+            (selectionChange)="onCategorySelectionChange($event)"
+          ></grocery-category-multiselect>
         </div>
       </div>
 

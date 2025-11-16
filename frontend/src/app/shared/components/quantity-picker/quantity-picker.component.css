@@ -1,0 +1,25 @@
+.quantity-picker {
+  border: 1px solid var(--gray-200);
+}
+
+.quantity-btn {
+  background: linear-gradient(
+    to bottom,
+    var(--gray-100),
+    var(--gray-200)
+  );
+  color: var(--gray-900);
+}
+
+.quantity-btn:hover:not(:disabled) {
+  background: linear-gradient(
+    to bottom,
+    var(--gray-200),
+    var(--light-pink)
+  );
+}
+
+.quantity-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

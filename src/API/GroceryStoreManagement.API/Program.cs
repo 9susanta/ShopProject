@@ -27,6 +27,9 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// Add SignalR
+builder.Services.AddSignalR();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
@@ -57,7 +60,12 @@ app.UseCors("AllowAll");
 // Add exception handling middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+app.UseAuthentication();
 app.UseAuthorization();
+
+// Add SignalR for import progress notifications
+app.MapHub<GroceryStoreManagement.API.Hubs.ImportProgressHub>("/hubs/import-progress");
+
 app.MapControllers();
 
 // Seed database

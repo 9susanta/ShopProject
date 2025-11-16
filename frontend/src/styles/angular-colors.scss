@@ -1,0 +1,82 @@
+/**
+ * Angular.dev Official Color System
+ * Source: https://angular.dev
+ * 
+ * This file contains the official Angular.dev color variables
+ * used throughout the application.
+ */
+
+.docs-light-mode {
+  background-color: #fff;
+  color-scheme: light;
+
+  // Primary Colors
+  --bright-blue: oklch(51.01% .274 263.83);
+  --indigo-blue: oklch(51.64% .229 281.65);
+  --electric-violet: oklch(53.18% .28 296.97);
+  --french-violet: oklch(47.66% .246 305.88);
+  --vivid-pink: oklch(69.02% .277 332.77);
+  --always-pink: oklch(69.02% .277 332.77);
+  --hot-pink: oklch(59.91% .239 8.14);
+  --hot-red: oklch(61.42% .238 15.34);
+  --orange-red: oklch(63.32% .24 31.68);
+  --super-green: oklch(79.12% .257 155.13);
+
+  // Subtle Color Mixes
+  --subtle-purple: color-mix(in srgb, var(--bright-blue) 5%, white 10%);
+  --subtle-blue: color-mix(in srgb, var(--bright-blue) 5%, white 95%);
+  --light-blue: color-mix(in srgb, var(--bright-blue), white 50%);
+  --light-violet: color-mix(in srgb, var(--electric-violet), white 65%);
+  --light-orange: color-mix(in srgb, var(--orange-red), white 50%);
+  --light-pink: color-mix(in srgb, var(--vivid-pink) 10%, white 80%);
+
+  // Symbolic Colors
+  --symbolic-purple: oklch(42.86% .29 266.4);
+  --symbolic-gray: oklch(66.98% 0 0);
+  --symbolic-blue: oklch(42.45% .223 263.38);
+  --symbolic-pink: oklch(63.67% .254 13.47);
+  --symbolic-orange: oklch(64.73% .23769984683784018 33.18328352127882);
+  --symbolic-yellow: oklch(78.09% .163 65.69);
+  --symbolic-green: oklch(67.83% .229 142.73);
+  --symbolic-cyan: oklch(67.05% .1205924489987394 181.34025902203868);
+  --symbolic-magenta: oklch(51.74% .25453048882711515 315.26261625862725);
+  --symbolic-teal: oklch(57.59% .083 230.58);
+  --symbolic-brown: oklch(49.06% .128 46.41);
+  --symbolic-lime: oklch(70.33% .2078857836035299 135.66843631046476);
+
+  // Gray Scale
+  --gray-1000: oklch(16.93% .004 285.95);
+  --gray-900: oklch(19.37% .006 300.98);
+  --gray-800: oklch(25.16% .008 308.11);
+  --gray-700: oklch(36.98% .014 302.71);
+  --gray-600: oklch(44% .019 306.08);
+  --gray-500: oklch(54.84% .023 304.99);
+  --gray-400: oklch(70.9% .015 304.04);
+  --gray-300: oklch(84.01% .009 308.34);
+  --gray-200: oklch(91.75% .004 301.42);
+  --gray-100: oklch(97.12% .002 325.59);
+  --gray-50: oklch(98.81% 0 0);
+
+  // Pre-defined Gradients
+  --red-to-pink-horizontal-gradient: linear-gradient(90deg, var(--hot-pink) 11.42%, var(--hot-red) 34.83%, var(--vivid-pink) 60.69%);
+  --red-to-pink-to-purple-horizontal-gradient: linear-gradient(90deg, var(--orange-red) 0%, var(--vivid-pink) 50%, var(--electric-violet) 100%);
+  --pink-to-purple-horizontal-gradient: linear-gradient(90deg, var(--vivid-pink) 0%, var(--electric-violet) 100%);
+  --purple-to-blue-horizontal-gradient: linear-gradient(90deg, var(--electric-violet) 0%, var(--bright-blue) 100%);
+  --blue-to-teal-vertical-gradient: linear-gradient(0deg, var(--bright-blue) 0%, var(--light-blue) 100%);
+
+  // Primary Accent (Vivid Pink) - Use this as the main accent color
+  --primary-accent: var(--vivid-pink);
+  --primary-accent-hover: var(--hot-pink);
+  --primary-accent-light: var(--light-pink);
+}
+
+// Apply to root element
+:root {
+  @extend .docs-light-mode;
+}
+
+// Ensure body uses light mode
+body {
+  @extend .docs-light-mode;
+}
+

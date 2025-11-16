@@ -1,0 +1,103 @@
+/* Global styles with Angular.dev color system */
+/* Angular.dev colors are imported in theme-gradients.scss */
+@import './styles/angular-colors.scss';
+@import './styles/theme-gradients.scss';
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+  background: var(--gray-50);
+  color: var(--gray-900);
+  min-height: 100vh;
+}
+
+/* Material Design overrides */
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+/* Custom scrollbar with gradient */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--pink-to-purple-horizontal-gradient);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, var(--hot-pink) 0%, var(--vivid-pink) 100%);
+}
+
+/* Focus styles for accessibility using Angular.dev colors */
+*:focus-visible {
+  outline: 2px solid var(--vivid-pink);
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white;
+  }
+}
+
+/* Utility classes for spacing (Tailwind-like but using Angular.dev colors) */
+.btn-primary {
+  @apply px-4 py-2 rounded-lg font-medium cursor-pointer;
+  background: var(--pink-to-purple-horizontal-gradient);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(90deg, var(--hot-pink) 0%, var(--electric-violet) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-secondary {
+  @apply px-4 py-2 rounded-lg font-medium cursor-pointer;
+  background: linear-gradient(90deg, var(--vivid-pink) 0%, var(--bright-blue) 100%);
+  color: white;
+  border: none;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: linear-gradient(90deg, var(--hot-pink) 0%, var(--indigo-blue) 100%);
+}
+
+.card {
+  @apply p-6 rounded-lg shadow-sm;
+  background: linear-gradient(to bottom right, var(--gray-50) 0%, var(--light-pink) 100%);
+  border: 1px solid var(--gray-200);
+}
+
+.input-field {
+  @apply w-full px-4 py-2 rounded-lg border border-solid;
+  border-color: var(--gray-300);
+  background: var(--gray-50);
+  color: var(--gray-900);
+}
+
+.input-field:focus {
+  border: 2px solid var(--vivid-pink);
+  box-shadow: 0 0 0 3px var(--light-pink);
+  outline: none;
+}

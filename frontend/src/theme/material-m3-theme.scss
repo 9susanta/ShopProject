@@ -1,0 +1,77 @@
+// Material Design 3 (Material You) Theme Configuration
+// Using official Material Design 3 color tokens
+
+@use '@angular/material' as mat;
+@include mat.core();
+
+// Material Design 3 Color Palette
+// Light Theme
+$m3-light-primary: mat.m2-define-palette(mat.$m2-indigo-palette, 500);
+$m3-light-secondary: mat.m2-define-palette(mat.$m2-purple-palette, 500);
+$m3-light-tertiary: mat.m2-define-palette(mat.$m2-teal-palette, 500);
+$m3-light-error: mat.m2-define-palette(mat.$m2-red-palette, 500);
+
+// Create Material 3 theme
+$m3-light-theme: mat.m2-define-light-theme((
+  color: (
+    primary: $m3-light-primary,
+    accent: $m3-light-secondary,
+    warn: $m3-light-error,
+  ),
+  typography: mat.m2-define-typography-config(),
+  density: 0,
+));
+
+// Apply theme
+@include mat.all-component-themes($m3-light-theme);
+
+// Material Design 3 Color Tokens (CSS Variables)
+:root {
+  // Primary colors
+  --md-sys-color-primary: #{mat.m2-get-color-from-palette($m3-light-primary, 500)};
+  --md-sys-color-on-primary: #{mat.m2-get-color-from-palette($m3-light-primary, 50)};
+  --md-sys-color-primary-container: #{mat.m2-get-color-from-palette($m3-light-primary, 100)};
+  --md-sys-color-on-primary-container: #{mat.m2-get-color-from-palette($m3-light-primary, 900)};
+
+  // Secondary colors
+  --md-sys-color-secondary: #{mat.m2-get-color-from-palette($m3-light-secondary, 500)};
+  --md-sys-color-on-secondary: #{mat.m2-get-color-from-palette($m3-light-secondary, 50)};
+  --md-sys-color-secondary-container: #{mat.m2-get-color-from-palette($m3-light-secondary, 100)};
+  --md-sys-color-on-secondary-container: #{mat.m2-get-color-from-palette($m3-light-secondary, 900)};
+
+  // Tertiary colors
+  --md-sys-color-tertiary: #{mat.m2-get-color-from-palette($m3-light-tertiary, 500)};
+  --md-sys-color-on-tertiary: #{mat.m2-get-color-from-palette($m3-light-tertiary, 50)};
+  --md-sys-color-tertiary-container: #{mat.m2-get-color-from-palette($m3-light-tertiary, 100)};
+  --md-sys-color-on-tertiary-container: #{mat.m2-get-color-from-palette($m3-light-tertiary, 900)};
+
+  // Surface colors
+  --md-sys-color-surface: #ffffff;
+  --md-sys-color-on-surface: #1c1b1f;
+  --md-sys-color-surface-variant: #e7e0ec;
+  --md-sys-color-on-surface-variant: #49454f;
+  --md-sys-color-surface-container: #f3edf7;
+  --md-sys-color-surface-container-high: #ece6f0;
+  --md-sys-color-surface-container-highest: #e6e0e9;
+  --md-sys-color-surface-container-low: #f7f2fa;
+  --md-sys-color-surface-container-lowest: #ffffff;
+
+  // Error colors
+  --md-sys-color-error: #{mat.m2-get-color-from-palette($m3-light-error, 500)};
+  --md-sys-color-on-error: #{mat.m2-get-color-from-palette($m3-light-error, 50)};
+  --md-sys-color-error-container: #{mat.m2-get-color-from-palette($m3-light-error, 100)};
+  --md-sys-color-on-error-container: #{mat.m2-get-color-from-palette($m3-light-error, 900)};
+
+  // Outline colors
+  --md-sys-color-outline: #79747e;
+  --md-sys-color-outline-variant: #cac4d0;
+
+  // Shadow
+  --md-sys-color-shadow: #000000;
+
+  // Inverse colors
+  --md-sys-color-inverse-surface: #313033;
+  --md-sys-color-inverse-on-surface: #f4eff4;
+  --md-sys-color-inverse-primary: #{mat.m2-get-color-from-palette($m3-light-primary, 200)};
+}
+

@@ -3,19 +3,20 @@ using GroceryStoreManagement.Application.Interfaces;
 using GroceryStoreManagement.Domain.Entities;
 using GroceryStoreManagement.Domain.Events;
 using Microsoft.Extensions.Logging;
+using InventoryEntity = GroceryStoreManagement.Domain.Entities.Inventory;
 
 namespace GroceryStoreManagement.Application.EventHandlers;
 
 public class UpdateStockOnPurchaseReceivedHandler : INotificationHandler<PurchaseReceivedEvent>
 {
-    private readonly IRepository<Inventory> _inventoryRepository;
+    private readonly IRepository<InventoryEntity> _inventoryRepository;
     private readonly IRepository<Product> _productRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMediator _mediator;
     private readonly ILogger<UpdateStockOnPurchaseReceivedHandler> _logger;
 
     public UpdateStockOnPurchaseReceivedHandler(
-        IRepository<Inventory> inventoryRepository,
+        IRepository<InventoryEntity> inventoryRepository,
         IRepository<Product> productRepository,
         IUnitOfWork unitOfWork,
         IMediator mediator,
@@ -40,7 +41,7 @@ public class UpdateStockOnPurchaseReceivedHandler : INotificationHandler<Purchas
             if (inventory == null)
             {
                 _logger.LogWarning("Inventory not found for product: {ProductId}, creating new inventory", item.ProductId);
-                inventory = new Inventory(item.ProductId, 0);
+                inventory = new InventoryEntity(item.ProductId, 0);
                 await _inventoryRepository.AddAsync(inventory, cancellationToken);
             }
 

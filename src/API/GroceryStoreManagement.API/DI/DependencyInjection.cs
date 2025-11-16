@@ -52,11 +52,19 @@ public static class DependencyInjection
         services.AddScoped<IFileStorageService, FileStorageService>();
         services.AddScoped<IVoiceToTextService, VoiceToTextService>();
 
+        // Add Import Services
+        services.AddScoped<IImportService, ImportService>();
+        services.AddScoped<IExcelParserService, ExcelParserService>();
+        services.AddScoped<IJsonParserService, JsonParserService>();
+        services.AddScoped<IErrorReportService, ErrorReportService>();
+        services.AddScoped<IMasterDataCache, MasterDataCacheService>();
+
         // Add Event Bus
         services.AddSingleton<IEventBus, InMemoryEventBus>();
 
         // Add Background Services
         services.AddHostedService<OutboxEventPublisher>();
+        services.AddHostedService<GroceryStoreManagement.Infrastructure.BackgroundServices.ImportBackgroundWorker>();
 
         return services;
     }

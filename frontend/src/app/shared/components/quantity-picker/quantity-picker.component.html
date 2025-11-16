@@ -1,0 +1,32 @@
+<div class="quantity-picker flex items-center rounded-lg overflow-hidden" style="border: 1px solid var(--gray-200);">
+  <button
+    type="button"
+    class="px-3 py-2 transition-colors quantity-btn"
+    (click)="decrement()"
+    [disabled]="value() <= min()"
+    [attr.aria-label]="'Decrease quantity'"
+  >
+    <span class="material-icons text-lg">remove</span>
+  </button>
+  <input
+    type="number"
+    [min]="min()"
+    [max]="max()"
+    [value]="value()"
+    (change)="onInputChange($event)"
+    class="w-16 text-center border-0 focus:outline-none"
+    style="background: var(--gray-50); color: var(--gray-900);"
+    [attr.aria-label]="'Quantity'"
+  />
+  <button
+    type="button"
+    class="px-3 py-2 transition-colors quantity-btn"
+    (click)="increment()"
+    [disabled]="value() >= max()"
+    [attr.aria-label]="'Increase quantity'"
+  >
+    <span class="material-icons text-lg">add</span>
+  </button>
+</div>
+
+

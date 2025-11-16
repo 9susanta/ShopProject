@@ -1,0 +1,264 @@
+/**
+ * Angular.dev Gradient Theme System
+ * Uses Angular.dev official color variables
+ * Primary accent: --vivid-pink
+ * 
+ * Note: Angular.dev colors are defined in angular-colors.scss
+ * and imported in styles.css
+ */
+
+/**
+ * Gradient Utility Classes
+ * All gradients use Angular.dev color variables
+ * Primary accent: var(--vivid-pink)
+ */
+
+// Header Gradient - Uses vivid pink prominently
+.header-gradient {
+  background: var(--red-to-pink-to-purple-horizontal-gradient);
+  color: white;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+// Primary Button Gradient - Vivid pink to purple
+.btn-gradient {
+  background: var(--pink-to-purple-horizontal-gradient);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  
+  &:hover:not(:disabled) {
+    background: linear-gradient(90deg, var(--hot-pink) 0%, var(--electric-violet) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--gray-300);
+  }
+}
+
+// Primary Button - Vivid pink accent
+.btn-gradient-primary {
+  @extend .btn-gradient;
+  background: var(--pink-to-purple-horizontal-gradient);
+  
+  &:hover:not(:disabled) {
+    background: linear-gradient(90deg, var(--hot-pink) 0%, var(--electric-violet) 100%);
+  }
+}
+
+// Secondary Button - Pink to blue
+.btn-gradient-secondary {
+  @extend .btn-gradient;
+  background: linear-gradient(90deg, var(--vivid-pink) 0%, var(--bright-blue) 100%);
+  
+  &:hover:not(:disabled) {
+    background: linear-gradient(90deg, var(--hot-pink) 0%, var(--indigo-blue) 100%);
+  }
+}
+
+// Tile Gradient (for POS product tiles) - Subtle pink
+.tile-gradient {
+  background: linear-gradient(135deg, var(--light-pink) 0%, var(--gray-50) 100%);
+  border: 1px solid var(--gray-200);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, var(--vivid-pink) 0%, var(--light-pink) 100%);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    border-color: var(--vivid-pink);
+  }
+}
+
+// Container Gradient (for cards, dashboard, import UI)
+.container-gradient {
+  background: linear-gradient(to bottom right, var(--gray-50) 0%, var(--light-pink) 100%);
+  border: 1px solid var(--gray-200);
+  color: var(--gray-900);
+}
+
+// Container Gradient with Highlight (for KPI cards) - Pink accent
+.container-gradient-highlight {
+  background: linear-gradient(135deg, var(--light-pink) 0%, var(--vivid-pink) 50%, var(--light-violet) 100%);
+  border: 1px solid var(--vivid-pink);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  color: white;
+}
+
+// Navbar Gradient
+.navbar-gradient {
+  background: linear-gradient(to bottom, var(--gray-50) 0%, var(--light-pink) 100%);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+// Sidebar Gradient
+.sidebar-gradient {
+  background: linear-gradient(to bottom, var(--gray-50) 0%, var(--light-pink) 100%);
+  border-left: 1px solid var(--gray-200);
+}
+
+// Menu Gradient
+.menu-gradient {
+  background: linear-gradient(to bottom, var(--light-pink) 0%, var(--gray-50) 100%);
+}
+
+// Menu Item Gradient - Pink accent on hover
+.menu-item-gradient {
+  background: transparent;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(to right, var(--light-pink) 0%, var(--vivid-pink) 100%);
+    color: white;
+  }
+
+  &.active {
+    background: linear-gradient(to right, var(--vivid-pink) 0%, var(--hot-pink) 100%);
+    color: white;
+  }
+}
+
+// Mobile Drawer Gradient
+.drawer-gradient {
+  background: linear-gradient(to bottom, var(--gray-50) 0%, var(--light-pink) 100%);
+  border-right: 1px solid var(--gray-200);
+}
+
+// Badge Gradients - Pink accent
+.badge-gradient {
+  background: var(--pink-to-purple-horizontal-gradient);
+  color: white;
+  font-weight: 500;
+}
+
+.badge-gradient-notification {
+  background: linear-gradient(135deg, var(--hot-red) 0%, var(--vivid-pink) 100%);
+  color: white;
+}
+
+// Status Gradients
+.status-gradient-success {
+  background: linear-gradient(135deg, var(--super-green) 0%, var(--symbolic-green) 100%);
+  color: white;
+}
+
+.status-gradient-warning {
+  background: linear-gradient(135deg, var(--orange-red) 0%, var(--symbolic-orange) 100%);
+  color: white;
+}
+
+.status-gradient-error {
+  background: linear-gradient(135deg, var(--hot-red) 0%, var(--vivid-pink) 100%);
+  color: white;
+}
+
+.status-gradient-info {
+  background: var(--pink-to-purple-horizontal-gradient);
+  color: white;
+}
+
+// Input Focus Gradient - Pink accent
+.input-gradient-focus {
+  border: 2px solid transparent;
+  background: linear-gradient(var(--gray-50), var(--gray-50)) padding-box,
+    linear-gradient(90deg, var(--vivid-pink) 0%, var(--electric-violet) 100%) border-box;
+
+  &:focus {
+    background: linear-gradient(var(--gray-50), var(--gray-50)) padding-box,
+      linear-gradient(90deg, var(--hot-pink) 0%, var(--vivid-pink) 100%) border-box;
+    outline: none;
+  }
+}
+
+// Progress Bar Gradient - Pink to purple
+.progress-gradient {
+  .mat-mdc-progress-bar-fill::after {
+    background: var(--pink-to-purple-horizontal-gradient);
+  }
+}
+
+// Cart Item Gradient
+.cart-item-gradient {
+  background: linear-gradient(to right, var(--gray-50) 0%, var(--light-pink) 100%);
+  border-left: 3px solid var(--vivid-pink);
+}
+
+// Dropzone Gradient - Pink accent
+.dropzone-gradient {
+  background: linear-gradient(135deg, var(--light-pink) 0%, var(--gray-50) 100%);
+  border: 2px dashed var(--gray-300);
+  transition: all 0.3s ease;
+
+  &:hover,
+  &.drag-over {
+    background: linear-gradient(135deg, var(--vivid-pink) 0%, var(--light-pink) 100%);
+    border-color: var(--vivid-pink);
+  }
+}
+
+// Checkout Button Gradient - Prominent pink
+.checkout-gradient {
+  background: var(--red-to-pink-to-purple-horizontal-gradient);
+  color: white;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(90deg, var(--hot-pink) 0%, var(--vivid-pink) 50%, var(--electric-violet) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--gray-300);
+  }
+}
+
+// Login Screen Background Gradient
+.login-bg-gradient {
+  background: var(--red-to-pink-to-purple-horizontal-gradient);
+  min-height: 100vh;
+  color: white;
+}
+
+// Table Header Gradient
+.table-header-gradient {
+  background: linear-gradient(to right, var(--gray-100) 0%, var(--light-pink) 100%);
+  color: var(--gray-900);
+}
+
+// Avatar Ring Gradient - Pink accent
+.avatar-ring-gradient {
+  background: var(--pink-to-purple-horizontal-gradient);
+  padding: 2px;
+  border-radius: 50%;
+}
+
+// Dashboard KPI Card - Pink accent
+.kpi-card-gradient {
+  background: linear-gradient(135deg, var(--light-pink) 0%, var(--vivid-pink) 50%, var(--light-violet) 100%);
+  border: 1px solid var(--vivid-pink);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  color: white;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Search Bar Focus - Pink accent
+.search-focus-gradient {
+  &:focus {
+    border: 2px solid var(--vivid-pink);
+    box-shadow: 0 0 0 3px var(--light-pink);
+  }
+}

@@ -1,0 +1,8 @@
+.import-upload-container {
+  min-height: 100vh;
+  background: var(--gray-50);
+}
+
+mat-form-field {
+  width: 100%;
+}

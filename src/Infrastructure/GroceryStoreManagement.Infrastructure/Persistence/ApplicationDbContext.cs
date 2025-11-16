@@ -27,6 +27,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<LoyaltyTransaction> LoyaltyTransactions { get; set; } = null!;
     public DbSet<PayLaterLedger> PayLaterLedgers { get; set; } = null!;
     public DbSet<StoreSettings> StoreSettings { get; set; } = null!;
+    public DbSet<ImportJob> ImportJobs { get; set; } = null!;
+    public DbSet<ImportError> ImportErrors { get; set; } = null!;
+    public DbSet<InventoryAdjustment> InventoryAdjustments { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

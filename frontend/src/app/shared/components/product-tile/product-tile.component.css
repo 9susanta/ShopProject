@@ -1,0 +1,38 @@
+.product-tile {
+  cursor: pointer;
+  background: linear-gradient(
+    to bottom,
+    var(--light-pink),
+    white
+  );
+  border: 1px solid var(--gray-200);
+  transition: all 0.3s ease;
+}
+
+.product-tile:hover {
+  background: linear-gradient(
+    to bottom,
+    var(--vivid-pink) 0%,
+    var(--light-pink) 100%
+  );
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  border-color: var(--vivid-pink);
+}
+
+.product-tile:focus {
+  outline: 2px solid var(--vivid-pink);
+  outline-offset: 2px;
+}
+
+.product-tile:focus-visible {
+  outline: 2px solid var(--vivid-pink);
+  outline-offset: 2px;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

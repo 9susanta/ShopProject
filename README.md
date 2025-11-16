@@ -247,6 +247,208 @@ JWT configuration is in `appsettings.json` (ready for implementation):
 }
 ```
 
+## Admin Bulk Import Module
+
+### Overview
+
+The Admin Bulk Import module allows administrators to bulk import products from Excel (.xlsx) or JSON files. The system processes imports asynchronously in the background, validates each row, and creates or updates products based on configuration.
+
+### Features
+
+- **File Upload**: Support for Excel (.xlsx) and JSON file formats
+- **Field Mapping**: Configurable field mapping via JSON
+- **Background Processing**: Jobs are processed asynchronously in batches of 200 rows
+- **Validation**: Each row is validated using FluentValidation rules
+- **Error Reporting**: Failed rows are captured in a CSV error report
+- **Idempotent Updates**: Products can be matched and updated by Barcode or SKU
+- **Progress Tracking**: Real-time progress via SignalR (optional) or polling endpoints
+
+### Import Options
+
+- `createMissingCategories`: Automatically create categories if they don't exist
+- `updateExistingBy`: Match existing products by "Barcode", "SKU", or "None"
+- `generateBarcodeIfMissing`: Auto-generate barcodes for products without one
+
+### API Endpoints
+
+#### Upload Import File
+```http
+POST /api/admin/imports/upload
+Content-Type: multipart/form-data
+
+Form Data:
+- file: (Excel or JSON file)
+- createMissingCategories: true/false
+- updateExistingBy: "None" | "Barcode" | "SKU"
+- generateBarcodeIfMissing: true/false
+- mappingJson: (optional JSON mapping configuration)
+```
+
+#### Preview Import File
+```http
+POST /api/admin/imports/preview
+Content-Type: multipart/form-data
+
+Query Parameters:
+- maxRows: 10 (default)
+
+Form Data:
+- file: (Excel or JSON file)
+```
+
+#### Get Import Job Status
+```http
+GET /api/admin/imports/{importJobId}
+```
+
+### Import File Format
+
+#### Excel Format
+The first row should contain headers. Supported columns:
+- `Name` (required)
+- `SKU` or `Barcode` (at least one required)
+- `MRP` or `Price` (required, > 0)
+- `SalePrice` (optional, defaults to MRP)
+- `Category` (required)
+- `Unit` (optional, defaults to "Piece")
+- `GST` or `GSTRate` (optional, must be 0, 5, 12, or 18)
+- `Quantity` (optional, >= 0)
+- `Description` (optional)
+
+#### JSON Format
+Array of objects with the same field names as Excel columns.
+
+### Validation Rules
+
+- Name is required
+- Barcode or SKU is required
+- Price must be greater than 0
+- GST must be 0, 5, 12, or 18
+- Quantity must be >= 0
+
+### Background Worker
+
+The `ImportBackgroundWorker` runs as a hosted service and:
+- Polls for pending import jobs every 10 seconds
+- Processes rows in batches of 200
+- Updates job progress after each batch
+- Generates error reports for failed rows
+- Publishes `ProductImportedEvent` for each successful product
+
+### Running the Background Worker
+
+The background worker is automatically started when the API starts. No additional configuration is needed.
+
+### Accessing Import Progress
+
+#### Via SignalR (Real-time)
+Connect to the SignalR hub:
+```javascript
+const connection = new signalR.HubConnectionBuilder()
+    .withUrl("/hubs/import-progress")
+    .build();
+
+await connection.start();
+await connection.invoke("JoinJobGroup", importJobId);
+
+connection.on("ProgressUpdate", (progress) => {
+    console.log(`Processed: ${progress.processedRows}/${progress.totalRows}`);
+});
+```
+
+#### Via Polling
+Poll the import job status endpoint:
+```http
+GET /api/admin/imports/{importJobId}
+```
+
+## Admin Dashboard
+
+### Overview
+
+The Admin Dashboard provides KPIs and analytics for store management.
+
+### API Endpoints
+
+#### Get Dashboard KPIs
+```http
+GET /api/admin/dashboard
+Authorization: Bearer {token}
+```
+
+**Response:**
+```json
+{
+  "todaySales": 15000.50,
+  "totalSalesThisMonth": 250000.00,
+  "totalSalesCountToday": 45,
+  "totalSalesCountThisMonth": 1200,
+  "fastMovingProducts": [
+    {
+      "productId": "...",
+      "productName": "Product Name",
+      "sku": "SKU001",
+      "quantitySold": 500,
+      "revenue": 45000.00
+    }
+  ],
+  "lowStockCount": 12,
+  "expirySoonCount": 5,
+  "recentImports": [...]
+}
+```
+
+## Inventory Enhancements
+
+### Manual Inventory Adjustments
+
+Admins can manually adjust inventory with audit trails.
+
+#### Adjust Inventory
+```http
+POST /api/admin/inventory/adjust
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "productId": "...",
+  "quantityChange": 10,  // Positive for increase, negative for decrease
+  "adjustmentType": "Manual",  // Manual, Damage, Return, Expiry
+  "reason": "Stock correction",
+  "referenceNumber": "REF001",
+  "adjustedBy": "admin@example.com"
+}
+```
+
+#### Get Low Stock Products
+```http
+GET /api/admin/inventory/low-stock?threshold=10
+Authorization: Bearer {token}
+```
+
+#### Get Expiry Soon Products
+```http
+GET /api/admin/inventory/expiry-soon?daysThreshold=7
+Authorization: Bearer {token}
+```
+
+### Domain Events
+
+Inventory adjustments trigger domain events:
+- `StockIncreasedEvent` - When stock is increased
+- `StockDecreasedEvent` - When stock is decreased
+- `LowStockEvent` - When stock falls below threshold
+
+## Master Data Cache
+
+The system includes a `IMasterDataCache` service that caches frequently accessed master data:
+- Categories
+- Suppliers
+- Units
+- Tax Slabs
+
+Cache expiration: 30 minutes (configurable)
+
 ## Future Enhancements
 
 - Replace in-memory event bus with RabbitMQ/Kafka

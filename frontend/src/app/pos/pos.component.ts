@@ -12,6 +12,7 @@ import { Product, Category, CartItem, SaleRequest } from '../core/models/product
 import { ProductTileComponent } from '../shared/components/product-tile/product-tile.component';
 import { BarcodeInputComponent } from '../shared/components/barcode-input/barcode-input.component';
 import { QuantityPickerComponent } from '../shared/components/quantity-picker/quantity-picker.component';
+import { CategoryMultiselectComponent } from '../shared/components/category-multiselect/category-multiselect.component';
 
 @Component({
   selector: 'grocery-pos',
@@ -19,12 +20,10 @@ import { QuantityPickerComponent } from '../shared/components/quantity-picker/qu
   imports: [
     CommonModule, 
     FormsModule, 
-    MatFormFieldModule,
-    MatSelectModule,
-    MatOptionModule,
     ProductTileComponent, 
     BarcodeInputComponent,
-    QuantityPickerComponent
+    QuantityPickerComponent,
+    CategoryMultiselectComponent
   ],
   templateUrl: './pos.component.html',
   styleUrls: ['./pos.component.css'],
@@ -38,7 +37,7 @@ export class PosComponent implements OnInit, OnDestroy {
   // Signal-based state management
   products = signal<Product[]>([]);
   categories = signal<Category[]>([]);
-  selectedCategoryId = signal<string | null>(null);
+  selectedCategoryIds = signal<string[]>([]);
   searchTerm = signal<string>('');
   cart = signal<CartItem[]>([]);
   customerPhone = signal<string>('');
@@ -53,13 +52,15 @@ export class PosComponent implements OnInit, OnDestroy {
   // Computed signals for derived state
   filteredProducts = computed(() => {
     let filtered = [...this.products()];
-    const categoryId = this.selectedCategoryId();
+    const selectedCategoryIds = this.selectedCategoryIds();
     const term = this.searchTerm().toLowerCase().trim();
 
-    if (categoryId) {
-      filtered = filtered.filter((p) => p.categoryId === categoryId);
+    // Filter by selected categories (multi-select)
+    if (selectedCategoryIds.length > 0) {
+      filtered = filtered.filter((p) => p.categoryId && selectedCategoryIds.includes(p.categoryId));
     }
 
+    // Filter by search term
     if (term) {
       filtered = filtered.filter(
         (p) =>
@@ -167,8 +168,8 @@ export class PosComponent implements OnInit, OnDestroy {
     this.searchTerm.set(term);
   }
 
-  onCategoryChange(categoryId: string | null): void {
-    this.selectedCategoryId.set(categoryId);
+  onCategorySelectionChange(categoryIds: string[]): void {
+    this.selectedCategoryIds.set(categoryIds);
   }
 
   onAddToCart(event: { product: Product; quantity: number }): void {

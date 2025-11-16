@@ -1,0 +1,28 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close"
+  },
+  "pos": {
+    "title": "Point of Sale",
+    "search": "Search products...",
+    "cart": "Cart",
+    "checkout": "Checkout",
+    "total": "Total",
+    "emptyCart": "Cart is empty"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "dashboard": "Dashboard",
+    "imports": "Imports",
+    "products": "Products"
+  }
+}
+
+
