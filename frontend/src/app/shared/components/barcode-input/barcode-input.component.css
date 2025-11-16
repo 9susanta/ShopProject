@@ -2,4 +2,27 @@
   width: 100%;
 }
 
+.barcode-input button {
+  background: var(--vivid-pink);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+  padding: 10px 14px;
+  min-width: 48px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.barcode-input button:hover:not(:disabled) {
+  background: var(--hot-pink);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.barcode-input button:focus {
+  outline: 2px solid var(--vivid-pink);
+  outline-offset: 2px;
+}
 

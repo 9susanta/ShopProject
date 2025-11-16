@@ -85,3 +85,33 @@ grocery-product-tile:focus {
   outline: 2px solid var(--vivid-pink);
   outline-offset: 4px;
 }
+
+/* Mic/Voice button styling - Vivid Pink */
+header button.btn-gradient-secondary {
+  background: var(--vivid-pink) !important;
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+  padding: 8px 14px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+header button.btn-gradient-secondary:hover:not(:disabled) {
+  background: var(--hot-pink) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+header button.btn-gradient-secondary:focus {
+  outline: 2px solid var(--vivid-pink);
+  outline-offset: 2px;
+}
+
+header button.badge-gradient-notification {
+  background: var(--hot-pink) !important;
+}

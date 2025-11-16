@@ -4,24 +4,54 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900;
+    background: var(--gray-50);
+    color: var(--gray-900);
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none;
+    background: var(--pink-to-purple-horizontal-gradient);
+    color: white;
+    border: none;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(90deg, var(--hot-pink) 0%, var(--electric-violet) 100%);
+  }
+
+  .btn-primary:focus {
+    box-shadow: 0 0 0 3px var(--light-pink);
   }
 
   .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2;
+    @apply font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none;
+    background: linear-gradient(90deg, var(--vivid-pink) 0%, var(--bright-blue) 100%);
+    color: white;
+    border: none;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: linear-gradient(90deg, var(--hot-pink) 0%, var(--indigo-blue) 100%);
+  }
+
+  .btn-secondary:focus {
+    box-shadow: 0 0 0 3px var(--light-pink);
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply rounded-lg shadow-md p-6;
+    background: white;
   }
 
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors;
+    @apply w-full px-4 py-2 rounded-lg outline-none transition-colors;
+    border: 1px solid var(--gray-300);
+  }
+
+  .input-field:focus {
+    border: 2px solid var(--vivid-pink);
+    box-shadow: 0 0 0 3px var(--light-pink);
   }
 }
