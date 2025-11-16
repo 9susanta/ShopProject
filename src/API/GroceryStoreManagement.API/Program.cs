@@ -48,14 +48,21 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+// Enable Swagger in all environments for easier testing
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Grocery Store Management API v1");
+    c.RoutePrefix = "swagger"; // Set Swagger UI at the app's root
+});
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+
+// Security & Audit Middleware (order matters - audit first to capture all requests)
+app.UseMiddleware<AuditMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseMiddleware<RateLimitMiddleware>();
 
 // Add exception handling middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();

@@ -3,6 +3,10 @@ import { AuthGuard, AdminGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'login',
+    loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent),
+  },
+  {
     path: 'pos',
     loadComponent: () => import('./pos/pos.component').then(m => m.PosComponent),
   },

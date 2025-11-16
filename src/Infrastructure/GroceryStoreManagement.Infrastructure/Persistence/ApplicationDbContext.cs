@@ -30,6 +30,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<ImportJob> ImportJobs { get; set; } = null!;
     public DbSet<ImportError> ImportErrors { get; set; } = null!;
     public DbSet<InventoryAdjustment> InventoryAdjustments { get; set; } = null!;
+    public DbSet<User> Users { get; set; } = null!;
+    public DbSet<Entities.AuditEntry> AuditEntries { get; set; } = null!;
+    public DbSet<Entities.RefreshToken> RefreshTokens { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

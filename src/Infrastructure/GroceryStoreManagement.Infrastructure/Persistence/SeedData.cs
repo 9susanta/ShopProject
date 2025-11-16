@@ -1,12 +1,56 @@
+using GroceryStoreManagement.Application.Interfaces;
 using GroceryStoreManagement.Domain.Entities;
 using GroceryStoreManagement.Domain.Enums;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GroceryStoreManagement.Infrastructure.Persistence;
 
 public static class SeedData
 {
-    public static async Task SeedAsync(ApplicationDbContext context)
+    public static async Task SeedAsync(ApplicationDbContext context, IServiceProvider? serviceProvider = null)
     {
+        // Seed Users first (if not already seeded)
+        if (!context.Users.Any() && serviceProvider != null)
+        {
+            var passwordHasher = serviceProvider.GetRequiredService<IPasswordHasher>();
+            
+            // Create SuperAdmin user
+            var superAdminResult = passwordHasher.HashPassword("SuperAdmin@123"); // Default password
+            var superAdmin = new User(
+                "superadmin@grocerystore.com",
+                "Super Admin",
+                superAdminResult.Hash,
+                UserRole.SuperAdmin,
+                "+911234567890"
+            );
+            superAdmin.SetPasswordMetadata(superAdminResult.Algorithm, superAdminResult.Salt, superAdminResult.Iterations);
+
+            // Create Admin user
+            var adminResult = passwordHasher.HashPassword("Admin@123"); // Default password
+            var admin = new User(
+                "admin@grocerystore.com",
+                "Admin User",
+                adminResult.Hash,
+                UserRole.Admin,
+                "+911234567891"
+            );
+            admin.SetPasswordMetadata(adminResult.Algorithm, adminResult.Salt, adminResult.Iterations);
+
+            // Create Staff user
+            var staffResult = passwordHasher.HashPassword("Staff@123"); // Default password
+            var staff = new User(
+                "staff@grocerystore.com",
+                "Staff User",
+                staffResult.Hash,
+                UserRole.Staff,
+                "+911234567892"
+            );
+            staff.SetPasswordMetadata(staffResult.Algorithm, staffResult.Salt, staffResult.Iterations);
+
+            await context.Users.AddRangeAsync(superAdmin, admin, staff);
+            await context.SaveChangesAsync();
+        }
+
         if (context.Categories.Any())
             return; // Database already seeded
 
