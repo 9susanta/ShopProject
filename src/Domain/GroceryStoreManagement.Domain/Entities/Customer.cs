@@ -9,6 +9,8 @@ public class Customer : BaseEntity
     public string Phone { get; private set; } = string.Empty; // Unique identifier
     public string? Email { get; private set; }
     public string? Address { get; private set; }
+    public string? City { get; private set; }
+    public string? Pincode { get; private set; }
     public int LoyaltyPoints { get; private set; } = 0;
     public decimal PayLaterBalance { get; private set; } = 0;
     public decimal PayLaterLimit { get; private set; } = 2000; // Default ₹2000
@@ -23,7 +25,7 @@ public class Customer : BaseEntity
 
     private Customer() { } // EF Core
 
-    public Customer(string name, string phone, string? email = null, string? address = null)
+    public Customer(string name, string phone, string? email = null, string? address = null, string? city = null, string? pincode = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Customer name cannot be null or empty", nameof(name));
@@ -31,13 +33,20 @@ public class Customer : BaseEntity
         if (string.IsNullOrWhiteSpace(phone))
             throw new ArgumentException("Phone number is required", nameof(phone));
 
+        // Basic validation for Indian phone numbers (10 digits)
+        var cleanedPhone = phone.Replace(" ", "").Replace("-", "").Replace("+", "");
+        if (cleanedPhone.Length != 10 || !cleanedPhone.All(char.IsDigit))
+            throw new ArgumentException("Phone number must be 10 digits", nameof(phone));
+
         Name = name;
-        Phone = phone;
+        Phone = cleanedPhone;
         Email = email;
         Address = address;
+        City = city;
+        Pincode = pincode;
     }
 
-    public void Update(string name, string? email = null, string? address = null)
+    public void Update(string name, string? email = null, string? address = null, string? city = null, string? pincode = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Customer name cannot be null or empty", nameof(name));
@@ -45,6 +54,8 @@ public class Customer : BaseEntity
         Name = name;
         Email = email;
         Address = address;
+        City = city;
+        Pincode = pincode;
         UpdatedAt = DateTime.UtcNow;
     }
 

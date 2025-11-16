@@ -11,7 +11,7 @@ public class CreateProductCommand : IRequest<ProductDto>
     public decimal SalePrice { get; set; }
     public Guid CategoryId { get; set; }
     public Guid UnitId { get; set; }
-    public Guid TaxSlabId { get; set; }
+    public Guid? TaxSlabId { get; set; } // Optional - will be auto-filled from Category if not provided
     public string? Description { get; set; }
     public string? Barcode { get; set; }
     public string? ImageUrl { get; set; }

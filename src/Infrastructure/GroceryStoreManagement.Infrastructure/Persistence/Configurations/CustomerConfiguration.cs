@@ -26,6 +26,12 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(c => c.Address)
             .HasMaxLength(500);
 
+        builder.Property(c => c.City)
+            .HasMaxLength(100);
+
+        builder.Property(c => c.Pincode)
+            .HasMaxLength(10);
+
         builder.Property(c => c.LoyaltyPoints)
             .IsRequired();
 

@@ -48,7 +48,11 @@ public class GetCustomerByPhoneQueryHandler : IRequestHandler<GetCustomerByPhone
             Email = customer.Email,
             Phone = customer.Phone,
             Address = customer.Address,
-            IsActive = customer.IsActive
+            City = customer.City,
+            Pincode = customer.Pincode,
+            IsActive = customer.IsActive,
+            CreatedAt = customer.CreatedAt,
+            UpdatedAt = customer.UpdatedAt
         };
 
         // Cache for 15 minutes

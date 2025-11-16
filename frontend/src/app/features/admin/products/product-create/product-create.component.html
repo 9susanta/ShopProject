@@ -1,0 +1,306 @@
+<div class="admin-page-container">
+  <div class="admin-page-header">
+    <h1>Create New Product</h1>
+  </div>
+
+  <div class="admin-page-content">
+    @if (isLoading()) {
+      <div class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading master data...</p>
+      </div>
+    } @else {
+      <form
+        [formGroup]="productForm"
+        (ngSubmit)="onSubmit()"
+        class="product-form"
+        novalidate>
+        
+        <!-- Duplicate Product Warning -->
+        @if (duplicateProductWarning()) {
+          <div class="alert alert-warning" role="alert">
+            <div class="alert-content">
+              <mat-icon>warning</mat-icon>
+              <div class="alert-text">
+                <strong>Product with this barcode already exists:</strong>
+                <span>{{ duplicateProductWarning()!.name }}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              mat-button
+              color="primary"
+              (click)="onPrefillFromDuplicate()"
+              aria-label="Prefill form from existing product">
+              Prefill
+            </button>
+          </div>
+        }
+
+        <div class="form-grid">
+          <!-- Product Name -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Product Name</mat-label>
+            <input
+              matInput
+              formControlName="name"
+              placeholder="Enter product name"
+              aria-label="Product name"
+              aria-required="true"
+              autocomplete="off" />
+            <mat-icon matPrefix>inventory_2</mat-icon>
+            @if (productForm.get('name')?.hasError('required') && productForm.get('name')?.touched) {
+              <mat-error>{{ getErrorMessage('name') }}</mat-error>
+            }
+            @if (productForm.get('name')?.hasError('minlength') && productForm.get('name')?.touched) {
+              <mat-error>{{ getErrorMessage('name') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- SKU -->
+          <mat-form-field appearance="outline">
+            <mat-label>SKU</mat-label>
+            <input
+              matInput
+              formControlName="sku"
+              placeholder="Enter SKU (optional)"
+              aria-label="SKU" />
+            <mat-icon matPrefix>tag</mat-icon>
+          </mat-form-field>
+
+          <!-- Barcode -->
+          <mat-form-field appearance="outline">
+            <mat-label>Barcode</mat-label>
+            <input
+              #barcodeInput
+              matInput
+              formControlName="barcode"
+              placeholder="Scan or enter barcode"
+              aria-label="Barcode"
+              (input)="onBarcodeInput($event)"
+              (blur)="onBarcodeBlur()" />
+            <mat-icon matPrefix>qr_code_scanner</mat-icon>
+          </mat-form-field>
+
+          <!-- Category with New Category Button -->
+          <div class="category-field-group">
+            <mat-form-field appearance="outline" class="category-select">
+              <mat-label>Category</mat-label>
+              <mat-select
+                formControlName="categoryId"
+                aria-label="Category"
+                aria-required="true">
+                @for (category of categories(); track category.id) {
+                  <mat-option [value]="category.id">
+                    <span class="category-option">
+                      <span>{{ category.name }}</span>
+                      @if (category.taxSlab) {
+                        <span class="tax-chip">{{ category.taxSlab.rate }}%</span>
+                      }
+                    </span>
+                  </mat-option>
+                }
+              </mat-select>
+              <mat-icon matPrefix>category</mat-icon>
+              @if (productForm.get('categoryId')?.hasError('required') && productForm.get('categoryId')?.touched) {
+                <mat-error>{{ getErrorMessage('categoryId') }}</mat-error>
+              }
+            </mat-form-field>
+            <button
+              type="button"
+              mat-icon-button
+              color="primary"
+              (click)="openCategoryModal()"
+              aria-label="Create new category"
+              title="Create new category">
+              <mat-icon>add_circle</mat-icon>
+            </button>
+          </div>
+
+          <!-- Tax Slab -->
+          <mat-form-field appearance="outline">
+            <mat-label>Tax Slab</mat-label>
+            <mat-select
+              formControlName="taxSlabId"
+              aria-label="Tax slab">
+              @for (taxSlab of taxSlabs(); track taxSlab.id) {
+                <mat-option [value]="taxSlab.id">
+                  {{ taxSlab.name }} ({{ taxSlab.rate }}%)
+                </mat-option>
+              }
+            </mat-select>
+            <mat-icon matPrefix>receipt</mat-icon>
+            <mat-hint>Auto-filled from category, but can be overridden</mat-hint>
+          </mat-form-field>
+
+          <!-- Unit -->
+          <mat-form-field appearance="outline">
+            <mat-label>Unit</mat-label>
+            <mat-select
+              formControlName="unitId"
+              aria-label="Unit"
+              aria-required="true">
+              @for (unit of units(); track unit.id) {
+                <mat-option [value]="unit.id">
+                  {{ getUnitDisplay(unit) }}
+                </mat-option>
+              }
+            </mat-select>
+            <mat-icon matPrefix>straighten</mat-icon>
+            @if (productForm.get('unitId')?.hasError('required') && productForm.get('unitId')?.touched) {
+              <mat-error>{{ getErrorMessage('unitId') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- MRP -->
+          <mat-form-field appearance="outline">
+            <mat-label>MRP (₹)</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="mrp"
+              placeholder="0.00"
+              aria-label="Maximum Retail Price"
+              aria-required="true"
+              min="0"
+              step="0.01" />
+            <mat-icon matPrefix>currency_rupee</mat-icon>
+            @if (productForm.get('mrp')?.hasError('required') && productForm.get('mrp')?.touched) {
+              <mat-error>{{ getErrorMessage('mrp') }}</mat-error>
+            }
+            @if (productForm.get('mrp')?.hasError('min') && productForm.get('mrp')?.touched) {
+              <mat-error>{{ getErrorMessage('mrp') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Sale Price -->
+          <mat-form-field appearance="outline">
+            <mat-label>Sale Price (₹)</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="salePrice"
+              placeholder="0.00"
+              aria-label="Sale price"
+              aria-required="true"
+              min="0"
+              step="0.01" />
+            <mat-icon matPrefix>currency_rupee</mat-icon>
+            @if (productForm.get('salePrice')?.hasError('required') && productForm.get('salePrice')?.touched) {
+              <mat-error>{{ getErrorMessage('salePrice') }}</mat-error>
+            }
+            @if (productForm.get('salePrice')?.hasError('salePriceExceedsMRP') && productForm.get('salePrice')?.touched) {
+              <mat-error>{{ getErrorMessage('salePrice') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Low Stock Threshold -->
+          <mat-form-field appearance="outline">
+            <mat-label>Low Stock Threshold</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="lowStockThreshold"
+              placeholder="10"
+              aria-label="Low stock threshold"
+              aria-required="true"
+              min="0" />
+            <mat-icon matPrefix>warning</mat-icon>
+            @if (productForm.get('lowStockThreshold')?.hasError('required') && productForm.get('lowStockThreshold')?.touched) {
+              <mat-error>{{ getErrorMessage('lowStockThreshold') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Description -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description (Optional)</mat-label>
+            <textarea
+              matInput
+              formControlName="description"
+              placeholder="Enter product description"
+              aria-label="Product description"
+              rows="4"></textarea>
+            @if (productForm.get('description')?.hasError('maxlength') && productForm.get('description')?.touched) {
+              <mat-error>{{ getErrorMessage('description') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Image Upload -->
+          <div class="image-upload-section full-width">
+            <label class="upload-label">Product Image (Optional)</label>
+            <div
+              class="upload-area"
+              (dragover)="onDragOver($event)"
+              (drop)="onDrop($event)"
+              [class.drag-over]="false">
+              <input
+                #fileInput
+                type="file"
+                accept="image/*"
+                (change)="onImageSelected($event)"
+                aria-label="Upload product image"
+                style="display: none;" />
+              @if (!imagePreview()) {
+                <div class="upload-placeholder">
+                  <mat-icon>cloud_upload</mat-icon>
+                  <p>Drag and drop an image here, or</p>
+                  <button
+                    type="button"
+                    mat-button
+                    color="primary"
+                    (click)="fileInput.click()">
+                    Browse Files
+                  </button>
+                </div>
+              } @else {
+                <grocery-image-preview
+                  [file]="selectedImage()"
+                  [imageUrl]="imagePreview()"
+                  (remove)="onImageRemove()"></grocery-image-preview>
+              }
+            </div>
+          </div>
+
+          <!-- Is Active -->
+          <mat-checkbox formControlName="isActive" class="full-width">
+            Product is active
+          </mat-checkbox>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <div class="form-actions-left">
+            <mat-checkbox [(ngModel)]="continueAfterSave" [ngModelOptions]="{standalone: true}">
+              Continue adding products
+            </mat-checkbox>
+          </div>
+          <div class="form-actions-right">
+            <button
+              type="button"
+              mat-button
+              (click)="onCancel()"
+              [disabled]="isSubmitting()"
+              aria-label="Cancel">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              mat-raised-button
+              color="primary"
+              [disabled]="productForm.invalid || isSubmitting()"
+              aria-label="Create product">
+              @if (isSubmitting()) {
+                <mat-spinner diameter="20" class="inline-spinner"></mat-spinner>
+                <span class="ml-2">Creating...</span>
+              } @else {
+                <mat-icon>save</mat-icon>
+                <span>Create Product</span>
+              }
+            </button>
+          </div>
+        </div>
+      </form>
+    }
+  </div>
+</div>
+

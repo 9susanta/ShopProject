@@ -129,9 +129,10 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
                 // Get unit price (override if provided)
                 var unitPrice = itemRequest.OverridePrice ?? product.SalePrice;
 
-                // Get GST rates from product's tax slab
-                var cgstRate = product.TaxSlab?.CGSTRate ?? 0;
-                var sgstRate = product.TaxSlab?.SGSTRate ?? 0;
+                // Get GST rates from product's tax slab (split equally between CGST and SGST)
+                var totalGSTRate = product.TaxSlab?.Rate ?? 0;
+                var cgstRate = totalGSTRate / 2; // CGST is half of total GST
+                var sgstRate = totalGSTRate / 2; // SGST is half of total GST
 
                 // Check for applicable offers
                 decimal discountAmount = 0;

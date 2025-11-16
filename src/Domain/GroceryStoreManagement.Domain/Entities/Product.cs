@@ -15,7 +15,7 @@ public class Product : BaseEntity
     public decimal SalePrice { get; private set; } // Selling Price
     public Guid CategoryId { get; private set; }
     public Guid UnitId { get; private set; }
-    public Guid TaxSlabId { get; private set; }
+    public Guid? TaxSlabId { get; private set; } // Nullable - can be auto-filled from Category
     public int LowStockThreshold { get; private set; } = 10;
     public bool IsWeightBased { get; private set; } = false;
     public decimal? WeightPerUnit { get; private set; } // For weight-based products
@@ -25,16 +25,16 @@ public class Product : BaseEntity
     // Navigation properties
     public virtual Category Category { get; private set; } = null!;
     public virtual Unit Unit { get; private set; } = null!;
-    public virtual TaxSlab TaxSlab { get; private set; } = null!;
+    public virtual TaxSlab? TaxSlab { get; private set; }
     public virtual ICollection<PurchaseOrderItem> PurchaseOrderItems { get; private set; } = new List<PurchaseOrderItem>();
     public virtual ICollection<SaleItem> SaleItems { get; private set; } = new List<SaleItem>();
     public virtual Inventory? Inventory { get; private set; }
 
     private Product() { } // EF Core
 
-    public Product(string name, string sku, decimal mrp, decimal salePrice, Guid categoryId, Guid unitId, Guid taxSlabId, 
+    public Product(string name, string sku, decimal mrp, decimal salePrice, Guid categoryId, Guid unitId, 
         string? description = null, string? barcode = null, string? imageUrl = null, int lowStockThreshold = 10, 
-        bool isWeightBased = false, decimal? weightPerUnit = null)
+        bool isWeightBased = false, decimal? weightPerUnit = null, Guid? taxSlabId = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Product name cannot be null or empty", nameof(name));
@@ -57,13 +57,22 @@ public class Product : BaseEntity
         SalePrice = salePrice;
         CategoryId = categoryId;
         UnitId = unitId;
-        TaxSlabId = taxSlabId;
+        TaxSlabId = taxSlabId; // Can be null, will be set from Category if needed
         Description = description;
         Barcode = barcode;
         ImageUrl = imageUrl;
         LowStockThreshold = lowStockThreshold;
         IsWeightBased = isWeightBased;
         WeightPerUnit = weightPerUnit;
+    }
+
+    public void SetTaxSlab(Guid taxSlabId)
+    {
+        if (taxSlabId == Guid.Empty)
+            throw new ArgumentException("TaxSlabId cannot be empty", nameof(taxSlabId));
+        
+        TaxSlabId = taxSlabId;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Update(string name, decimal mrp, decimal salePrice, string? description = null, 

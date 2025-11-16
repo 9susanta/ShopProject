@@ -28,13 +28,13 @@ export interface ProductCreateRequest {
   barcode?: string;
   mrp: number;
   salePrice: number;
-  gstRate: number;
   categoryId: string;
-  supplierId?: string;
+  taxSlabId?: string; // Optional - will be auto-filled from category if not provided
   unitId: string;
   description?: string;
   image?: File;
   lowStockThreshold: number;
+  isActive?: boolean;
 }
 
 export interface ProductUpdateRequest extends Partial<ProductCreateRequest> {

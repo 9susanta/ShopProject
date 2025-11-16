@@ -39,12 +39,17 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("TaxSlabId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -53,6 +58,11 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("TaxSlabId");
 
                     b.ToTable("Categories", (string)null);
                 });
@@ -66,6 +76,10 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                     b.Property<string>("Address")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -101,6 +115,10 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Pincode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<int?>("PreferredPaymentMethod")
                         .HasColumnType("int");
@@ -706,7 +724,7 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("TaxSlabId")
+                    b.Property<Guid?>("TaxSlabId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("UnitId")
@@ -722,6 +740,10 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Barcode")
+                        .IsUnique()
+                        .HasFilter("[Barcode] IS NOT NULL");
 
                     b.HasIndex("CategoryId");
 
@@ -1087,9 +1109,6 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("CGSTRate")
-                        .HasColumnType("decimal(5,2)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -1097,14 +1116,21 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<decimal>("SGSTRate")
+                    b.Property<decimal>("Rate")
                         .HasColumnType("decimal(5,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -1115,6 +1141,9 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("IsDefault")
+                        .HasFilter("[IsDefault] = 1");
+
                     b.ToTable("TaxSlabs", (string)null);
                 });
 
@@ -1124,9 +1153,6 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("ConversionFactor")
-                        .HasColumnType("decimal(18,4)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -1134,12 +1160,19 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<string>("Symbol")
                         .IsRequired()
@@ -1358,6 +1391,17 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                     b.ToTable("RefreshTokens", (string)null);
                 });
 
+            modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.Category", b =>
+                {
+                    b.HasOne("GroceryStoreManagement.Domain.Entities.TaxSlab", "TaxSlab")
+                        .WithMany("Categories")
+                        .HasForeignKey("TaxSlabId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("TaxSlab");
+                });
+
             modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.ImportError", b =>
                 {
                     b.HasOne("GroceryStoreManagement.Domain.Entities.ImportJob", "ImportJob")
@@ -1484,13 +1528,12 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                     b.HasOne("GroceryStoreManagement.Domain.Entities.TaxSlab", "TaxSlab")
                         .WithMany("Products")
                         .HasForeignKey("TaxSlabId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("GroceryStoreManagement.Domain.Entities.Unit", "Unit")
                         .WithMany("Products")
                         .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -1612,6 +1655,8 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.TaxSlab", b =>
                 {
+                    b.Navigation("Categories");
+
                     b.Navigation("Products");
                 });
 

@@ -160,6 +160,19 @@ export class ApiService {
   }
 
   /**
+   * POST request with FormData (for file uploads with form fields)
+   */
+  postFormData<T>(endpoint: string, formData: FormData, options?: ApiOptions): Observable<T> {
+    const url = this.buildUrl(endpoint);
+    return this.http.post<T>(url, formData, {
+      headers: options?.headers,
+      params: options?.params,
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Chunked file upload with retry
    */
   uploadFileChunked<T>(

@@ -57,11 +57,11 @@ public static class SeedData
         // Seed Units
         var units = new List<Unit>
         {
-            new Unit("Kilogram", "kg", UnitType.Kilogram, 1),
-            new Unit("Gram", "gm", UnitType.Gram, 0.001m),
-            new Unit("Litre", "L", UnitType.Litre, 1),
-            new Unit("Piece", "pcs", UnitType.Piece, 1),
-            new Unit("Pack", "pack", UnitType.Pack, 1)
+            new Unit("Kilogram", "kg", UnitType.Kilogram, 10),
+            new Unit("Gram", "gm", UnitType.Gram, 20),
+            new Unit("Litre", "L", UnitType.Litre, 30),
+            new Unit("Piece", "pcs", UnitType.Piece, 40),
+            new Unit("Pack", "pack", UnitType.Pack, 50)
         };
 
         await context.Units.AddRangeAsync(units);
@@ -70,22 +70,24 @@ public static class SeedData
         // Seed Tax Slabs (Indian GST rates)
         var taxSlabs = new List<TaxSlab>
         {
-            new TaxSlab("5% GST", 2.5m, 2.5m), // 5% = 2.5% CGST + 2.5% SGST
-            new TaxSlab("12% GST", 6m, 6m),     // 12% = 6% CGST + 6% SGST
-            new TaxSlab("18% GST", 9m, 9m)      // 18% = 9% CGST + 9% SGST
+            new TaxSlab("GST 0%", 0m, false),    // 0% GST
+            new TaxSlab("GST 5%", 5m, true),   // 5% GST (default)
+            new TaxSlab("GST 12%", 12m, false), // 12% GST
+            new TaxSlab("GST 18%", 18m, false)  // 18% GST
         };
 
         await context.TaxSlabs.AddRangeAsync(taxSlabs);
         await context.SaveChangesAsync();
 
-        // Seed Categories
+        // Seed Categories (using default tax slab - GST 5%)
+        var defaultTaxSlabId = taxSlabs.First(ts => ts.IsDefault).Id;
         var categories = new List<Category>
         {
-            new Category("Fruits", "Fresh fruits"),
-            new Category("Vegetables", "Fresh vegetables"),
-            new Category("Dairy", "Dairy products"),
-            new Category("Beverages", "Drinks and beverages"),
-            new Category("Snacks", "Snacks and chips")
+            new Category("Fruits", defaultTaxSlabId, "Fresh fruits"),
+            new Category("Vegetables", defaultTaxSlabId, "Fresh vegetables"),
+            new Category("Dairy", defaultTaxSlabId, "Dairy products"),
+            new Category("Beverages", taxSlabs.First(ts => ts.Rate == 12m).Id, "Drinks and beverages"),
+            new Category("Snacks", taxSlabs.First(ts => ts.Rate == 18m).Id, "Snacks and chips")
         };
 
         await context.Categories.AddRangeAsync(categories);
@@ -115,12 +117,12 @@ public static class SeedData
         // Seed Products (with MRP, SalePrice, UnitId, TaxSlabId)
         var products = new List<Product>
         {
-            new Product("Apple", "FRUIT-001", 2.00m, 1.50m, categories[0].Id, units[3].Id, taxSlabs[0].Id, "Red delicious apples", "1234567890123", null, 20),
-            new Product("Banana", "FRUIT-002", 1.00m, 0.75m, categories[0].Id, units[3].Id, taxSlabs[0].Id, "Fresh bananas", "1234567890124", null, 30),
-            new Product("Carrot", "VEG-001", 1.20m, 1.00m, categories[1].Id, units[1].Id, taxSlabs[0].Id, "Fresh carrots", "1234567890125", null, 25),
-            new Product("Milk", "DAIRY-001", 4.00m, 3.50m, categories[2].Id, units[2].Id, taxSlabs[1].Id, "Whole milk 1 litre", "1234567890126", null, 15),
-            new Product("Coca Cola", "BEV-001", 2.50m, 2.00m, categories[3].Id, units[3].Id, taxSlabs[2].Id, "12 oz can", "1234567890127", null, 50),
-            new Product("Potato Chips", "SNACK-001", 4.50m, 3.99m, categories[4].Id, units[4].Id, taxSlabs[2].Id, "Classic flavor", "1234567890128", null, 40)
+            new Product("Apple", "FRUIT-001", 2.00m, 1.50m, categories[0].Id, units[3].Id, "Red delicious apples", "1234567890123", null, 20, false, null, taxSlabs[0].Id),
+            new Product("Banana", "FRUIT-002", 1.00m, 0.75m, categories[0].Id, units[3].Id, "Fresh bananas", "1234567890124", null, 30, false, null, taxSlabs[0].Id),
+            new Product("Carrot", "VEG-001", 1.20m, 1.00m, categories[1].Id, units[1].Id, "Fresh carrots", "1234567890125", null, 25, false, null, taxSlabs[0].Id),
+            new Product("Milk", "DAIRY-001", 4.00m, 3.50m, categories[2].Id, units[2].Id, "Whole milk 1 litre", "1234567890126", null, 15, false, null, taxSlabs[1].Id),
+            new Product("Coca Cola", "BEV-001", 2.50m, 2.00m, categories[3].Id, units[3].Id, "12 oz can", "1234567890127", null, 50, false, null, taxSlabs[2].Id),
+            new Product("Potato Chips", "SNACK-001", 4.50m, 3.99m, categories[4].Id, units[4].Id, "Classic flavor", "1234567890128", null, 40, false, null, taxSlabs[2].Id)
         };
 
         await context.Products.AddRangeAsync(products);
@@ -150,17 +152,19 @@ public static class SeedData
         var sale1 = new Sale("INV-001", customers[0].Id, discountAmount: 0);
         sale1.AddItem(products[0].Id, 5, products[0].SalePrice);
         sale1.AddItem(products[2].Id, 3, products[2].SalePrice);
-        // Set GST rates for items
-        sale1.Items.First(i => i.ProductId == products[0].Id).SetGSTRates(taxSlabs[0].CGSTRate, taxSlabs[0].SGSTRate);
-        sale1.Items.First(i => i.ProductId == products[2].Id).SetGSTRates(taxSlabs[0].CGSTRate, taxSlabs[0].SGSTRate);
+        // Set GST rates for items (split equally between CGST and SGST)
+        var taxRate0 = taxSlabs[0].Rate / 2;
+        sale1.Items.First(i => i.ProductId == products[0].Id).SetGSTRates(taxRate0, taxRate0);
+        sale1.Items.First(i => i.ProductId == products[2].Id).SetGSTRates(taxRate0, taxRate0);
         sale1.Complete();
 
         var sale2 = new Sale("INV-002", customers[1].Id, discountAmount: 2.00m);
         sale2.AddItem(products[4].Id, 10, products[4].SalePrice);
         sale2.AddItem(products[5].Id, 2, products[5].SalePrice);
-        // Set GST rates for items
-        sale2.Items.First(i => i.ProductId == products[4].Id).SetGSTRates(taxSlabs[2].CGSTRate, taxSlabs[2].SGSTRate);
-        sale2.Items.First(i => i.ProductId == products[5].Id).SetGSTRates(taxSlabs[2].CGSTRate, taxSlabs[2].SGSTRate);
+        // Set GST rates for items (split equally between CGST and SGST)
+        var taxRate2 = taxSlabs[2].Rate / 2;
+        sale2.Items.First(i => i.ProductId == products[4].Id).SetGSTRates(taxRate2, taxRate2);
+        sale2.Items.First(i => i.ProductId == products[5].Id).SetGSTRates(taxRate2, taxRate2);
         sale2.Complete();
 
         await context.Sales.AddRangeAsync(sale1, sale2);

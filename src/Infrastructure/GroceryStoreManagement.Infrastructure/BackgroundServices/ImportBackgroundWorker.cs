@@ -289,7 +289,14 @@ public class ImportBackgroundWorker : BackgroundService
         
         if (categoryId == Guid.Empty && job.CreateMissingCategories)
         {
-            var newCategory = new Category(categoryName ?? "Uncategorized");
+            // Get default tax slab for new category
+            var allTaxSlabs = await taxSlabRepository.GetAllAsync(cancellationToken);
+            var defaultTaxSlab = allTaxSlabs.FirstOrDefault(ts => ts.IsDefault && ts.IsActive) 
+                ?? allTaxSlabs.FirstOrDefault(ts => ts.IsActive);
+            if (defaultTaxSlab == null)
+                throw new InvalidOperationException("No active tax slab found for creating category");
+            
+            var newCategory = new Category(categoryName ?? "Uncategorized", defaultTaxSlab.Id);
             await categoryRepository.AddAsync(newCategory, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             categoryId = newCategory.Id;
@@ -311,12 +318,12 @@ public class ImportBackgroundWorker : BackgroundService
 
         // Find tax slab by GST rate
         var taxSlabs = await masterDataCache.GetTaxSlabsAsync(cancellationToken);
-        var taxSlabId = taxSlabs.FirstOrDefault(t => t.Value.CGST + t.Value.SGST == gstRate).Key;
+        var taxSlabId = taxSlabs.FirstOrDefault(t => t.Value == gstRate).Key;
         if (taxSlabId == Guid.Empty)
         {
-            // Default to first tax slab
+            // Default to first active tax slab
             var allTaxSlabs = await taxSlabRepository.GetAllAsync(cancellationToken);
-            taxSlabId = allTaxSlabs.FirstOrDefault()?.Id ?? Guid.Empty;
+            taxSlabId = allTaxSlabs.FirstOrDefault(ts => ts.IsActive)?.Id ?? Guid.Empty;
         }
 
         // Generate barcode if missing
@@ -343,7 +350,7 @@ public class ImportBackgroundWorker : BackgroundService
         if (product != null)
         {
             // Update existing product
-            product.Update(name, mrp, salePrice, description, barcode, null);
+            product.Update(name ?? "Unknown", mrp, salePrice, description, barcode, null);
             await productRepository.UpdateAsync(product, cancellationToken);
         }
         else
@@ -351,17 +358,19 @@ public class ImportBackgroundWorker : BackgroundService
             // Create new product
             isNewProduct = true;
             product = new Product(
-                name,
-                sku,
+                name ?? "Unknown",
+                sku ?? $"SKU-{DateTime.UtcNow.Ticks}",
                 mrp,
                 salePrice,
                 categoryId,
                 unitId,
-                taxSlabId,
                 description,
                 barcode,
                 null,
-                10); // Default low stock threshold
+                10, // Default low stock threshold
+                false, // isWeightBased
+                null, // weightPerUnit
+                taxSlabId); // taxSlabId (optional, will be auto-filled from category if null)
 
             await productRepository.AddAsync(product, cancellationToken);
         }

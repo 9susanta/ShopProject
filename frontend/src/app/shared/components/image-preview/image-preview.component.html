@@ -1,0 +1,13 @@
+@if (previewUrl()) {
+  <div class="image-preview-container">
+    <img [src]="previewUrl()!" alt="Product preview" class="preview-image" />
+    <button
+      type="button"
+      class="remove-button"
+      (click)="onRemove()"
+      aria-label="Remove image">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+}
+

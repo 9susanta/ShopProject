@@ -51,9 +51,20 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         if (unit == null)
             throw new InvalidOperationException($"Unit with id {request.UnitId} not found");
 
-        var taxSlab = await _taxSlabRepository.GetByIdAsync(request.TaxSlabId, cancellationToken);
+        // Auto-fill TaxSlabId from Category if not provided
+        var taxSlabId = request.TaxSlabId ?? category.TaxSlabId;
+        
+        var taxSlab = await _taxSlabRepository.GetByIdAsync(taxSlabId, cancellationToken);
         if (taxSlab == null)
-            throw new InvalidOperationException($"Tax slab with id {request.TaxSlabId} not found");
+            throw new InvalidOperationException($"Tax slab with id {taxSlabId} not found");
+
+        // Validate barcode uniqueness if provided
+        if (!string.IsNullOrWhiteSpace(request.Barcode))
+        {
+            var allProducts = await _productRepository.GetAllAsync(cancellationToken);
+            if (allProducts.Any(p => p.Barcode != null && p.Barcode.Equals(request.Barcode, StringComparison.OrdinalIgnoreCase)))
+                throw new InvalidOperationException($"Product with barcode '{request.Barcode}' already exists");
+        }
 
         var product = new Product(
             request.Name,
@@ -62,13 +73,13 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             request.SalePrice,
             request.CategoryId,
             request.UnitId,
-            request.TaxSlabId,
             request.Description,
             request.Barcode,
             request.ImageUrl,
             request.LowStockThreshold,
             request.IsWeightBased,
-            request.WeightPerUnit);
+            request.WeightPerUnit,
+            taxSlabId);
 
         await _productRepository.AddAsync(product, cancellationToken);
 

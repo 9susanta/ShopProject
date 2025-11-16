@@ -25,9 +25,13 @@ public class UnitConfiguration : IEntityTypeConfiguration<Unit>
             .HasConversion<int>()
             .IsRequired();
 
-        builder.Property(u => u.ConversionFactor)
-            .HasColumnType("decimal(18,4)")
-            .IsRequired();
+        builder.Property(u => u.SortOrder)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(u => u.IsActive)
+            .IsRequired()
+            .HasDefaultValue(true);
 
         builder.HasIndex(u => u.Name)
             .IsUnique();

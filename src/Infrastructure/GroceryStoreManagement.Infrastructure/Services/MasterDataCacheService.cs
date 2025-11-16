@@ -69,15 +69,15 @@ public class MasterDataCacheService : IMasterDataCache
         }) ?? new Dictionary<Guid, string>();
     }
 
-    public async Task<Dictionary<Guid, (decimal CGST, decimal SGST)>> GetTaxSlabsAsync(CancellationToken cancellationToken = default)
+    public async Task<Dictionary<Guid, decimal>> GetTaxSlabsAsync(CancellationToken cancellationToken = default)
     {
         return await _memoryCache.GetOrCreateAsync(TaxSlabsKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheExpiration;
             _logger.LogInformation("Loading tax slabs into cache");
             var taxSlabs = await _taxSlabRepository.GetAllAsync(cancellationToken);
-            return taxSlabs.ToDictionary(t => t.Id, t => (t.CGSTRate, t.SGSTRate));
-        }) ?? new Dictionary<Guid, (decimal, decimal)>();
+            return taxSlabs.ToDictionary(t => t.Id, t => t.Rate);
+        }) ?? new Dictionary<Guid, decimal>();
     }
 
     public async Task InvalidateCacheAsync(CancellationToken cancellationToken = default)

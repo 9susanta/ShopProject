@@ -42,8 +42,24 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasForeignKey(p => p.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(p => p.Unit)
+            .WithMany(u => u.Products)
+            .HasForeignKey(p => p.UnitId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(p => p.TaxSlab)
+            .WithMany(ts => ts.Products)
+            .HasForeignKey(p => p.TaxSlabId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired(false);
+
         builder.HasIndex(p => p.SKU)
             .IsUnique();
+
+        // Unique constraint on Barcode if provided
+        builder.HasIndex(p => p.Barcode)
+            .IsUnique()
+            .HasFilter("[Barcode] IS NOT NULL");
     }
 }
 

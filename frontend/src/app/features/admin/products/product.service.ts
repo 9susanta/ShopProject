@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApiService } from '@core/api/api.service';
 import {
   Product,
@@ -44,13 +45,29 @@ export class ProductService {
   }
 
   getProductByBarcode(barcode: string): Observable<Product> {
-    return this.api.get<Product>(`products/by-barcode/${encodeURIComponent(barcode)}`, {
+    return this.api.get<Product[]>(`products/search?barcode=${encodeURIComponent(barcode)}`, {
       cache: false,
-    });
+    }).pipe(
+      // Map array response to single product
+      map((response: Product[]) => {
+        if (Array.isArray(response) && response.length > 0) {
+          return response[0];
+        }
+        throw new Error('Product not found');
+      })
+    );
   }
 
   createProduct(product: ProductCreateRequest): Observable<Product> {
-    return this.api.post<Product>('admin/products', this.createFormData(product));
+    // If image is present, use FormData, otherwise use JSON
+    if (product.image) {
+      const formData = this.createFormData(product);
+      return this.api.postFormData<Product>('products', formData);
+    } else {
+      // Remove image from payload for JSON request
+      const { image, ...productData } = product;
+      return this.api.post<Product>('products', productData);
+    }
   }
 
   updateProduct(product: ProductUpdateRequest): Observable<Product> {

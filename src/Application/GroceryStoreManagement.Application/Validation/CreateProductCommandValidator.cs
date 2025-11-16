@@ -29,7 +29,7 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
             .NotEmpty().WithMessage("Unit ID is required");
 
         RuleFor(x => x.TaxSlabId)
-            .NotEmpty().WithMessage("Tax Slab ID is required");
+            .NotEmpty().When(x => x.TaxSlabId.HasValue).WithMessage("Tax Slab ID must be valid if provided");
 
         RuleFor(x => x.LowStockThreshold)
             .GreaterThanOrEqualTo(0).WithMessage("Low stock threshold must be greater than or equal to 0");

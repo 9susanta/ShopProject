@@ -1,0 +1,21 @@
+.confirm-dialog {
+  min-width: 300px;
+}
+
+.confirm-dialog h2 {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.confirm-dialog p {
+  margin: 0;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+.mat-mdc-dialog-actions {
+  margin-top: 24px;
+  padding: 0;
+}
+

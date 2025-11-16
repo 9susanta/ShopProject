@@ -11,7 +11,7 @@ export const productRoutes: Routes = [
   {
     path: 'new',
     loadComponent: () =>
-      import('./product-form/product-form.component').then(m => m.ProductFormComponent),
+      import('./product-create/product-create.component').then(m => m.ProductCreateComponent),
     canActivate: [AdminGuard],
   },
   {

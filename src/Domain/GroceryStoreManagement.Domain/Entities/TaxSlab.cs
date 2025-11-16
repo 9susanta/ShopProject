@@ -5,40 +5,65 @@ namespace GroceryStoreManagement.Domain.Entities;
 public class TaxSlab : BaseEntity
 {
     public string Name { get; private set; } = string.Empty;
-    public decimal CGSTRate { get; private set; } // Central GST
-    public decimal SGSTRate { get; private set; } // State GST
-    public decimal TotalGSTRate => CGSTRate + SGSTRate;
+    public decimal Rate { get; private set; } // Single tax rate (e.g., 5, 12, 18)
+    public bool IsDefault { get; private set; } = false;
     public bool IsActive { get; private set; } = true;
 
     // Navigation properties
     public virtual ICollection<Product> Products { get; private set; } = new List<Product>();
+    public virtual ICollection<Category> Categories { get; private set; } = new List<Category>();
 
     private TaxSlab() { } // EF Core
 
-    public TaxSlab(string name, decimal cgstRate, decimal sgstRate)
+    public TaxSlab(string name, decimal rate, bool isDefault = false)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Tax slab name cannot be null or empty", nameof(name));
 
-        if (cgstRate < 0 || sgstRate < 0)
-            throw new ArgumentException("Tax rates cannot be negative");
+        if (rate < 0 || rate > 28)
+            throw new ArgumentException("Tax rate must be between 0 and 28", nameof(rate));
 
         Name = name;
-        CGSTRate = cgstRate;
-        SGSTRate = sgstRate;
+        Rate = rate;
+        IsDefault = isDefault;
     }
 
-    public void Update(string name, decimal cgstRate, decimal sgstRate)
+    public void Update(string name, decimal rate)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Tax slab name cannot be null or empty", nameof(name));
 
-        if (cgstRate < 0 || sgstRate < 0)
-            throw new ArgumentException("Tax rates cannot be negative");
+        if (rate < 0 || rate > 28)
+            throw new ArgumentException("Tax rate must be between 0 and 28", nameof(rate));
 
         Name = name;
-        CGSTRate = cgstRate;
-        SGSTRate = sgstRate;
+        Rate = rate;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetAsDefault()
+    {
+        IsDefault = true;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void RemoveDefault()
+    {
+        IsDefault = false;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+        if (IsDefault)
+            IsDefault = false;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Activate()
+    {
+        IsActive = true;
         UpdatedAt = DateTime.UtcNow;
     }
 }

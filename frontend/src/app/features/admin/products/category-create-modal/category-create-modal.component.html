@@ -1,0 +1,83 @@
+<div class="category-create-modal" (keydown)="onKeyDown($event)" tabindex="0">
+  <h2 mat-dialog-title>Create New Category</h2>
+  
+  <mat-dialog-content>
+    <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
+      <div class="form-grid">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Category Name</mat-label>
+          <input
+            matInput
+            formControlName="name"
+            placeholder="Enter category name"
+            aria-label="Category name"
+            aria-required="true"
+            autocomplete="off" />
+          @if (categoryForm.get('name')?.hasError('required') && categoryForm.get('name')?.touched) {
+            <mat-error>{{ getErrorMessage('name') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Tax Slab</mat-label>
+          <mat-select
+            formControlName="taxSlabId"
+            aria-label="Tax slab"
+            aria-required="true">
+            @if (isLoading()) {
+              <mat-option disabled>Loading tax slabs...</mat-option>
+            } @else {
+              @for (taxSlab of taxSlabs(); track taxSlab.id) {
+                <mat-option [value]="taxSlab.id">
+                  {{ taxSlab.name }} ({{ taxSlab.rate }}%)
+                </mat-option>
+              }
+            }
+          </mat-select>
+          @if (categoryForm.get('taxSlabId')?.hasError('required') && categoryForm.get('taxSlabId')?.touched) {
+            <mat-error>{{ getErrorMessage('taxSlabId') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description (Optional)</mat-label>
+          <textarea
+            matInput
+            formControlName="description"
+            placeholder="Enter category description"
+            aria-label="Category description"
+            rows="3"></textarea>
+          @if (categoryForm.get('description')?.hasError('maxlength') && categoryForm.get('description')?.touched) {
+            <mat-error>{{ getErrorMessage('description') }}</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button
+      mat-button
+      type="button"
+      (click)="onCancel()"
+      [disabled]="isSubmitting()"
+      aria-label="Cancel">
+      Cancel
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      type="button"
+      (click)="onSubmit()"
+      [disabled]="categoryForm.invalid || isSubmitting()"
+      aria-label="Create category">
+      @if (isSubmitting()) {
+        <mat-spinner diameter="20" class="inline-spinner"></mat-spinner>
+        <span class="ml-2">Creating...</span>
+      } @else {
+        Create Category
+      }
+    </button>
+  </mat-dialog-actions>
+</div>
+
