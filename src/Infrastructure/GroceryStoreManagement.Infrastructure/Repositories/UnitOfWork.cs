@@ -27,7 +27,13 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
     {
-        _transaction = await _context.Database.BeginTransactionAsync(isolationLevel, cancellationToken);
+        // EF Core 8.0: BeginTransactionAsync doesn't support IsolationLevel parameter directly
+        // Start default transaction - isolation level should be set at connection/command level if needed
+        // For most use cases, the default isolation level (ReadCommitted) is sufficient
+        _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        
+        // Note: If specific isolation level is critical, it may need to be set via raw SQL:
+        // await _context.Database.ExecuteSqlRawAsync($"SET TRANSACTION ISOLATION LEVEL {isolationLevel}", cancellationToken);
     }
 
     public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)

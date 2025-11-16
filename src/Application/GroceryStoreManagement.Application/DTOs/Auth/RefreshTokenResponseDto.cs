@@ -19,5 +19,10 @@ public class RefreshTokenResponseDto
     /// Token expiration time in seconds
     /// </summary>
     public int ExpiresIn { get; set; }
+
+    /// <summary>
+    /// User information
+    /// </summary>
+    public UserDto User { get; set; } = null!;
 }
 

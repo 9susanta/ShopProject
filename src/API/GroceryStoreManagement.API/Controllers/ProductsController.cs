@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using GroceryStoreManagement.Application.Commands.Products;
 using GroceryStoreManagement.Application.Queries.Products;
+using GroceryStoreManagement.Application.DTOs;
 
 namespace GroceryStoreManagement.API.Controllers;
 
@@ -16,6 +17,34 @@ public class ProductsController : ControllerBase
     {
         _mediator = mediator;
         _logger = logger;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<Application.DTOs.ProductListResponseDto>> GetProducts(
+        [FromQuery] string? search = null,
+        [FromQuery] Guid? categoryId = null,
+        [FromQuery] Guid? supplierId = null,
+        [FromQuery] bool? lowStock = null,
+        [FromQuery] bool? isActive = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortOrder = null,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var query = new GetProductsQuery
+        {
+            Search = search,
+            CategoryId = categoryId,
+            SupplierId = supplierId,
+            LowStock = lowStock,
+            IsActive = isActive,
+            SortBy = sortBy,
+            SortOrder = sortOrder,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+        var result = await _mediator.Send(query);
+        return Ok(result);
     }
 
     [HttpPost]
