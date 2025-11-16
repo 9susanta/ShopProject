@@ -1,0 +1,17 @@
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\obj\Debug\net8.0\GroceryStoreManagement.Infrastructure.csproj.AssemblyReference.cache
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\obj\Debug\net8.0\GroceryStoreManagement.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\obj\Debug\net8.0\GroceryStoreManagement.Infrastructure.AssemblyInfoInputs.cache
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\obj\Debug\net8.0\GroceryStoreManagement.Infrastructure.AssemblyInfo.cs
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\obj\Debug\net8.0\GroceryStoreManagement.Infrastructure.csproj.CoreCompileInputs.cache
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\bin\Debug\net8.0\GroceryStoreManagement.Infrastructure.deps.json
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\bin\Debug\net8.0\GroceryStoreManagement.Infrastructure.dll
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\bin\Debug\net8.0\GroceryStoreManagement.Infrastructure.pdb
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\bin\Debug\net8.0\GroceryStoreManagement.Application.dll
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\bin\Debug\net8.0\GroceryStoreManagement.Domain.dll
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\bin\Debug\net8.0\GroceryStoreManagement.Domain.pdb
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\bin\Debug\net8.0\GroceryStoreManagement.Application.pdb
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\obj\Debug\net8.0\GroceryS.D1A4B23B.Up2Date
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\obj\Debug\net8.0\GroceryStoreManagement.Infrastructure.dll
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\obj\Debug\net8.0\refint\GroceryStoreManagement.Infrastructure.dll
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\obj\Debug\net8.0\GroceryStoreManagement.Infrastructure.pdb
+D:\Projects\ShopProject\src\Infrastructure\GroceryStoreManagement.Infrastructure\obj\Debug\net8.0\ref\GroceryStoreManagement.Infrastructure.dll

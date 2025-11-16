@@ -1,0 +1,38 @@
+using GroceryStoreManagement.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace GroceryStoreManagement.Infrastructure.Persistence;
+
+public class ApplicationDbContext : DbContext
+{
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    {
+    }
+
+    public DbSet<Category> Categories { get; set; } = null!;
+    public DbSet<Product> Products { get; set; } = null!;
+    public DbSet<Supplier> Suppliers { get; set; } = null!;
+    public DbSet<Customer> Customers { get; set; } = null!;
+    public DbSet<Inventory> Inventories { get; set; } = null!;
+    public DbSet<PurchaseOrder> PurchaseOrders { get; set; } = null!;
+    public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; } = null!;
+    public DbSet<Sale> Sales { get; set; } = null!;
+    public DbSet<SaleItem> SaleItems { get; set; } = null!;
+    public DbSet<Invoice> Invoices { get; set; } = null!;
+    public DbSet<LedgerEntry> LedgerEntries { get; set; } = null!;
+    public DbSet<OutboxEvent> OutboxEvents { get; set; } = null!;
+    public DbSet<Unit> Units { get; set; } = null!;
+    public DbSet<TaxSlab> TaxSlabs { get; set; } = null!;
+    public DbSet<Offer> Offers { get; set; } = null!;
+    public DbSet<LoyaltyTransaction> LoyaltyTransactions { get; set; } = null!;
+    public DbSet<PayLaterLedger> PayLaterLedgers { get; set; } = null!;
+    public DbSet<StoreSettings> StoreSettings { get; set; } = null!;
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+    }
+}
+
