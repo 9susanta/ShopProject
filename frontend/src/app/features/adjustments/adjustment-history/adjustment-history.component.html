@@ -1,0 +1,121 @@
+<div class="adjustment-history-container p-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Adjustment History</h1>
+    <button mat-raised-button color="primary" routerLink="/inventory/adjustments/new">
+      <mat-icon>add</mat-icon>
+      New Adjustment
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="mb-4">
+    <mat-card-content>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Adjustment Type</mat-label>
+          <mat-select [(ngModel)]="filters().adjustmentType">
+            <mat-option [value]="undefined">All</mat-option>
+            @for (type of adjustmentTypes; track type.value) {
+              <mat-option [value]="type.value">{{ type.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>From Date</mat-label>
+          <input matInput [matDatepicker]="fromPicker" [(ngModel)]="filters().adjustedAtFrom" />
+          <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+          <mat-datepicker #fromPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>To Date</mat-label>
+          <input matInput [matDatepicker]="toPicker" [(ngModel)]="filters().adjustedAtTo" />
+          <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+          <mat-datepicker #toPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <div class="flex gap-2 mt-4">
+        <button mat-raised-button color="primary" (click)="applyFilters()">Apply Filters</button>
+        <button mat-button (click)="clearFilters()">Clear</button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Table -->
+  <mat-card>
+    <mat-card-content>
+      @if (loading()) {
+        <div class="flex justify-center p-8">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+      } @else {
+        <table mat-table [dataSource]="adjustments()" class="w-full">
+          <ng-container matColumnDef="adjustedAt">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let adj">{{ adj.adjustedAt | date: 'short' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="productName">
+            <th mat-header-cell *matHeaderCellDef>Product</th>
+            <td mat-cell *matCellDef="let adj">{{ adj.productName || 'N/A' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="batchNumber">
+            <th mat-header-cell *matHeaderCellDef>Batch</th>
+            <td mat-cell *matCellDef="let adj">{{ adj.batchNumber || 'N/A' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="adjustmentType">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let adj">
+              <mat-chip>{{ getAdjustmentTypeLabel(adj.adjustmentType) }}</mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="quantityChange">
+            <th mat-header-cell *matHeaderCellDef>Quantity Change</th>
+            <td mat-cell *matCellDef="let adj">
+              <span [class]="'font-semibold text-' + getQuantityColor(adj.quantityChange)">
+                {{ adj.quantityChange > 0 ? '+' : '' }}{{ adj.quantityChange }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="reason">
+            <th mat-header-cell *matHeaderCellDef>Reason</th>
+            <td mat-cell *matCellDef="let adj">{{ adj.reason }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="adjustedBy">
+            <th mat-header-cell *matHeaderCellDef>Adjusted By</th>
+            <td mat-cell *matCellDef="let adj">{{ adj.adjustedByName || adj.adjustedBy }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let adj">
+              <button mat-icon-button [matTooltip]="'View Details'">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+
+        <mat-paginator
+          [length]="totalCount()"
+          [pageSize]="pageSize()"
+          [pageIndex]="pageNumber() - 1"
+          [pageSizeOptions]="[10, 20, 50, 100]"
+          (page)="onPageChange($event)"
+          showFirstLastButtons>
+        </mat-paginator>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
+

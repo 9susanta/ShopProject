@@ -1,0 +1,152 @@
+<div class="po-list-container p-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Purchase Orders</h1>
+    <button mat-raised-button color="primary" (click)="createNew()">
+      <mat-icon>add</mat-icon>
+      New Purchase Order
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-card mb-4 p-4 bg-white rounded-lg shadow">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Supplier</mat-label>
+        <input matInput [(ngModel)]="filters().supplierId" placeholder="Filter by supplier" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Status</mat-label>
+        <mat-select [(ngModel)]="filters().status">
+          <mat-option [value]="undefined">All</mat-option>
+          @for (status of statusOptions; track status.value) {
+            <mat-option [value]="status.value">{{ status.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>From Date</mat-label>
+        <input matInput [matDatepicker]="fromPicker" [(ngModel)]="filters().orderDateFrom" />
+        <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+        <mat-datepicker #fromPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>To Date</mat-label>
+        <input matInput [matDatepicker]="toPicker" [(ngModel)]="filters().orderDateTo" />
+        <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+        <mat-datepicker #toPicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <div class="flex gap-2 mt-4">
+      <button mat-raised-button color="primary" (click)="applyFilters()">Apply Filters</button>
+      <button mat-button (click)="clearFilters()">Clear</button>
+      @if (isAdmin() && hasSelection()) {
+        <button mat-raised-button color="accent" (click)="bulkApprove()">Bulk Approve</button>
+      }
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container bg-white rounded-lg shadow overflow-hidden">
+    @if (loading()) {
+      <div class="flex justify-center items-center p-8">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    } @else {
+      <table mat-table [dataSource]="purchaseOrders()" class="w-full">
+        <!-- Select Column -->
+        @if (isAdmin()) {
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-checkbox [checked]="allSelected()" [indeterminate]="hasSelection() && !allSelected()" (change)="toggleSelectAll()"></mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let po">
+              <mat-checkbox [checked]="selectedPOs().has(po.id)" (change)="toggleSelect(po.id)"></mat-checkbox>
+            </td>
+          </ng-container>
+        }
+
+        <!-- Order Number -->
+        <ng-container matColumnDef="orderNumber">
+          <th mat-header-cell *matHeaderCellDef>Order Number</th>
+          <td mat-cell *matCellDef="let po">
+            <a (click)="viewDetails(po.id)" class="text-blue-600 hover:underline cursor-pointer">{{ po.orderNumber }}</a>
+          </td>
+        </ng-container>
+
+        <!-- Supplier -->
+        <ng-container matColumnDef="supplierName">
+          <th mat-header-cell *matHeaderCellDef>Supplier</th>
+          <td mat-cell *matCellDef="let po">{{ po.supplierName || 'N/A' }}</td>
+        </ng-container>
+
+        <!-- Order Date -->
+        <ng-container matColumnDef="orderDate">
+          <th mat-header-cell *matHeaderCellDef>Order Date</th>
+          <td mat-cell *matCellDef="let po">{{ po.orderDate | date: 'short' }}</td>
+        </ng-container>
+
+        <!-- Expected Delivery -->
+        <ng-container matColumnDef="expectedDeliveryDate">
+          <th mat-header-cell *matHeaderCellDef>Expected Delivery</th>
+          <td mat-cell *matCellDef="let po">
+            @if (po.expectedDeliveryDate) {
+              {{ po.expectedDeliveryDate | date: 'short' }}
+            } @else {
+              N/A
+            }
+          </td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let po">
+            <mat-chip [style.background-color]="getStatusColor(po.status) + '20'" [style.color]="getStatusColor(po.status)">
+              {{ getStatusLabel(po.status) }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Total Amount -->
+        <ng-container matColumnDef="totalAmount">
+          <th mat-header-cell *matHeaderCellDef>Total Amount</th>
+          <td mat-cell *matCellDef="let po">{{ po.totalAmount | currency: 'INR' }}</td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let po">
+            <div class="flex gap-2">
+              <button mat-icon-button [matTooltip]="'View Details'" (click)="viewDetails(po.id)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              @if (po.status === 0 || po.status === 1) {
+                <button mat-icon-button [matTooltip]="'Edit'" (click)="edit(po.id)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+
+      <mat-paginator
+        [length]="totalCount()"
+        [pageSize]="pageSize()"
+        [pageIndex]="pageNumber() - 1"
+        [pageSizeOptions]="[10, 20, 50, 100]"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    }
+  </div>
+</div>
+

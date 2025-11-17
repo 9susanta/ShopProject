@@ -5,7 +5,37 @@ export const inventoryRoutes: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./inventory-list/inventory-list.component').then(m => m.InventoryListComponent),
+      import('./inventory-dashboard/inventory-dashboard.component').then(m => m.InventoryDashboardComponent),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'products',
+    loadComponent: () =>
+      import('./product-batch-list/product-batch-list.component').then(m => m.ProductBatchListComponent),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'product/:productId',
+    loadComponent: () =>
+      import('./batch-details/batch-details.component').then(m => m.BatchDetailsComponent),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'product/:productId/batches',
+    loadComponent: () =>
+      import('./batch-details/batch-details.component').then(m => m.BatchDetailsComponent),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'low-stock',
+    loadComponent: () =>
+      import('./low-stock-list/low-stock-list.component').then(m => m.LowStockListComponent),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'expiry',
+    loadComponent: () =>
+      import('./expiry-list/expiry-list.component').then(m => m.ExpiryListComponent),
     canActivate: [AuthGuard],
   },
   {
@@ -15,9 +45,9 @@ export const inventoryRoutes: Routes = [
     canActivate: [AuthGuard],
   },
   {
-    path: 'expiry',
+    path: 'list',
     loadComponent: () =>
-      import('./expiry-management/expiry-management.component').then(m => m.ExpiryManagementComponent),
+      import('./inventory-list/inventory-list.component').then(m => m.InventoryListComponent),
     canActivate: [AuthGuard],
   },
 ];

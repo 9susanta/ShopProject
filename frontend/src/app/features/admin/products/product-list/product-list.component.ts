@@ -62,10 +62,7 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
     'actions',
   ] as const;
 
-  // TrackBy function to prevent unnecessary row re-renders
-  trackByProductId(index: number, product: ProductTableItem): string {
-    return product.id;
-  }
+  // Note: Material tables handle rendering efficiently without explicit trackBy
 
   dataSource = new MatTableDataSource<ProductTableItem>([]);
   products = signal<Product[]>([]);

@@ -1,0 +1,23 @@
+.po-form-container {
+  min-height: calc(100vh - 64px);
+}
+
+.summary-box {
+  min-width: 300px;
+}
+
+/* Touch-friendly for tablets */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  button {
+    min-height: 44px;
+  }
+
+  table {
+    font-size: 0.875rem;
+  }
+}
+

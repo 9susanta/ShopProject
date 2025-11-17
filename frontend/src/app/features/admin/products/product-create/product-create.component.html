@@ -288,13 +288,15 @@
               mat-raised-button
               color="primary"
               [disabled]="productForm.invalid || isSubmitting()"
+              [class.disabled-button]="productForm.invalid || isSubmitting()"
+              [matTooltip]="productForm.invalid ? 'Please fill all required fields' : ''"
               aria-label="Create product">
               @if (isSubmitting()) {
                 <mat-spinner diameter="20" class="inline-spinner"></mat-spinner>
                 <span class="ml-2">Creating...</span>
               } @else {
-                <mat-icon>save</mat-icon>
-                <span>Create Product</span>
+                <mat-icon>add_circle</mat-icon>
+                Create Product
               }
             </button>
           </div>

@@ -59,15 +59,42 @@ export class ProductService {
   }
 
   createProduct(product: ProductCreateRequest): Observable<Product> {
-    // If image is present, use FormData, otherwise use JSON
-    if (product.image) {
-      const formData = this.createFormData(product);
-      return this.api.postFormData<Product>('products', formData);
-    } else {
-      // Remove image from payload for JSON request
-      const { image, ...productData } = product;
-      return this.api.post<Product>('products', productData);
+    // Ensure SKU is not empty (backend requires it)
+    if (!product.sku || product.sku.trim() === '') {
+      // Generate a default SKU from product name if not provided
+      product.sku = product.name
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .substring(0, 20) || 'SKU-' + Date.now().toString().slice(-6);
     }
+
+    // Convert camelCase to PascalCase for backend API (ASP.NET Core accepts camelCase by default, but being explicit)
+    const backendRequest: any = {
+      name: product.name.trim(),
+      sku: product.sku.trim(),
+      mrp: product.mrp,
+      salePrice: product.salePrice,
+      categoryId: product.categoryId,
+      unitId: product.unitId,
+      lowStockThreshold: product.lowStockThreshold,
+    };
+
+    // Add optional fields (only if they have values)
+    if (product.barcode && product.barcode.trim()) {
+      backendRequest.barcode = product.barcode.trim();
+    }
+    if (product.taxSlabId) {
+      backendRequest.taxSlabId = product.taxSlabId;
+    }
+    if (product.description && product.description.trim()) {
+      backendRequest.description = product.description.trim();
+    }
+
+    // Note: Image upload should be handled separately if needed
+    // For now, we'll send the product data without image
+    // ImageUrl can be set later via a separate endpoint if available
+
+    return this.api.post<Product>('products', backendRequest);
   }
 
   updateProduct(product: ProductUpdateRequest): Observable<Product> {
@@ -93,6 +120,27 @@ export class ProductService {
         }
       }
     });
+
+    return formData;
+  }
+
+  private createFormDataForBackend(backendRequest: any, imageFile: File): FormData {
+    const formData = new FormData();
+    
+    // Append all backend request properties with PascalCase names
+    Object.keys(backendRequest).forEach(key => {
+      const value = backendRequest[key];
+      if (value !== null && value !== undefined) {
+        if (typeof value === 'object' && !(value instanceof File)) {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, value.toString());
+        }
+      }
+    });
+
+    // Append image file
+    formData.append('image', imageFile);
 
     return formData;
   }

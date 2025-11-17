@@ -1,0 +1,15 @@
+.adjustment-form-container {
+  min-height: calc(100vh - 64px);
+}
+
+/* Touch-friendly */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  button {
+    min-height: 44px;
+  }
+}
+

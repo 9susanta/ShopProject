@@ -1,0 +1,103 @@
+<div class="expiry-list-container p-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Expiring Soon</h1>
+    <div class="flex gap-4 items-center">
+      <mat-form-field appearance="outline">
+        <mat-label>Days Ahead</mat-label>
+        <mat-select [ngModel]="daysAhead()" (ngModelChange)="daysAhead.set($event); onDaysAheadChange()">
+          <mat-option [value]="3">3 days</mat-option>
+          <mat-option [value]="7">7 days</mat-option>
+          <mat-option [value]="14">14 days</mat-option>
+          <mat-option [value]="30">30 days</mat-option>
+        </mat-select>
+      </mat-form-field>
+      @if (selectedBatches().size > 0) {
+        <button mat-raised-button color="warn" (click)="markExpired()">
+          <mat-icon>cancel</mat-icon>
+          Mark Expired ({{ selectedBatches().size }})
+        </button>
+        <button mat-raised-button color="accent" (click)="createReturn()">
+          <mat-icon>reply</mat-icon>
+          Create Return ({{ selectedBatches().size }})
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center p-8">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else if (batches().length === 0) {
+    <mat-card>
+      <mat-card-content>
+        <div class="text-center py-8">
+          <mat-icon class="text-6xl text-green-500 mb-4">check_circle</mat-icon>
+          <h2 class="text-xl font-semibold mb-2">No batches expiring soon!</h2>
+          <p class="text-gray-500">All batches are within the selected time frame.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        <table mat-table [dataSource]="batches()" class="w-full">
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-checkbox
+                [checked]="selectedBatches().size === batches().length && batches().length > 0"
+                [indeterminate]="selectedBatches().size > 0 && selectedBatches().size < batches().length"
+                (change)="toggleSelectAll()">
+              </mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let batch">
+              <mat-checkbox [checked]="selectedBatches().has(batch.batchId)" (change)="toggleSelect(batch.batchId)"></mat-checkbox>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="productName">
+            <th mat-header-cell *matHeaderCellDef>Product</th>
+            <td mat-cell *matCellDef="let batch">{{ batch.productName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="batchNumber">
+            <th mat-header-cell *matHeaderCellDef>Batch Number</th>
+            <td mat-cell *matCellDef="let batch">{{ batch.batchNumber }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="quantity">
+            <th mat-header-cell *matHeaderCellDef>Quantity</th>
+            <td mat-cell *matCellDef="let batch">{{ batch.quantity }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="expiryDate">
+            <th mat-header-cell *matHeaderCellDef>Expiry Date</th>
+            <td mat-cell *matCellDef="let batch">{{ batch.expiryDate | date: 'short' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="daysUntilExpiry">
+            <th mat-header-cell *matHeaderCellDef>Days Until Expiry</th>
+            <td mat-cell *matCellDef="let batch">
+              <mat-chip [color]="getExpiryColor(batch.daysUntilExpiry)">
+                {{ batch.daysUntilExpiry }} day{{ batch.daysUntilExpiry !== 1 ? 's' : '' }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let batch">
+              <button mat-icon-button [matTooltip]="'View Batch Details'">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>
+

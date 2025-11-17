@@ -1,0 +1,139 @@
+<div class="dashboard-container p-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Inventory Dashboard</h1>
+    <button mat-raised-button color="primary" (click)="refresh()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center p-8">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else {
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <!-- Total SKUs -->
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm mb-1">Total SKUs</p>
+              <p class="text-3xl font-bold">{{ totalSKUs() }}</p>
+            </div>
+            <mat-icon class="text-blue-500 text-4xl">inventory_2</mat-icon>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Total Stock Value -->
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm mb-1">Total Stock Value</p>
+              <p class="text-3xl font-bold">{{ totalStockValue() | currency: 'INR' }}</p>
+            </div>
+            <mat-icon class="text-green-500 text-4xl">attach_money</mat-icon>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Low Stock Count -->
+      <mat-card class="summary-card" [class.alert-card]="lowStockCount() > 0" routerLink="/inventory/low-stock">
+        <mat-card-content>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm mb-1">Low Stock Items</p>
+              <p class="text-3xl font-bold" [class.text-red-600]="lowStockCount() > 0">
+                {{ lowStockCount() }}
+              </p>
+            </div>
+            <mat-icon class="text-orange-500 text-4xl">warning</mat-icon>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Expiry Soon Count -->
+      <mat-card class="summary-card" [class.alert-card]="expirySoonCount() > 0" routerLink="/inventory/expiry">
+        <mat-card-content>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm mb-1">Expiring Soon</p>
+              <p class="text-3xl font-bold" [class.text-red-600]="expirySoonCount() > 0">
+                {{ expirySoonCount() }}
+              </p>
+            </div>
+            <mat-icon class="text-red-500 text-4xl">schedule</mat-icon>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Quick Actions -->
+    <mat-card class="mb-6">
+      <mat-card-header>
+        <mat-card-title>Quick Actions</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex flex-wrap gap-4">
+          <button mat-raised-button color="primary" routerLink="/inventory/products">
+            <mat-icon>list</mat-icon>
+            View All Products
+          </button>
+          <button mat-raised-button color="accent" routerLink="/inventory/low-stock">
+            <mat-icon>warning</mat-icon>
+            Low Stock Items
+          </button>
+          <button mat-raised-button color="warn" routerLink="/inventory/expiry">
+            <mat-icon>schedule</mat-icon>
+            Expiring Soon
+          </button>
+          <button mat-raised-button routerLink="/inventory/adjust">
+            <mat-icon>edit</mat-icon>
+            Stock Adjustment
+          </button>
+          <button mat-raised-button routerLink="/purchasing/purchase-orders/new">
+            <mat-icon>add_shopping_cart</mat-icon>
+            Create Purchase Order
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Valuation Breakdown -->
+    @if (valuation()?.breakdownByCategory && valuation()!.breakdownByCategory!.length > 0) {
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Valuation by Category</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b">
+                  <th class="text-left p-2">Category</th>
+                  <th class="text-right p-2">SKUs</th>
+                  <th class="text-right p-2">Quantity</th>
+                  <th class="text-right p-2">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (category of valuation()!.breakdownByCategory!; track category.categoryId) {
+                  <tr class="border-b hover:bg-gray-50">
+                    <td class="p-2">{{ category.categoryName }}</td>
+                    <td class="text-right p-2">{{ category.skuCount }}</td>
+                    <td class="text-right p-2">{{ category.totalQuantity }}</td>
+                    <td class="text-right p-2 font-semibold">{{ category.totalValue | currency: 'INR' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+</div>
+

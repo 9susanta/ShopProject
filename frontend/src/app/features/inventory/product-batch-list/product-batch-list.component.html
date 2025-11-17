@@ -1,0 +1,100 @@
+<div class="product-batch-list-container p-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Product Inventory</h1>
+    <button mat-raised-button color="primary" routerLink="/inventory/adjust">
+      <mat-icon>edit</mat-icon>
+      Stock Adjustment
+    </button>
+  </div>
+
+  <!-- Search -->
+  <div class="mb-4">
+    <mat-form-field appearance="outline" class="w-full max-w-md">
+      <mat-label>Search Products</mat-label>
+      <input matInput [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" (keyup.enter)="onSearch()" placeholder="Search by name or SKU" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="onSearch()" class="ml-2">Search</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container bg-white rounded-lg shadow overflow-hidden">
+    @if (loading()) {
+      <div class="flex justify-center items-center p-8">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    } @else {
+      <table mat-table [dataSource]="products()" class="w-full">
+        <ng-container matColumnDef="productName">
+          <th mat-header-cell *matHeaderCellDef>Product Name</th>
+          <td mat-cell *matCellDef="let product">
+            <div>
+              <div class="font-semibold">{{ product.productName }}</div>
+              <div class="text-sm text-gray-500">{{ product.categoryName || 'Uncategorized' }}</div>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="sku">
+          <th mat-header-cell *matHeaderCellDef>SKU</th>
+          <td mat-cell *matCellDef="let product">{{ product.productSKU }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="totalQuantity">
+          <th mat-header-cell *matHeaderCellDef>Total Quantity</th>
+          <td mat-cell *matCellDef="let product">{{ product.totalQuantity }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="availableQuantity">
+          <th mat-header-cell *matHeaderCellDef>Available</th>
+          <td mat-cell *matCellDef="let product">{{ product.availableQuantity }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="lowStock">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let product">
+            @if (product.isLowStock) {
+              <mat-chip color="warn">Low Stock</mat-chip>
+            } @else {
+              <mat-chip color="primary">In Stock</mat-chip>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="batches">
+          <th mat-header-cell *matHeaderCellDef>Batches</th>
+          <td mat-cell *matCellDef="let product">
+            <span [matTooltip]="getBatchSummary(product.batches)">{{ getBatchSummary(product.batches) }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let product">
+            <div class="flex gap-2">
+              <button mat-icon-button [matTooltip]="'View Details'" (click)="viewDetails(product.productId)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button [matTooltip]="'View Batches'" (click)="viewBatches(product.productId)">
+                <mat-icon>inventory_2</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+
+      <mat-paginator
+        [length]="totalCount()"
+        [pageSize]="pageSize()"
+        [pageIndex]="pageNumber() - 1"
+        [pageSizeOptions]="[10, 20, 50, 100]"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    }
+  </div>
+</div>
+

@@ -31,6 +31,12 @@ export const routes: Routes = [
       import('./features/inventory/inventory.routes').then(m => m.inventoryRoutes),
   },
   {
+    path: 'purchasing',
+    canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/purchasing/purchasing.routes').then(m => m.purchasingRoutes),
+  },
+  {
     path: 'reports',
     canActivate: [AuthGuard],
     loadChildren: () =>
@@ -41,6 +47,18 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     loadChildren: () =>
       import('./features/settings/settings.routes').then(m => m.settingsRoutes),
+  },
+  {
+    path: 'inventory/adjustments',
+    canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/adjustments/adjustments.routes').then(m => m.adjustmentsRoutes),
+  },
+  {
+    path: 'admin/audit',
+    canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/audit/audit.routes').then(m => m.auditRoutes),
   },
   {
     path: '**',

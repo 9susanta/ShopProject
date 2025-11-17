@@ -13,6 +13,33 @@ export interface ImportProgressEvent {
   errors?: string[];
 }
 
+export interface LowStockAlertEvent {
+  productId: string;
+  productName: string;
+  productSKU: string;
+  currentStock: number;
+  threshold: number;
+}
+
+export interface GRNCompletedEvent {
+  grnId: string;
+  grnNumber: string;
+  supplierName: string;
+  totalAmount: number;
+  itemsReceived: number;
+}
+
+export interface ExpiryAlertEvent {
+  batchId: string;
+  productId: string;
+  productName: string;
+  productSKU: string;
+  batchNumber: string;
+  expiryDate: string;
+  daysUntilExpiry: number;
+  quantity: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -20,181 +47,231 @@ export class SignalRService {
   private hubConnection: HubConnection | null = null;
   private connectionStateSubject = new Subject<HubConnectionState>();
   private importProgressSubject = new Subject<ImportProgressEvent>();
+  private lowStockAlertSubject = new Subject<LowStockAlertEvent>();
+  private grnCompletedSubject = new Subject<GRNCompletedEvent>();
+  private expiryAlertSubject = new Subject<ExpiryAlertEvent>();
   private authService = inject(AuthService);
   
   // Flags to prevent concurrent start/stop operations
   private isStarting = false;
   private isStopping = false;
 
+  // Hub connections for different hubs
+  private importHubConnection: HubConnection | null = null;
+  private inventoryHubConnection: HubConnection | null = null;
+
   public connectionState$ = this.connectionStateSubject.asObservable();
   public importProgress$ = this.importProgressSubject.asObservable();
+  public lowStockAlert$ = this.lowStockAlertSubject.asObservable();
+  public grnCompleted$ = this.grnCompletedSubject.asObservable();
+  public expiryAlert$ = this.expiryAlertSubject.asObservable();
 
   constructor() {
     if (environment.enableSignalR) {
-      this.initializeConnection();
+      this.initializeConnections();
     }
   }
 
   /**
-   * Initialize SignalR hub connection
+   * Initialize SignalR hub connections (import and inventory)
    */
-  private initializeConnection(): void {
+  private initializeConnections(): void {
     if (!environment.enableSignalR) {
       return;
     }
 
-    // Get access token for authentication
-    const accessToken = this.authService.getAccessToken();
+    // Initialize import progress hub (existing)
+    this.initializeImportHub();
     
-    this.hubConnection = new HubConnectionBuilder()
-      .withUrl(environment.signalRHub, {
+    // Initialize inventory hub
+    this.initializeInventoryHub();
+  }
+
+  /**
+   * Initialize Import Progress Hub
+   */
+  private initializeImportHub(): void {
+    const importHubUrl = environment.signalRHub || 'http://localhost:5120/hubs/import-progress';
+    
+    this.importHubConnection = new HubConnectionBuilder()
+      .withUrl(importHubUrl, {
         accessTokenFactory: () => {
-          // Return the current access token
-          const token = this.authService.getAccessToken();
-          return token || '';
+          return this.authService.getAccessToken() || '';
         },
-        withCredentials: false // We're using token in header, not cookies
+        withCredentials: false
       })
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: (retryContext) => {
-          // Exponential backoff: 0s, 2s, 10s, 30s, then 30s intervals
-          if (retryContext.previousRetryCount === 0) {
-            return 0;
-          }
-          if (retryContext.previousRetryCount === 1) {
-            return 2000;
-          }
-          if (retryContext.previousRetryCount === 2) {
-            return 10000;
-          }
+          if (retryContext.previousRetryCount === 0) return 0;
+          if (retryContext.previousRetryCount === 1) return 2000;
+          if (retryContext.previousRetryCount === 2) return 10000;
           return 30000;
         },
       })
       .configureLogging(environment.production ? LogLevel.Error : LogLevel.Warning)
       .build();
 
-    this.setupEventHandlers();
+    this.setupImportHubHandlers();
   }
 
   /**
-   * Setup SignalR event handlers
+   * Initialize Inventory Hub
    */
-  private setupEventHandlers(): void {
-    if (!this.hubConnection) {
+  private initializeInventoryHub(): void {
+    const baseUrl = environment.apiUrl.replace('/api', '');
+    const inventoryHubUrl = `${baseUrl}/hubs/inventory`;
+    
+    this.inventoryHubConnection = new HubConnectionBuilder()
+      .withUrl(inventoryHubUrl, {
+        accessTokenFactory: () => {
+          return this.authService.getAccessToken() || '';
+        },
+        withCredentials: false
+      })
+      .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: (retryContext) => {
+          if (retryContext.previousRetryCount === 0) return 0;
+          if (retryContext.previousRetryCount === 1) return 2000;
+          if (retryContext.previousRetryCount === 2) return 10000;
+          return 30000;
+        },
+      })
+      .configureLogging(environment.production ? LogLevel.Error : LogLevel.Warning)
+      .build();
+
+    this.setupInventoryHubHandlers();
+  }
+
+  /**
+   * Setup Import Hub event handlers
+   */
+  private setupImportHubHandlers(): void {
+    if (!this.importHubConnection) {
       return;
     }
 
-    // Connection state changes
-    this.hubConnection.onclose((error) => {
-      // Only log in development and if it's not a connection refused error
-      if (!environment.production && error) {
-        console.debug('SignalR connection closed');
-      }
-      this.connectionStateSubject.next(HubConnectionState.Disconnected);
-    });
-
-    this.hubConnection.onreconnecting((error) => {
-      // Only log in development
-      if (!environment.production) {
-        console.debug('SignalR reconnecting...');
-      }
-      this.connectionStateSubject.next(HubConnectionState.Reconnecting);
-    });
-
-    this.hubConnection.onreconnected((connectionId) => {
-      if (!environment.production) {
-        console.log('SignalR reconnected');
-      }
-      this.connectionStateSubject.next(HubConnectionState.Connected);
-    });
-
     // Import progress event
-    this.hubConnection.on('ImportProgressUpdated', (event: ImportProgressEvent) => {
-      console.log('Import progress updated:', event);
+    this.importHubConnection.on('ImportProgressUpdated', (event: ImportProgressEvent) => {
+      if (!environment.production) {
+        console.log('Import progress updated:', event);
+      }
       this.importProgressSubject.next(event);
     });
   }
 
   /**
-   * Start the SignalR connection
+   * Setup Inventory Hub event handlers
+   */
+  private setupInventoryHubHandlers(): void {
+    if (!this.inventoryHubConnection) {
+      return;
+    }
+
+    // Low stock alert
+    this.inventoryHubConnection.on('LowStockAlert', (event: LowStockAlertEvent) => {
+      if (!environment.production) {
+        console.log('Low stock alert:', event);
+      }
+      this.lowStockAlertSubject.next(event);
+    });
+
+    // GRN completed
+    this.inventoryHubConnection.on('GRNCompleted', (event: GRNCompletedEvent) => {
+      if (!environment.production) {
+        console.log('GRN completed:', event);
+      }
+      this.grnCompletedSubject.next(event);
+    });
+
+    // Expiry alert
+    this.inventoryHubConnection.on('ExpiryAlert', (event: ExpiryAlertEvent) => {
+      if (!environment.production) {
+        console.log('Expiry alert:', event);
+      }
+      this.expiryAlertSubject.next(event);
+    });
+  }
+
+  /**
+   * Start all SignalR connections
    */
   async start(): Promise<void> {
-    if (!this.hubConnection || !environment.enableSignalR) {
+    if (!environment.enableSignalR) {
       return;
     }
 
     // Prevent concurrent start operations
     if (this.isStarting) {
-      console.log('SignalR start already in progress');
-      return;
-    }
-
-    if (this.hubConnection.state === HubConnectionState.Connected) {
       return;
     }
 
     this.isStarting = true;
     try {
-      await this.hubConnection.start();
-      if (!environment.production) {
-        console.log('SignalR connection started');
+      // Start import hub
+      if (this.importHubConnection && this.importHubConnection.state !== HubConnectionState.Connected) {
+        await this.startHub(this.importHubConnection, 'Import');
       }
+
+      // Start inventory hub
+      if (this.inventoryHubConnection && this.inventoryHubConnection.state !== HubConnectionState.Connected) {
+        await this.startHub(this.inventoryHubConnection, 'Inventory');
+      }
+
       this.connectionStateSubject.next(HubConnectionState.Connected);
     } catch (error: any) {
-      // Silently handle connection refused errors (backend not running)
-      if (error?.message?.includes('Failed to fetch') || 
-          error?.message?.includes('ERR_CONNECTION_REFUSED') ||
-          error?.message?.includes('Failed to complete negotiation')) {
-        // Backend is not available - this is expected in development
-        if (!environment.production) {
-          console.debug('SignalR: Backend not available, connection will retry automatically');
-        }
-      } else {
-        // Other errors should be logged
-        if (!environment.production) {
-          console.warn('SignalR connection error:', error);
-        }
+      if (!environment.production) {
+        console.debug('SignalR: Some hubs may not be available');
       }
-      this.connectionStateSubject.next(HubConnectionState.Disconnected);
-      // Don't throw - let automatic reconnect handle it
     } finally {
       this.isStarting = false;
     }
   }
 
   /**
-   * Stop the SignalR connection
+   * Start a specific hub connection
+   */
+  private async startHub(hub: HubConnection, hubName: string): Promise<void> {
+    try {
+      await hub.start();
+      if (!environment.production) {
+        console.log(`SignalR ${hubName} hub connected`);
+      }
+    } catch (error: any) {
+      if (error?.message?.includes('Failed to fetch') || 
+          error?.message?.includes('ERR_CONNECTION_REFUSED') ||
+          error?.message?.includes('Failed to complete negotiation')) {
+        if (!environment.production) {
+          console.debug(`SignalR ${hubName} hub: Backend not available, will retry automatically`);
+        }
+      } else if (!environment.production) {
+        console.warn(`SignalR ${hubName} hub connection error:`, error);
+      }
+    }
+  }
+
+  /**
+   * Stop all SignalR connections
    */
   async stop(): Promise<void> {
-    if (!this.hubConnection) {
-      return;
-    }
-
-    // Prevent concurrent stop operations
     if (this.isStopping) {
-      console.log('SignalR stop already in progress');
-      return;
-    }
-
-    if (this.hubConnection.state === HubConnectionState.Disconnected) {
       return;
     }
 
     this.isStopping = true;
     try {
-      // Remove event handlers before stopping
-      const handlers = (this.hubConnection as any)._handlers;
-      if (handlers) {
-        this.hubConnection.off('ImportProgressUpdated', handlers.onImportProgress);
-        // Note: onclose, onreconnecting, onreconnected are not removable in SignalR
-        // They will be cleaned up when connection is stopped
+      if (this.importHubConnection && this.importHubConnection.state !== HubConnectionState.Disconnected) {
+        await this.importHubConnection.stop();
+      }
+      
+      if (this.inventoryHubConnection && this.inventoryHubConnection.state !== HubConnectionState.Disconnected) {
+        await this.inventoryHubConnection.stop();
       }
 
-      await this.hubConnection.stop();
-      console.log('SignalR connection stopped');
       this.connectionStateSubject.next(HubConnectionState.Disconnected);
     } catch (error) {
-      console.error('Error stopping SignalR connection:', error);
+      if (!environment.production) {
+        console.error('Error stopping SignalR connections:', error);
+      }
     } finally {
       this.isStopping = false;
     }
@@ -211,17 +288,31 @@ export class SignalRService {
   }
 
   /**
-   * Get current connection state
+   * Get current connection state (returns connected if any hub is connected)
    */
   getConnectionState(): HubConnectionState {
-    return this.hubConnection?.state || HubConnectionState.Disconnected;
+    const importConnected = this.importHubConnection?.state === HubConnectionState.Connected;
+    const inventoryConnected = this.inventoryHubConnection?.state === HubConnectionState.Connected;
+    
+    if (importConnected || inventoryConnected) {
+      return HubConnectionState.Connected;
+    }
+    
+    return HubConnectionState.Disconnected;
   }
 
   /**
-   * Check if connected
+   * Check if any hub is connected
    */
   isConnected(): boolean {
-    return this.hubConnection?.state === HubConnectionState.Connected;
+    return this.getConnectionState() === HubConnectionState.Connected;
+  }
+
+  /**
+   * Check if inventory hub is connected
+   */
+  isInventoryHubConnected(): boolean {
+    return this.inventoryHubConnection?.state === HubConnectionState.Connected;
   }
 
   /**
@@ -229,15 +320,18 @@ export class SignalRService {
    * Should be called when application is destroyed
    */
   async dispose(): Promise<void> {
-    // Stop connection
     await this.stop();
     
     // Complete subjects to allow garbage collection
     this.connectionStateSubject.complete();
     this.importProgressSubject.complete();
+    this.lowStockAlertSubject.complete();
+    this.grnCompletedSubject.complete();
+    this.expiryAlertSubject.complete();
     
-    // Clear hub connection
-    this.hubConnection = null;
+    // Clear hub connections
+    this.importHubConnection = null;
+    this.inventoryHubConnection = null;
   }
 }
 

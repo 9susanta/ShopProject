@@ -1,0 +1,70 @@
+<div class="file-upload-container">
+  <input
+    type="file"
+    [accept]="accept"
+    [multiple]="multiple"
+    (change)="onFileSelected($event)"
+    #fileInput
+    class="hidden"
+    id="fileInput" />
+
+  @if (!selectedFile() && selectedFiles().length === 0) {
+    <div class="upload-area" (click)="fileInput.click()">
+      <mat-icon class="text-6xl text-gray-400 mb-4">cloud_upload</mat-icon>
+      <p class="text-lg font-semibold mb-2">{{ label }}</p>
+      <p class="text-sm text-gray-500 mb-4">Click to browse or drag and drop</p>
+      <button mat-raised-button color="primary" type="button">
+        <mat-icon>folder_open</mat-icon>
+        Select File
+      </button>
+      <p class="text-xs text-gray-400 mt-2">Max size: {{ maxSize / 1024 / 1024 }}MB</p>
+    </div>
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        @if (selectedFile()) {
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <mat-icon class="text-4xl">description</mat-icon>
+              <div>
+                <p class="font-semibold">{{ selectedFile()!.name }}</p>
+                <p class="text-sm text-gray-500">{{ formatFileSize(selectedFile()!.size) }}</p>
+              </div>
+            </div>
+            <button mat-icon-button color="warn" (click)="removeFile()">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        }
+
+        @if (selectedFiles().length > 0) {
+          <div class="space-y-2">
+            @for (file of selectedFiles(); track file.name) {
+              <div class="flex items-center justify-between border rounded p-2">
+                <div class="flex items-center gap-2">
+                  <mat-icon>description</mat-icon>
+                  <span>{{ file.name }} ({{ formatFileSize(file.size) }})</span>
+                </div>
+              </div>
+            }
+            <button mat-button color="warn" (click)="removeFile()">Remove All</button>
+          </div>
+        }
+
+        @if (uploading()) {
+          <div class="mt-4">
+            <mat-progress-bar mode="determinate" [value]="uploadProgressValue()"></mat-progress-bar>
+            <p class="text-sm text-center mt-2">{{ uploadProgressValue() }}%</p>
+          </div>
+        }
+
+        @if (error()) {
+          <div class="mt-4 p-2 bg-red-50 text-red-600 rounded">
+            {{ error() }}
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>
+

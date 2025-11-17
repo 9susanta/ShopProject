@@ -28,6 +28,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap, catchError, of } from 'rxjs';
 import { ProductService } from '../product.service';
 import { MasterDataService } from '@core/services/master-data.service';
@@ -72,6 +73,7 @@ function salePriceValidator(control: AbstractControl): ValidationErrors | null {
     MatProgressSpinnerModule,
     MatDialogModule,
     MatSnackBarModule,
+    MatTooltipModule,
     ImagePreviewComponent,
   ],
   templateUrl: './product-create.component.html',
@@ -357,9 +359,19 @@ export class ProductCreateComponent implements OnInit, OnDestroy {
     this.isSubmitting.set(true);
     const formValue = this.productForm.value;
 
+    // Ensure SKU has a value - generate from name if empty
+    let skuValue = formValue.sku?.trim();
+    if (!skuValue || skuValue === '') {
+      // Generate SKU from product name
+      skuValue = formValue.name
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .substring(0, 20) || 'SKU-' + Date.now().toString().slice(-6);
+    }
+
     const request: ProductCreateRequest = {
       name: formValue.name.trim(),
-      sku: formValue.sku?.trim() || '',
+      sku: skuValue,
       barcode: formValue.barcode?.trim() || undefined,
       categoryId: formValue.categoryId,
       taxSlabId: formValue.taxSlabId || undefined,
@@ -368,7 +380,6 @@ export class ProductCreateComponent implements OnInit, OnDestroy {
       salePrice: parseFloat(formValue.salePrice),
       description: formValue.description?.trim() || undefined,
       lowStockThreshold: parseInt(formValue.lowStockThreshold, 10),
-      isActive: formValue.isActive ?? true,
       image: this.selectedImage() || undefined,
     };
 
