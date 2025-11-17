@@ -2,6 +2,8 @@ import { Component, signal, inject, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { SignalRService } from '../../core/services/signalr.service';
+import { ToastService } from '../../core/toast/toast.service';
 import { User } from '../../core/models/user.model';
 import { Subscription } from 'rxjs';
 
@@ -15,6 +17,8 @@ import { Subscription } from 'rxjs';
 export class AdminHeaderComponent implements OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private signalRService = inject(SignalRService);
+  private toastService = inject(ToastService);
 
   // User profile signal
   currentUser = signal<User | null>(this.authService.getCurrentUser());
@@ -79,9 +83,45 @@ export class AdminHeaderComponent implements OnDestroy {
     this.isProfileMenuOpen.set(false);
   }
 
+  setPointerCursor(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (target) {
+      target.style.setProperty('cursor', 'pointer', 'important');
+    }
+  }
+
   logout(): void {
+    // Close profile menu
+    this.closeProfileMenu();
+    
+    // Logout user first (clears tokens and user data)
     this.authService.logout();
-    this.router.navigate(['/login']);
+    
+    // Disconnect SignalR connections (non-blocking)
+    this.signalRService.dispose().catch((error) => {
+      console.warn('Error disconnecting SignalR on logout:', error);
+    });
+    
+    // Clear session storage
+    if (typeof window !== 'undefined') {
+      sessionStorage.clear();
+    }
+    
+    // Navigate to login page immediately
+    this.router.navigate(['/login'], { 
+      replaceUrl: true,
+      skipLocationChange: false 
+    }).then(() => {
+      // Show success message after navigation
+      this.toastService.success('Logged out successfully');
+    }).catch((error) => {
+      // If navigation fails, still show message and try window.location as fallback
+      console.warn('Router navigation failed, using window.location:', error);
+      this.toastService.success('Logged out successfully');
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    });
   }
 
   navigateToProfile(): void {

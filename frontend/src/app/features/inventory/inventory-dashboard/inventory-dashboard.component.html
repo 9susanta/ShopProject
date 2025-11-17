@@ -1,13 +1,28 @@
 <div class="dashboard-container p-4">
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">Inventory Dashboard</h1>
-    <button mat-raised-button color="primary" (click)="refresh()">
+    <button mat-raised-button color="primary" (click)="refresh()" [disabled]="!hasAccess()">
       <mat-icon>refresh</mat-icon>
       Refresh
     </button>
   </div>
 
-  @if (loading()) {
+  @if (!hasAccess()) {
+    <mat-card class="p-6">
+      <mat-card-content>
+        <div class="flex flex-col items-center justify-center text-center">
+          <mat-icon class="text-red-500 text-6xl mb-4">lock</mat-icon>
+          <h2 class="text-xl font-bold mb-2">Access Denied</h2>
+          <p class="text-gray-600 mb-4">
+            You do not have permission to access inventory data. This feature requires SuperAdmin, Admin, or Staff role.
+          </p>
+          <p class="text-sm text-gray-500">
+            Please contact your administrator if you believe you should have access to this feature.
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  } @else if (loading()) {
     <div class="flex justify-center p-8">
       <mat-spinner diameter="40"></mat-spinner>
     </div>

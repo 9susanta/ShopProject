@@ -22,6 +22,148 @@
   gap: 8px;
 }
 
+/* Uniform styling for all filter inputs */
+.form-control {
+  height: 40px;
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  background: white;
+  color: var(--gray-900);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--vivid-pink);
+  box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+}
+
+.form-control::placeholder {
+  color: var(--gray-500);
+}
+
+/* Low Stock filter field - match category styling */
+.low-stock-filter-field {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.low-stock-filter-field ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+.low-stock-filter-field ::ng-deep .mat-mdc-form-field-label {
+  display: none !important;
+}
+
+/* Match Material select to native form-control styling */
+.low-stock-filter-field ::ng-deep .mat-mdc-text-field-wrapper {
+  padding-bottom: 0;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  align-items: center;
+  border-radius: 6px;
+}
+
+.low-stock-filter-field ::ng-deep .mat-mdc-form-field-infix {
+  padding: 8px 12px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  height: 40px !important;
+  border-top: 0 !important;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.low-stock-filter-field ::ng-deep .mat-mdc-select-trigger {
+  min-height: 24px;
+  height: 24px;
+  line-height: 24px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  width: 100%;
+  color: var(--gray-900);
+}
+
+/* Ensure the form field wrapper matches other form controls */
+.low-stock-filter-field ::ng-deep .mat-mdc-form-field {
+  height: 40px;
+}
+
+.low-stock-filter-field ::ng-deep .mat-mdc-form-field-wrapper {
+  padding-bottom: 0;
+  height: 40px;
+}
+
+/* Match border and focus states */
+.low-stock-filter-field ::ng-deep .mat-mdc-text-field-wrapper .mat-mdc-form-field-flex {
+  border-radius: 6px;
+}
+
+.low-stock-filter-field ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled) .mdc-notched-outline__leading,
+.low-stock-filter-field ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled) .mdc-notched-outline__notch,
+.low-stock-filter-field ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+  border-color: var(--gray-300);
+  border-width: 1px;
+}
+
+.low-stock-filter-field ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled):hover .mdc-notched-outline__leading,
+.low-stock-filter-field ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled):hover .mdc-notched-outline__notch,
+.low-stock-filter-field ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled):hover .mdc-notched-outline__trailing {
+  border-color: var(--gray-400);
+}
+
+.low-stock-filter-field ::ng-deep .mat-mdc-text-field-wrapper.mdc-text-field--focused .mdc-notched-outline__leading,
+.low-stock-filter-field ::ng-deep .mat-mdc-text-field-wrapper.mdc-text-field--focused .mdc-notched-outline__notch,
+.low-stock-filter-field ::ng-deep .mat-mdc-text-field-wrapper.mdc-text-field--focused .mdc-notched-outline__trailing {
+  border-color: var(--vivid-pink);
+  border-width: 1px;
+}
+
+.low-stock-filter-field ::ng-deep .mat-mdc-text-field-wrapper.mdc-text-field--focused {
+  box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+}
+
+.low-stock-filter-field ::ng-deep .mat-mdc-select-placeholder {
+  color: var(--gray-500);
+}
+
+/* Improve dropdown panel styling */
+::ng-deep .low-stock-filter-field .mat-mdc-select-panel {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 4px;
+}
+
+::ng-deep .low-stock-filter-field .mat-mdc-option {
+  padding: 10px 16px;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+::ng-deep .low-stock-filter-field .mat-mdc-option:hover:not(.mdc-list-item--disabled) {
+  background-color: var(--light-pink);
+}
+
+::ng-deep .low-stock-filter-field .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background-color: rgba(233, 30, 99, 0.1);
+  color: var(--vivid-pink);
+  font-weight: 500;
+}
+
+::ng-deep .low-stock-filter-field .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled):hover {
+  background-color: rgba(233, 30, 99, 0.15);
+}
+
 .category-filter-field {
   width: 100%;
   margin: 0;
@@ -36,26 +178,75 @@
   display: none !important;
 }
 
+/* Match Material select to native form-control styling */
 .category-filter-field ::ng-deep .mat-mdc-text-field-wrapper {
   padding-bottom: 0;
-  height: 38px;
-  min-height: 38px;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
   align-items: center;
+  border-radius: 6px;
 }
 
 .category-filter-field ::ng-deep .mat-mdc-form-field-infix {
   padding: 8px 12px !important;
-  min-height: 38px !important;
-  border-top: 0;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  height: 40px !important;
+  border-top: 0 !important;
   display: flex;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .category-filter-field ::ng-deep .mat-mdc-select-trigger {
-  min-height: 22px;
-  line-height: 22px;
+  min-height: 24px;
+  height: 24px;
+  line-height: 24px;
   display: flex;
   align-items: center;
+  font-size: 14px;
+  width: 100%;
+  color: var(--gray-900);
+}
+
+/* Ensure the form field wrapper matches other form controls */
+.category-filter-field ::ng-deep .mat-mdc-form-field {
+  height: 40px;
+}
+
+.category-filter-field ::ng-deep .mat-mdc-form-field-wrapper {
+  padding-bottom: 0;
+  height: 40px;
+}
+
+/* Match border and focus states */
+.category-filter-field ::ng-deep .mat-mdc-text-field-wrapper .mat-mdc-form-field-flex {
+  border-radius: 6px;
+}
+
+.category-filter-field ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled) .mdc-notched-outline__leading,
+.category-filter-field ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled) .mdc-notched-outline__notch,
+.category-filter-field ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+  border-color: var(--gray-300);
+  border-width: 1px;
+}
+
+.category-filter-field ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled):hover .mdc-notched-outline__leading,
+.category-filter-field ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled):hover .mdc-notched-outline__notch,
+.category-filter-field ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled):hover .mdc-notched-outline__trailing {
+  border-color: var(--gray-400);
+}
+
+.category-filter-field ::ng-deep .mat-mdc-text-field-wrapper.mdc-text-field--focused .mdc-notched-outline__leading,
+.category-filter-field ::ng-deep .mat-mdc-text-field-wrapper.mdc-text-field--focused .mdc-notched-outline__notch,
+.category-filter-field ::ng-deep .mat-mdc-text-field-wrapper.mdc-text-field--focused .mdc-notched-outline__trailing {
+  border-color: var(--vivid-pink);
+  border-width: 1px;
+}
+
+.category-filter-field ::ng-deep .mat-mdc-text-field-wrapper.mdc-text-field--focused {
+  box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
 }
 
 .category-filter-field ::ng-deep .mat-mdc-select-placeholder {
@@ -67,22 +258,43 @@
 }
 
 .category-search-container {
-  padding: 8px 16px;
+  padding: 12px;
   border-bottom: 1px solid var(--gray-200);
-  background: var(--gray-50);
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .category-search-input {
   width: 100%;
-  border: none;
+  border: 1px solid var(--gray-400) !important;
+  border-radius: 6px;
   outline: none;
-  background: transparent;
-  padding: 8px;
+  background: white;
+  padding: 10px 12px;
   font-size: 14px;
+  color: var(--gray-900);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.category-search-input:hover {
+  border-color: var(--gray-500) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.category-search-input:focus {
+  background: white;
+  border-color: var(--vivid-pink) !important;
+  box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
 }
 
 .category-search-input::placeholder {
   color: var(--gray-500);
+  font-size: 14px;
 }
 
 ::ng-deep .category-filter-field .mat-mdc-select-panel {
@@ -144,6 +356,18 @@
   font-weight: 600;
   padding: 16px;
   border-bottom: 2px solid var(--vivid-pink);
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Ensure sortable headers show cursor pointer */
+.products-table th[mat-sort-header] {
+  cursor: pointer;
+}
+
+.products-table th[mat-sort-header]:hover {
+  background: linear-gradient(to bottom, var(--light-pink), var(--gray-50));
 }
 
 .products-table td {
@@ -175,6 +399,27 @@
 .status-inactive {
   color: var(--danger-500);
   font-weight: 500;
+}
+
+/* Stock quantity styling */
+.stock-quantity {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.stock-low {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.stock-out {
+  color: var(--danger-500);
+  font-weight: 600;
+}
+
+.stock-unknown .stock-na {
+  color: var(--gray-500);
+  font-style: italic;
 }
 
 .action-buttons {
@@ -259,12 +504,282 @@
   background: var(--light-pink);
 }
 
+/* Sort Header Arrow Styling - Show both arrows always */
+/* Hide Material's default rotating arrow */
 ::ng-deep .mat-sort-header-arrow {
+  display: none !important;
+}
+
+/* Sort header content wrapper */
+.sort-header-content {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+/* Sort arrows container */
+.sort-arrows {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  vertical-align: middle;
+  gap: 1px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.sort-arrows:hover {
+  background: rgba(233, 30, 99, 0.08);
+}
+
+/* Individual sort arrow */
+.sort-arrow {
+  font-size: 11px;
+  color: var(--gray-500);
+  cursor: pointer;
+  line-height: 1.2;
+  transition: all 0.2s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 10px;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.sort-arrow:hover {
   color: var(--vivid-pink);
+  opacity: 1;
+  transform: scale(1.15);
+  font-weight: 600;
+}
+
+/* Active ascending sort - highlight up arrow */
+::ng-deep .mat-sort-header-sorted[aria-sort="ascending"] .sort-arrow-up,
+::ng-deep th[mat-sort-header].mat-sort-header-sorted[aria-sort="ascending"] .sort-arrow-up {
+  color: var(--vivid-pink) !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 2px rgba(233, 30, 99, 0.2);
+}
+
+/* Inactive down arrow when ascending */
+::ng-deep .mat-sort-header-sorted[aria-sort="ascending"] .sort-arrow-down,
+::ng-deep th[mat-sort-header].mat-sort-header-sorted[aria-sort="ascending"] .sort-arrow-down {
+  color: var(--gray-400) !important;
+  opacity: 0.4 !important;
+  font-weight: 400 !important;
+}
+
+/* Active descending sort - highlight down arrow */
+::ng-deep .mat-sort-header-sorted[aria-sort="descending"] .sort-arrow-down,
+::ng-deep th[mat-sort-header].mat-sort-header-sorted[aria-sort="descending"] .sort-arrow-down {
+  color: var(--vivid-pink) !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 2px rgba(233, 30, 99, 0.2);
+}
+
+/* Inactive up arrow when descending */
+::ng-deep .mat-sort-header-sorted[aria-sort="descending"] .sort-arrow-up,
+::ng-deep th[mat-sort-header].mat-sort-header-sorted[aria-sort="descending"] .sort-arrow-up {
+  color: var(--gray-400) !important;
+  opacity: 0.4 !important;
+  font-weight: 400 !important;
+}
+
+
+/* Hover state - brighten inactive arrows (only if not sorted) */
+::ng-deep .mat-sort-header:not(.mat-sort-header-sorted):hover::before,
+::ng-deep .mat-sort-header:not(.mat-sort-header-sorted):hover::after {
+  color: var(--gray-600);
+}
+
+/* Active column on hover - keep active arrow highlighted */
+::ng-deep .mat-sort-header-sorted[aria-sort="ascending"]:hover .sort-arrow-up {
+  color: var(--hot-pink) !important;
+  transform: scale(1.2) !important;
+}
+
+::ng-deep .mat-sort-header-sorted[aria-sort="descending"]:hover .sort-arrow-down {
+  color: var(--hot-pink) !important;
+  transform: scale(1.2) !important;
+}
+
+/* Active column arrows container hover */
+::ng-deep .mat-sort-header-sorted:hover .sort-arrows {
+  background: rgba(233, 30, 99, 0.12);
 }
 
 ::ng-deep .mat-sort-header-pointer-left .mat-sort-header-indicator {
+  color: var(--vivid-pink) !important;
+  opacity: 1 !important;
+}
+
+/* Ensure sort arrows are visible when column is sortable */
+::ng-deep .mat-sort-header-button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+::ng-deep .mat-sort-header-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Ensure arrow container is visible */
+::ng-deep .mat-sort-header-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Fix for Material 15+ sort header structure */
+::ng-deep .mat-mdc-sort-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+::ng-deep .mat-mdc-sort-header-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+/* Material 15+ - Hide default arrow */
+::ng-deep .mat-mdc-sort-header-arrow {
+  display: none !important;
+}
+
+/* Material 15+ - Use same arrow styles */
+::ng-deep .mat-mdc-sort-header .sort-arrows {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  vertical-align: middle;
+  gap: 1px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: transparent;
+  transition: background-color 0.2s ease;
+}
+
+::ng-deep .mat-mdc-sort-header .sort-arrows:hover {
+  background: rgba(233, 30, 99, 0.08);
+}
+
+::ng-deep .mat-mdc-sort-header .sort-arrow {
+  font-size: 11px;
+  color: var(--gray-500);
+  cursor: pointer;
+  line-height: 1.2;
+  transition: all 0.2s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 10px;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+::ng-deep .mat-mdc-sort-header .sort-arrow:hover {
   color: var(--vivid-pink);
+  opacity: 1;
+  transform: scale(1.15);
+  font-weight: 600;
+}
+
+/* Active ascending sort - highlight up arrow */
+::ng-deep .mat-mdc-sort-header-sorted[aria-sort="ascending"] .sort-arrow-up {
+  color: var(--vivid-pink) !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 2px rgba(233, 30, 99, 0.2);
+}
+
+/* Inactive down arrow when ascending */
+::ng-deep .mat-mdc-sort-header-sorted[aria-sort="ascending"] .sort-arrow-down {
+  color: var(--gray-400) !important;
+  opacity: 0.4 !important;
+  font-weight: 400 !important;
+}
+
+/* Active descending sort - highlight down arrow */
+::ng-deep .mat-mdc-sort-header-sorted[aria-sort="descending"] .sort-arrow-down {
+  color: var(--vivid-pink) !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 2px rgba(233, 30, 99, 0.2);
+}
+
+/* Inactive up arrow when descending */
+::ng-deep .mat-mdc-sort-header-sorted[aria-sort="descending"] .sort-arrow-up {
+  color: var(--gray-400) !important;
+  opacity: 0.4 !important;
+  font-weight: 400 !important;
+}
+
+/* Active column on hover */
+::ng-deep .mat-mdc-sort-header-sorted[aria-sort="ascending"]:hover .sort-arrow-up {
+  color: var(--hot-pink) !important;
+  transform: scale(1.2) !important;
+}
+
+::ng-deep .mat-mdc-sort-header-sorted[aria-sort="descending"]:hover .sort-arrow-down {
+  color: var(--hot-pink) !important;
+  transform: scale(1.2) !important;
+}
+
+/* Active column arrows container hover */
+::ng-deep .mat-mdc-sort-header-sorted:hover .sort-arrows {
+  background: rgba(233, 30, 99, 0.12);
+}
+
+/* Ensure arrow container is visible */
+::ng-deep .mat-sort-header-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Fix for Material 15+ sort header structure */
+::ng-deep .mat-mdc-sort-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+::ng-deep .mat-mdc-sort-header-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+::ng-deep .mat-mdc-sort-header-arrow {
+  color: var(--vivid-pink) !important;
+  opacity: 1 !important;
+  margin-left: 4px;
+}
+
+::ng-deep .mat-mdc-sort-header-sorted .mat-mdc-sort-header-arrow {
+  opacity: 1 !important;
+  color: var(--vivid-pink) !important;
 }
 
 @media (max-width: 768px) {

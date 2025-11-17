@@ -4,6 +4,7 @@ using GroceryStoreManagement.Application.Interfaces;
 using GroceryStoreManagement.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using InventoryEntity = GroceryStoreManagement.Domain.Entities.Inventory;
+using UnitEntity = GroceryStoreManagement.Domain.Entities.Unit;
 
 namespace GroceryStoreManagement.Application.Queries.Products;
 
@@ -11,15 +12,21 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, Product
 {
     private readonly IRepository<Product> _productRepository;
     private readonly IRepository<InventoryEntity> _inventoryRepository;
+    private readonly IRepository<Category> _categoryRepository;
+    private readonly IRepository<UnitEntity> _unitRepository;
     private readonly ILogger<GetProductsQueryHandler> _logger;
 
     public GetProductsQueryHandler(
         IRepository<Product> productRepository,
         IRepository<InventoryEntity> inventoryRepository,
+        IRepository<Category> categoryRepository,
+        IRepository<UnitEntity> unitRepository,
         ILogger<GetProductsQueryHandler> logger)
     {
         _productRepository = productRepository;
         _inventoryRepository = inventoryRepository;
+        _categoryRepository = categoryRepository;
+        _unitRepository = unitRepository;
         _logger = logger;
     }
 
@@ -56,9 +63,15 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, Product
             products = products.Where(p => p.IsActive);
         }
 
-        // Get inventory data for low stock filtering (needed before pagination if filtering by low stock)
+        // Load related data for mapping
         var allInventory = await _inventoryRepository.GetAllAsync(cancellationToken);
+        var allCategories = await _categoryRepository.GetAllAsync(cancellationToken);
+        var allUnits = await _unitRepository.GetAllAsync(cancellationToken);
+        
+        // Create lookup dictionaries for efficient mapping
         var inventoryLookup = allInventory.ToDictionary(i => i.ProductId, i => i.AvailableQuantity);
+        var categoryLookup = allCategories.ToDictionary(c => c.Id, c => c.Name);
+        var unitLookup = allUnits.ToDictionary(u => u.Id, u => u.Name);
 
         // Filter by low stock if requested (must be done before pagination for accurate count)
         if (request.LowStock == true)
@@ -116,14 +129,15 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, Product
                 SalePrice = p.SalePrice,
                 MRP = p.MRP,
                 CategoryId = p.CategoryId,
+                CategoryName = categoryLookup.TryGetValue(p.CategoryId, out var categoryName) ? categoryName : string.Empty,
+                UnitId = p.UnitId,
+                UnitName = unitLookup.TryGetValue(p.UnitId, out var unitName) ? unitName : null,
+                AvailableQuantity = inventoryLookup.TryGetValue(p.Id, out var quantity) ? quantity : null,
                 LowStockThreshold = p.LowStockThreshold,
                 IsActive = p.IsActive,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
             };
-
-            // Add category name if available (would need to load categories separately)
-            // For now, CategoryName will remain empty
 
             return dto;
         }).ToList();

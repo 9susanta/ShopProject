@@ -12,6 +12,9 @@ public class ProductDto
     public decimal MRP { get; set; }
     public Guid CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
+    public Guid UnitId { get; set; }
+    public string? UnitName { get; set; }
+    public int? AvailableQuantity { get; set; }
     public int LowStockThreshold { get; set; }
     public bool IsActive { get; set; }
     public DateTime? CreatedAt { get; set; }

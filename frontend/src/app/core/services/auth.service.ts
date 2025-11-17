@@ -290,13 +290,24 @@ export class AuthService {
 
   /**
    * Logout user
+   * Clears all authentication data and user information
    */
   logout(): void {
+    // Clear tokens
     this.accessToken = null;
     this.refreshToken = null;
     this.removeStoredTokens();
+    
+    // Clear user data
     this.removeStoredUser();
     this.currentUserSubject.next(null);
+    
+    // Clear any in-progress refresh token request
+    this.refreshTokenInProgress = null;
+    
+    if (!environment.production) {
+      console.debug('User logged out successfully');
+    }
   }
 
   /**

@@ -28,12 +28,46 @@ export class ProductService {
       });
     }
     
-    return this.api.get<ProductListResponse>('products', {
+    return this.api.get<any>('products', {
       params: cleanFilters,
       cache: true,
       cacheKey: `products_${JSON.stringify(cleanFilters)}`,
       cacheTTL: 60000,
-    });
+    }).pipe(
+      map((response: any) => {
+        // Map API response to frontend model
+        // API returns camelCase by default (ASP.NET Core System.Text.Json)
+        // But ensure all fields are properly mapped
+        return {
+          items: (response.items || []).map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            sku: item.sku,
+            barcode: item.barcode,
+            mrp: item.mrp,
+            salePrice: item.salePrice,
+            gstRate: item.gstRate || 0,
+            categoryId: item.categoryId,
+            categoryName: item.categoryName || '',
+            supplierId: item.supplierId,
+            supplierName: item.supplierName,
+            unitId: item.unitId,
+            unitName: item.unitName || null,
+            description: item.description,
+            imageUrl: item.imageUrl,
+            lowStockThreshold: item.lowStockThreshold,
+            isActive: item.isActive,
+            availableQuantity: item.availableQuantity !== undefined ? item.availableQuantity : null,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+          } as Product)),
+          totalCount: response.totalCount || 0,
+          pageNumber: response.pageNumber || 1,
+          pageSize: response.pageSize || 20,
+          totalPages: response.totalPages || 0,
+        } as ProductListResponse;
+      })
+    );
   }
 
   getProductById(id: string): Observable<Product> {

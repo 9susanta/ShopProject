@@ -60,9 +60,16 @@
             <span>Account Settings</span>
           </button>
           <div class="profile-menu-divider"></div>
-          <button class="profile-menu-item logout" (click)="logout()">
-            <span class="material-icons">logout</span>
-            <span>Logout</span>
+          <button 
+            class="profile-menu-item logout" 
+            type="button" 
+            (click)="logout(); $event.stopPropagation()"
+            (mouseenter)="setPointerCursor($event)"
+            (mouseleave)="setPointerCursor($event)"
+            style="cursor: pointer !important; pointer-events: auto !important;"
+            aria-label="Logout">
+            <span class="material-icons" style="cursor: pointer !important; pointer-events: none;">logout</span>
+            <span style="cursor: pointer !important; pointer-events: none;">Logout</span>
           </button>
         </div>
       }

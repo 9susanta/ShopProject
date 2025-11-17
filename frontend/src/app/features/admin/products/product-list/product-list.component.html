@@ -67,16 +67,17 @@
       </div>
       <div class="filter-group">
         <label for="lowStock" class="form-label">Low Stock</label>
-        <select
-          id="lowStock"
-          class="form-control"
-          [value]="lowStockFilter() === undefined ? '' : lowStockFilter()"
-          (change)="lowStockFilter.set($any($event.target).value === '' ? undefined : $any($event.target).value === 'true')"
-          (change)="onFilterChange()">
-          <option value="">All</option>
-          <option [value]="true">Yes</option>
-          <option [value]="false">No</option>
-        </select>
+        <mat-form-field appearance="outline" class="low-stock-filter-field">
+          <mat-select
+            id="lowStock"
+            [value]="getLowStockFilterValue()"
+            (selectionChange)="onLowStockChange($event.value)"
+            placeholder="All">
+            <mat-option value="">All</mat-option>
+            <mat-option value="true">Yes</mat-option>
+            <mat-option value="false">No</mat-option>
+          </mat-select>
+        </mat-form-field>
       </div>
       <div class="filter-actions">
         <button class="btn btn-primary" (click)="onSearch()">Search</button>
@@ -97,10 +98,16 @@
     </div>
   } @else {
     <div class="table-container">
-      <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="products-table">
+      <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="products-table mat-elevation-z0">
         <!-- Product Name Column -->
         <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header="name" [disableClear]="true">Product Name</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="name" [disableClear]="true">
+            <span class="sort-header-content">Product Name</span>
+            <span class="sort-arrows">
+              <span class="sort-arrow sort-arrow-up" (click)="sortByColumn('name', 'asc'); $event.stopPropagation()" title="Sort ascending">▲</span>
+              <span class="sort-arrow sort-arrow-down" (click)="sortByColumn('name', 'desc'); $event.stopPropagation()" title="Sort descending">▼</span>
+            </span>
+          </th>
           <td mat-cell *matCellDef="let product">
             <a [routerLink]="['/admin/products', product.id]" class="product-link">
               {{ product.name }}
@@ -110,37 +117,93 @@
 
         <!-- SKU Column -->
         <ng-container matColumnDef="sku">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header="sku" [disableClear]="true">SKU</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="sku" [disableClear]="true">
+            <span class="sort-header-content">SKU</span>
+            <span class="sort-arrows">
+              <span class="sort-arrow sort-arrow-up" (click)="sortByColumn('sku', 'asc'); $event.stopPropagation()" title="Sort ascending">▲</span>
+              <span class="sort-arrow sort-arrow-down" (click)="sortByColumn('sku', 'desc'); $event.stopPropagation()" title="Sort descending">▼</span>
+            </span>
+          </th>
           <td mat-cell *matCellDef="let product">{{ product.sku }}</td>
         </ng-container>
 
         <!-- Barcode Column -->
         <ng-container matColumnDef="barcode">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header="barcode" [disableClear]="true">Barcode</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="barcode" [disableClear]="true">
+            <span class="sort-header-content">Barcode</span>
+            <span class="sort-arrows">
+              <span class="sort-arrow sort-arrow-up" (click)="sortByColumn('barcode', 'asc'); $event.stopPropagation()" title="Sort ascending">▲</span>
+              <span class="sort-arrow sort-arrow-down" (click)="sortByColumn('barcode', 'desc'); $event.stopPropagation()" title="Sort descending">▼</span>
+            </span>
+          </th>
           <td mat-cell *matCellDef="let product">{{ product.barcode || '-' }}</td>
         </ng-container>
 
         <!-- Sale Price Column -->
         <ng-container matColumnDef="salePrice">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header="salePrice" [disableClear]="true">Sale Price</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="salePrice" [disableClear]="true">
+            <span class="sort-header-content">Sale Price</span>
+            <span class="sort-arrows">
+              <span class="sort-arrow sort-arrow-up" (click)="sortByColumn('salePrice', 'asc'); $event.stopPropagation()" title="Sort ascending">▲</span>
+              <span class="sort-arrow sort-arrow-down" (click)="sortByColumn('salePrice', 'desc'); $event.stopPropagation()" title="Sort descending">▼</span>
+            </span>
+          </th>
           <td mat-cell *matCellDef="let product">₹{{ product.salePrice?.toFixed(2) || '0.00' }}</td>
         </ng-container>
 
         <!-- MRP Column -->
         <ng-container matColumnDef="mrp">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header="mrp" [disableClear]="true">MRP</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="mrp" [disableClear]="true">
+            <span class="sort-header-content">MRP</span>
+            <span class="sort-arrows">
+              <span class="sort-arrow sort-arrow-up" (click)="sortByColumn('mrp', 'asc'); $event.stopPropagation()" title="Sort ascending">▲</span>
+              <span class="sort-arrow sort-arrow-down" (click)="sortByColumn('mrp', 'desc'); $event.stopPropagation()" title="Sort descending">▼</span>
+            </span>
+          </th>
           <td mat-cell *matCellDef="let product">₹{{ product.mrp?.toFixed(2) || '0.00' }}</td>
+        </ng-container>
+
+        <!-- Stock Column -->
+        <ng-container matColumnDef="stock">
+          <th mat-header-cell *matHeaderCellDef>
+            <span class="sort-header-content">Stock</span>
+          </th>
+          <td mat-cell *matCellDef="let product">
+            <span 
+              class="stock-quantity"
+              [class.stock-low]="product.availableQuantity !== undefined && product.availableQuantity <= product.lowStockThreshold"
+              [class.stock-out]="product.availableQuantity === 0"
+              [class.stock-unknown]="product.availableQuantity === undefined">
+              @if (product.availableQuantity !== undefined) {
+                {{ product.availableQuantity | number: '1.0-0' }}@if (product.unitName) { ({{ product.unitName }}) }
+              } @else {
+                <span class="stock-na">-</span>
+              }
+            </span>
+          </td>
         </ng-container>
 
         <!-- Category Column -->
         <ng-container matColumnDef="categoryName">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header="categoryName" [disableClear]="true">Category</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="categoryName" [disableClear]="true">
+            <span class="sort-header-content">Category</span>
+            <span class="sort-arrows">
+              <span class="sort-arrow sort-arrow-up" (click)="sortByColumn('categoryName', 'asc'); $event.stopPropagation()" title="Sort ascending">▲</span>
+              <span class="sort-arrow sort-arrow-down" (click)="sortByColumn('categoryName', 'desc'); $event.stopPropagation()" title="Sort descending">▼</span>
+            </span>
+          </th>
           <td mat-cell *matCellDef="let product">{{ product.categoryName || '-' }}</td>
         </ng-container>
 
         <!-- Status Column -->
         <ng-container matColumnDef="isActive">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header="isActive" [disableClear]="true">Status</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="isActive" [disableClear]="true">
+            <span class="sort-header-content">Status</span>
+            <span class="sort-arrows">
+              <span class="sort-arrow sort-arrow-up" (click)="sortByColumn('isActive', 'asc'); $event.stopPropagation()" title="Sort ascending">▲</span>
+              <span class="sort-arrow sort-arrow-down" (click)="sortByColumn('isActive', 'desc'); $event.stopPropagation()" title="Sort descending">▼</span>
+            </span>
+          </th>
           <td mat-cell *matCellDef="let product">
             <span [class]="product.isActive ? 'status-active' : 'status-inactive'">
               {{ product.isActive ? 'Active' : 'Inactive' }}

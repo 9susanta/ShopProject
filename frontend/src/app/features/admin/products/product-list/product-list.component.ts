@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, signal, inject, computed, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator, PageEvent } from '@angular/material/paginator';
@@ -49,6 +49,7 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
   private productService = inject(ProductService);
   private toastService = inject(ToastService);
   private categoryService = inject(CategoryService);
+  private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
   private subscriptions = new Subscription();
 
@@ -62,6 +63,7 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
     'barcode',
     'salePrice',
     'mrp',
+    'stock',
     'categoryName',
     'isActive',
     'actions',
@@ -106,6 +108,22 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    // Read sort parameters from query string if available
+    this.route.queryParams.subscribe(params => {
+      if (params['sortBy']) {
+        this.sortBy.set(params['sortBy']);
+      }
+      if (params['sortOrder'] === 'asc' || params['sortOrder'] === 'desc') {
+        this.sortOrder.set(params['sortOrder']);
+      }
+      if (params['pageNumber']) {
+        this.currentPage.set(parseInt(params['pageNumber'], 10) || 1);
+      }
+      if (params['pageSize']) {
+        this.pageSize.set(parseInt(params['pageSize'], 10) || 20);
+      }
+    });
+
     // Set up debounced search
     this.searchSubscription = this.searchSubject
       .pipe(
@@ -146,15 +164,59 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
       return item[property] || '';
     };
 
-    // Set initial sort state
-    if (this.sort) {
-      this.sort.active = this.sortBy();
-      this.sort.direction = this.sortOrder() === 'asc' ? 'asc' : 'desc';
-      this.sort.sortChange.emit({
-        active: this.sort.active,
-        direction: this.sort.direction,
-      });
-    }
+    // Restore sort state after view is initialized
+    this.restoreSortState();
+  }
+
+  private restoreSortState(): void {
+    // Use setTimeout to ensure MatSort is fully initialized and DOM is ready
+    setTimeout(() => {
+      if (this.sort) {
+        const currentSortBy = this.sortBy();
+        const currentSortOrder = this.sortOrder();
+        
+        // Set MatSort state to match our internal state
+        // This will update the visual arrows
+        this.sort.active = currentSortBy;
+        this.sort.direction = currentSortOrder === 'asc' ? 'asc' : 'desc';
+        
+        // Force update of MatSort visual state
+        // This ensures the arrows are displayed correctly
+        this.cdr.detectChanges();
+        
+        // Additional check: if sort state didn't update, try again after a short delay
+        if (this.sort.active !== currentSortBy || this.sort.direction !== currentSortOrder) {
+          setTimeout(() => {
+            if (this.sort) {
+              this.sort.active = currentSortBy;
+              this.sort.direction = currentSortOrder === 'asc' ? 'asc' : 'desc';
+              this.cdr.detectChanges();
+            }
+          }, 50);
+        }
+        
+        // Final verification and force update
+        setTimeout(() => {
+          if (this.sort && this.sort.active === currentSortBy) {
+            // Ensure direction is correct
+            if (this.sort.direction !== currentSortOrder) {
+              this.sort.direction = currentSortOrder === 'asc' ? 'asc' : 'desc';
+              this.cdr.detectChanges();
+            }
+          }
+        }, 200);
+        
+        if (!environment.production) {
+          console.debug('Sort state restored:', {
+            active: this.sort.active,
+            direction: this.sort.direction,
+            sortBy: currentSortBy,
+            sortOrder: currentSortOrder,
+            matches: this.sort.active === currentSortBy && this.sort.direction === currentSortOrder
+          });
+        }
+      }
+    }, 100);
   }
 
   ngOnDestroy(): void {
@@ -168,13 +230,16 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
   loadProducts(): void {
     this.isLoading.set(true);
 
+    const currentSortBy = this.sortBy() || 'name';
+    const currentSortOrder = this.sortOrder() || 'asc';
+
     const filters: ProductFilters = {
       search: this.searchTerm() || undefined,
       categoryId: this.categoryFilter().length > 0 ? this.categoryFilter()[0] : undefined, // Backend may only support single category filter
       supplierId: this.supplierFilter() || undefined,
       lowStock: this.lowStockFilter(),
-      sortBy: this.sortBy() || 'name', // Always provide a sort (default to name)
-      sortOrder: this.sortOrder() || 'asc', // Always provide a sort order
+      sortBy: currentSortBy,
+      sortOrder: currentSortOrder,
       pageNumber: this.currentPage(),
       pageSize: this.pageSize(),
     };
@@ -182,6 +247,12 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
     // Debug logging (remove in production)
     if (!environment.production) {
       console.debug('Loading products with filters:', filters);
+      console.debug('Sort state:', {
+        sortBy: currentSortBy,
+        sortOrder: currentSortOrder,
+        matSortActive: this.sort?.active,
+        matSortDirection: this.sort?.direction
+      });
     }
 
     const sub = this.productService.getProducts(filters).subscribe({
@@ -189,12 +260,15 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.products.set(response.items);
         this.totalCount.set(response.totalCount);
         
-        // Map category names to products
+        // Map products with category names (use API-provided categoryName, fallback to local lookup)
         const productsWithCategories: ProductTableItem[] = response.items.map(product => {
-          const category = this.categories().find(cat => cat.id === product.categoryId);
+          // Use categoryName from API if available, otherwise lookup from local categories
+          const categoryName = product.categoryName || 
+            this.categories().find(cat => cat.id === product.categoryId)?.name || 
+            '-';
           return {
             ...product,
-            categoryName: category?.name || '-',
+            categoryName: categoryName,
           } as ProductTableItem;
         });
         
@@ -206,6 +280,9 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
           this.paginator.length = response.totalCount;
           this.paginator.pageIndex = this.currentPage() - 1;
         }
+        
+        // Restore sort state after data is loaded to ensure arrows are correct
+        this.restoreSortState();
         
         this.isLoading.set(false);
       },
@@ -254,14 +331,75 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     const backendSortBy = sortByMap[sort.active] || sort.active;
+    const previousSortBy = this.sortBy();
+    const previousSortOrder = this.sortOrder();
     
-    // Update sort state - MatSort already toggled arrow immediately
-    if (sort.direction) {
-      this.sortBy.set(backendSortBy);
-      this.sortOrder.set(sort.direction === 'asc' ? 'asc' : 'desc');
+    // Determine sort direction
+    // If clicking the same column, toggle direction
+    // If clicking a different column, start with 'asc'
+    let newDirection: 'asc' | 'desc' = 'asc';
+    
+    if (previousSortBy === backendSortBy) {
+      // Same column clicked - toggle direction
+      newDirection = previousSortOrder === 'asc' ? 'desc' : 'asc';
     } else {
-      this.sortBy.set('name');
-      this.sortOrder.set('asc');
+      // Different column - start with 'asc'
+      newDirection = 'asc';
+    }
+    
+    // Update sort state immediately
+    this.sortBy.set(backendSortBy);
+    this.sortOrder.set(newDirection);
+    
+    // Update MatSort visual state immediately to reflect the change
+    // This ensures the arrow direction updates right away
+    if (this.sort) {
+      this.sort.active = sort.active;
+      this.sort.direction = newDirection;
+    }
+
+    // Debug logging
+    if (!environment.production) {
+      console.debug('Sort changed:', {
+        active: sort.active,
+        direction: newDirection,
+        backendSortBy,
+        previousSortBy,
+        previousSortOrder,
+        matSortDirection: this.sort?.direction
+      });
+    }
+
+    // Reset to first page and load data
+    this.currentPage.set(1);
+    this.loadProducts();
+  }
+
+  /**
+   * Sort by specific column and direction (called by arrow clicks)
+   */
+  sortByColumn(column: string, direction: 'asc' | 'desc'): void {
+    // Map Material sort field names to backend field names
+    const sortByMap: Record<string, string> = {
+      'name': 'name',
+      'sku': 'sku',
+      'barcode': 'barcode',
+      'salePrice': 'salePrice',
+      'mrp': 'mrp',
+      'categoryName': 'categoryName',
+      'isActive': 'isActive',
+    };
+
+    const backendSortBy = sortByMap[column] || column;
+    
+    // Update sort state
+    this.sortBy.set(backendSortBy);
+    this.sortOrder.set(direction);
+    
+    // Update MatSort visual state
+    if (this.sort) {
+      this.sort.active = column;
+      this.sort.direction = direction;
     }
 
     // Reset to first page and load data
@@ -288,6 +426,31 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
   getCategoryName(categoryId: string): string {
     const category = this.categories().find(cat => cat.id === categoryId);
     return category?.name || categoryId;
+  }
+
+  /**
+   * Get the low stock filter value as a string for Material select
+   */
+  getLowStockFilterValue(): string {
+    const value = this.lowStockFilter();
+    if (value === undefined) {
+      return '';
+    }
+    return value ? 'true' : 'false';
+  }
+
+  /**
+   * Handle low stock filter change
+   */
+  onLowStockChange(value: string): void {
+    if (value === '') {
+      this.lowStockFilter.set(undefined);
+    } else if (value === 'true') {
+      this.lowStockFilter.set(true);
+    } else {
+      this.lowStockFilter.set(false);
+    }
+    this.onFilterChange();
   }
 
 }
