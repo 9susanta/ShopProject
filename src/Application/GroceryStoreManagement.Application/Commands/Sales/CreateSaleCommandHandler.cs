@@ -57,7 +57,10 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, SaleD
                 }
             }
 
-            var sale = new Sale(request.InvoiceNumber, request.CustomerId, discountAmount: request.DiscountAmount);
+            var sale = new Sale(request.InvoiceNumber, request.CustomerId, request.CustomerPhone, discountAmount: request.DiscountAmount);
+
+            // Set payment method
+            sale.SetPaymentMethod(request.PaymentMethod, request.CashAmount, request.UPIAmount, request.CardAmount, request.PayLaterAmount);
 
             // Process items and validate inventory within transaction
             var inventoryChecks = new List<(InventoryEntity inventory, int quantity)>();
@@ -137,12 +140,19 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, SaleD
                 InvoiceNumber = sale.InvoiceNumber,
                 CustomerId = sale.CustomerId,
                 CustomerName = customer?.Name,
+                CustomerPhone = sale.CustomerPhone,
                 Status = sale.Status.ToString(),
                 SaleDate = sale.SaleDate,
                 SubTotal = sale.SubTotal,
                 TaxAmount = sale.TotalGSTAmount,
                 DiscountAmount = sale.DiscountAmount,
                 TotalAmount = sale.TotalAmount,
+                PaymentMethod = sale.PaymentMethod,
+                CashAmount = sale.CashAmount,
+                UPIAmount = sale.UPIAmount,
+                CardAmount = sale.CardAmount,
+                PayLaterAmount = sale.PayLaterAmount,
+                Notes = request.Notes,
                 Items = sale.Items.Select(i => new SaleItemDto
                 {
                     Id = i.Id,

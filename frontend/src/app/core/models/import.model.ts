@@ -69,3 +69,8 @@ export interface ImportPreviewRow {
   data: Record<string, any>;
   errors?: string[];
 }
+
+export interface ImportStatusResponse {
+  job: ImportJob;
+  progress: number;
+}

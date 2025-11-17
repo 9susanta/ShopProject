@@ -37,6 +37,10 @@ export interface Sale {
   discountAmount: number;
   totalAmount: number;
   paymentMethod: PaymentMethod;
+  cashAmount?: number;
+  upiAmount?: number;
+  cardAmount?: number;
+  payLaterAmount?: number;
   paymentReference?: string;
   notes?: string;
 }
@@ -47,6 +51,10 @@ export interface CreateSaleRequest {
   items: SaleItemRequest[];
   discountAmount?: number;
   paymentMethod: PaymentMethod;
+  cashAmount?: number;
+  upiAmount?: number;
+  cardAmount?: number;
+  payLaterAmount?: number;
   paymentReference?: string;
   notes?: string;
 }

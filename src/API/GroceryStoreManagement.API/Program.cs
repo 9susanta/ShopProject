@@ -21,6 +21,8 @@ builder.Services.AddControllers()
         // Ensure camelCase property names for JSON serialization (matches frontend expectations)
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.WriteIndented = false;
+        // Allow string enum values from frontend to be converted to enum (e.g., "Cash" -> PaymentMethod.Cash)
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase));
     });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

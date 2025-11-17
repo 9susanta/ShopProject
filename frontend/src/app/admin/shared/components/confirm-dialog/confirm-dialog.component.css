@@ -1,0 +1,124 @@
+.confirm-dialog {
+  min-width: 400px;
+  max-width: 500px;
+  padding: 0;
+}
+
+::ng-deep .mat-mdc-dialog-container .mdc-dialog__content {
+  padding: 24px 24px 0 24px !important;
+}
+
+.confirm-dialog h2 {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gray-900, #1a1a1a);
+}
+
+.confirm-dialog p {
+  margin: 0;
+  color: var(--gray-700, #4a4a4a);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.mat-mdc-dialog-actions {
+  margin-top: 24px;
+  padding: 8px 24px 24px 24px !important;
+  gap: 12px;
+  margin-bottom: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+}
+
+.cancel-button {
+  min-width: 100px;
+  font-weight: 500;
+  color: var(--gray-700, #4a4a4a) !important;
+  padding: 8px 20px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.cancel-button:hover {
+  background-color: var(--gray-100, #f5f5f5) !important;
+  color: var(--gray-900, #1a1a1a) !important;
+}
+
+.confirm-button {
+  min-width: 120px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  padding: 8px 24px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.confirm-button[color="primary"] {
+  background: var(--vivid-pink, #e91e63) !important;
+  color: white !important;
+}
+
+.confirm-button[color="primary"]:hover {
+  background: var(--vivid-pink-dark, #c2185b) !important;
+  box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3);
+  transform: translateY(-1px);
+}
+
+.confirm-button[color="warn"] {
+  background: #f44336 !important;
+  color: white !important;
+}
+
+.confirm-button[color="warn"]:hover {
+  background: #d32f2f !important;
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+  transform: translateY(-1px);
+}
+
+.confirm-button[color="accent"] {
+  background: #ff9800 !important;
+  color: white !important;
+}
+
+.confirm-button[color="accent"]:hover {
+  background: #f57c00 !important;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .confirm-dialog {
+    min-width: 280px;
+    max-width: 90vw;
+  }
+
+  .mat-mdc-dialog-actions {
+    padding: 8px 16px 16px 16px !important;
+  }
+
+  ::ng-deep .mat-mdc-dialog-container .mdc-dialog__content {
+    padding: 16px 16px 0 16px !important;
+  }
+
+  .dialog-actions {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
+
+  .cancel-button,
+  .confirm-button {
+    width: 100%;
+    min-width: unset;
+  }
+}
+

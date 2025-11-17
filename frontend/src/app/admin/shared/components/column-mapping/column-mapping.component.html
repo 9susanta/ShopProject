@@ -1,0 +1,34 @@
+<div class="column-mapping-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Map Excel Columns to Fields</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="space-y-4">
+        @for (field of requiredFields; track field) {
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>{{ getFieldLabel(field) }} @if (isFieldRequired(field)) { * }</mat-label>
+            <mat-select [(ngModel)]="mappings()[field]" (selectionChange)="onFieldChange(field, $event.value)">
+              <mat-option [value]="undefined">-- Select Column --</mat-option>
+              @for (header of excelHeaders; track header) {
+                <mat-option [value]="header">{{ header }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+      </div>
+
+      <div class="flex gap-4 mt-6">
+        <button mat-raised-button color="primary" (click)="onApply()" [disabled]="!validateMapping()">
+          <mat-icon>check</mat-icon>
+          Apply Mapping
+        </button>
+        <button mat-raised-button color="accent" (click)="onSave()" [disabled]="!validateMapping()">
+          <mat-icon>save</mat-icon>
+          Save Mapping
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+

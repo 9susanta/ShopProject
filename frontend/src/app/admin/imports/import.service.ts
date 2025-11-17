@@ -7,8 +7,9 @@ import {
   ImportStartRequest,
   ImportStatusResponse,
   ImportJob,
+  UpdateExistingBy,
 } from '../../core/models/import.model';
-import { FilePreview } from '../../shared/components/file-import/file-import.component';
+import { FilePreview } from '../shared/components/file-import/file-import.component';
 
 @Injectable({
   providedIn: 'root',
@@ -24,14 +25,30 @@ export class ImportService {
     return this.api.uploadFile<ImportUploadResponse>('admin/imports/upload', file);
   }
 
-  /**
-   * Start import job with mapping
-   * Calls POST /admin/imports/{jobId}/start
-   */
-  startImport(jobId: string, mapping: { [key: string]: string }): Observable<void> {
-    const payload: ImportStartRequest = { mapping };
+         /**
+          * Start import job with mapping
+          * Calls POST /admin/imports/{jobId}/start
+          */
+         startImport(jobId: string, mapping: { [key: string]: string }): Observable<void> {
+    const payload: ImportStartRequest = {
+      columnMapping: mapping,
+      options: {
+        createMissingCategories: true,
+        updateExistingBy: UpdateExistingBy.Barcode,
+        generateBarcodeIfMissing: true,
+        ignoreDuplicates: false,
+        chunkSize: 100,
+      },
+    };
     return this.api.post<void>(`admin/imports/${jobId}/start`, payload);
   }
+
+         /**
+          * Start import job with full request payload
+          */
+         startImportWithOptions(jobId: string, payload: ImportStartRequest): Observable<void> {
+           return this.api.post<void>(`admin/imports/${jobId}/start`, payload);
+         }
 
   /**
    * Get import job status

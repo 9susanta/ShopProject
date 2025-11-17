@@ -11,54 +11,59 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./features/auth/login/login.component').then(m => m.LoginComponent),
+      import('./auth/login/login.component').then(m => m.LoginComponent),
+  },
+  {
+    path: 'admin-imports-legacy',
+    loadComponent: () =>
+      import('./admin/imports/import-upload.component').then(m => m.ImportUploadComponent),
   },
   {
     path: 'admin',
     canActivate: [AdminGuard],
     loadChildren: () =>
-      import('./features/admin/admin.routes').then(m => m.adminRoutes),
+      import('./admin/features/admin/admin.routes').then(m => m.adminRoutes),
   },
   {
     path: 'pos',
     loadChildren: () =>
-      import('./features/pos/pos.routes').then(m => m.posRoutes),
+      import('./client/features/pos/pos.routes').then(m => m.posRoutes),
   },
   {
     path: 'inventory',
     canActivate: [AuthGuard],
     loadChildren: () =>
-      import('./features/inventory/inventory.routes').then(m => m.inventoryRoutes),
+      import('./admin/features/inventory/inventory.routes').then(m => m.inventoryRoutes),
   },
   {
     path: 'purchasing',
     canActivate: [AuthGuard],
     loadChildren: () =>
-      import('./features/purchasing/purchasing.routes').then(m => m.purchasingRoutes),
+      import('./admin/features/purchasing/purchasing.routes').then(m => m.purchasingRoutes),
   },
   {
     path: 'reports',
     canActivate: [AuthGuard],
     loadChildren: () =>
-      import('./features/reports/reports.routes').then(m => m.reportsRoutes),
+      import('./admin/features/reports/reports.routes').then(m => m.reportsRoutes),
   },
   {
     path: 'settings',
     canActivate: [AuthGuard],
     loadChildren: () =>
-      import('./features/settings/settings.routes').then(m => m.settingsRoutes),
+      import('./admin/features/settings/settings.routes').then(m => m.settingsRoutes),
   },
   {
     path: 'inventory/adjustments',
     canActivate: [AuthGuard],
     loadChildren: () =>
-      import('./features/adjustments/adjustments.routes').then(m => m.adjustmentsRoutes),
+      import('./admin/features/adjustments/adjustments.routes').then(m => m.adjustmentsRoutes),
   },
   {
     path: 'admin/audit',
     canActivate: [AuthGuard],
     loadChildren: () =>
-      import('./features/audit/audit.routes').then(m => m.auditRoutes),
+      import('./admin/features/audit/audit.routes').then(m => m.auditRoutes),
   },
   {
     path: '**',

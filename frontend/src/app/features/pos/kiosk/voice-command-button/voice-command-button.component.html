@@ -1,8 +1,0 @@
-<button
-  class="voice-button"
-  [class.listening]="isListening"
-  (click)="toggleListening()"
-  [attr.aria-label]="isListening ? 'Stop listening' : 'Start voice command'">
-  <span class="material-icons">{{ isListening ? 'mic' : 'mic_none' }}</span>
-</button>
-

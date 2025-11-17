@@ -9,7 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { FormsModule } from '@angular/forms';
-import { FileImportComponent } from '../../shared/components/file-import/file-import.component';
+import { FileImportComponent } from '../shared/components/file-import/file-import.component';
 
 describe('ImportUploadComponent', () => {
   let component: ImportUploadComponent;

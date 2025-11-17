@@ -9,8 +9,8 @@ import { Subscription, firstValueFrom } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ImportService } from './import.service';
 import { SignalRService } from '../../core/services/signalr.service';
-import { ImportStatus, ImportJob } from '../../core/models/import.model';
-import { FileImportComponent, FilePreview } from '../../shared/components/file-import/file-import.component';
+import { ImportJobStatus, ImportJob } from '../../core/models/import.model';
+import { FileImportComponent, FilePreview } from '../shared/components/file-import/file-import.component';
 
 @Component({
   selector: 'grocery-import-upload',
@@ -161,20 +161,11 @@ export class ImportUploadComponent implements OnInit, OnDestroy {
 
     try {
       const response = await firstValueFrom(this.importService.uploadFile(file));
-      if (response) {
-        this.currentJobId.set(response.jobId);
-        // Update preview if server returned different preview
-        if (response.previewRows && response.headers) {
-          const preview: FilePreview = {
-            headers: response.headers,
-            rows: response.previewRows,
-            fileName: response.fileName,
-            fileType: file.name.endsWith('.json') ? 'json' : 'xlsx',
-          };
-          this.preview.set(preview);
-          this.initializeMapping();
-        }
-      }
+             if (response) {
+               this.currentJobId.set(response.jobId);
+               // Note: ImportUploadResponse doesn't include preview data
+               // Preview should be handled by FileImportComponent
+             }
     } catch (error: any) {
       console.error('Upload failed:', error);
       this.errors.set([error.userMessage || 'Failed to upload file']);
@@ -197,10 +188,10 @@ export class ImportUploadComponent implements OnInit, OnDestroy {
     this.progress.set(0);
     this.errors.set([]);
 
-    try {
-      await firstValueFrom(
-        this.importService.startImport(this.currentJobId()!, this.mapping())
-      );
+           try {
+             await firstValueFrom(
+               this.importService.startImport(this.currentJobId()!, this.mapping())
+             );
       this.startStatusPolling();
     } catch (error: any) {
       console.error('Import start failed:', error);
@@ -227,13 +218,13 @@ export class ImportUploadComponent implements OnInit, OnDestroy {
           this.progress.set(response.progress);
 
           if (
-            response.job.status === ImportStatus.Completed ||
-            response.job.status === ImportStatus.Failed ||
-            response.job.status === ImportStatus.Cancelled
+            response.job.status === ImportJobStatus.Completed ||
+            response.job.status === ImportJobStatus.Failed ||
+            response.job.status === ImportJobStatus.Cancelled
           ) {
             this.isImporting.set(false);
-            if (response.job.errors) {
-              this.errors.set(response.job.errors);
+            if (response.job.errorMessage) {
+              this.errors.set([response.job.errorMessage]);
             }
           }
         },
@@ -249,14 +240,15 @@ export class ImportUploadComponent implements OnInit, OnDestroy {
       const file = this.selectedFile();
       this.importStatus.set({
         id: event.jobId,
-        status: event.status as ImportStatus,
+        status: event.status as ImportJobStatus,
         fileName: file?.name || '',
+        fileType: file?.name.endsWith('.json') ? 'json' : 'xlsx',
         totalRows: event.totalRows || 0,
         processedRows: event.processedRows || 0,
-        successRows: 0,
-        errorRows: 0,
+        successfulRows: event.successfulRows || 0,
+        failedRows: event.failedRows || 0,
         createdAt: new Date().toISOString(),
-      });
+      } as ImportJob);
     }
 
     if (event.errors) {

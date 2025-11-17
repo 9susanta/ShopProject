@@ -89,13 +89,13 @@
           {{ importStatus()!.processedRows }} / {{ importStatus()!.totalRows }}
         </span>
       </div>
-      <div *ngIf="importStatus()!.successRows > 0" class="flex items-center justify-between">
+      <div *ngIf="importStatus()!.successfulRows > 0" class="flex items-center justify-between">
         <span class="text-sm" style="color: var(--gray-600);">Success:</span>
-        <span class="text-sm font-medium" style="color: var(--vivid-pink);">{{ importStatus()!.successRows }}</span>
+        <span class="text-sm font-medium" style="color: var(--vivid-pink);">{{ importStatus()!.successfulRows }}</span>
       </div>
-      <div *ngIf="importStatus()!.errorRows > 0" class="flex items-center justify-between">
+      <div *ngIf="importStatus()!.failedRows > 0" class="flex items-center justify-between">
         <span class="text-sm" style="color: var(--gray-600);">Errors:</span>
-        <span class="text-sm font-medium" style="color: var(--hot-red);">{{ importStatus()!.errorRows }}</span>
+        <span class="text-sm font-medium" style="color: var(--hot-red);">{{ importStatus()!.failedRows }}</span>
       </div>
     </div>
   </div>
