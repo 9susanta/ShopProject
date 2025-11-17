@@ -31,7 +31,11 @@ import { CheckoutModalComponent } from '../../../shared/components/checkout-moda
     CheckoutModalComponent
   ],
   templateUrl: './pos.component.html',
-  styleUrls: ['./pos.component.css'],
+  styleUrls: [
+    './pos.component.css',
+    './pos-products.component.css',
+    './pos-cart.component.css'
+  ],
 })
 export class PosComponent implements OnInit, OnDestroy {
   // Constant for unlimited quantity (when stock data not available)
@@ -94,6 +98,18 @@ export class PosComponent implements OnInit, OnDestroy {
   cartItemCount = computed(() => 
     this.cart().reduce((sum, item) => sum + item.quantity, 0)
   );
+
+  // Track selected quantities before adding to cart
+  selectedQuantities = signal<Map<string, number>>(new Map());
+
+  // Computed signal for cart quantities by product ID
+  cartQuantities = computed(() => {
+    const quantities = new Map<string, number>();
+    this.cart().forEach(item => {
+      quantities.set(item.product.id, item.quantity);
+    });
+    return quantities;
+  });
 
   // Effect to handle search debouncing (Angular 20 feature)
   constructor() {
@@ -332,5 +348,126 @@ export class PosComponent implements OnInit, OnDestroy {
     if (response?.pdfUrl) {
       window.open(response.pdfUrl, '_blank');
     }
+  }
+
+  // Get cart quantity for a specific product
+  getCartQuantity(productId: string): number {
+    return this.cartQuantities().get(productId) || 0;
+  }
+
+  // Get selected quantity for a specific product (before adding to cart)
+  getSelectedQuantity(productId: string): number {
+    return this.selectedQuantities().get(productId) || 0;
+  }
+
+  // Set selected quantity
+  setSelectedQuantity(productId: string, quantity: number): void {
+    const current = new Map(this.selectedQuantities());
+    if (quantity <= 0) {
+      current.delete(productId);
+    } else {
+      current.set(productId, quantity);
+    }
+    this.selectedQuantities.set(current);
+  }
+
+  // Get max quantity available for a product
+  getMaxQuantity(productId: string): number {
+    const product = this.products().find(p => p.id === productId);
+    if (!product) return this.UNLIMITED_QUANTITY;
+    if (product.availableQuantity === undefined || product.availableQuantity === null) {
+      return this.UNLIMITED_QUANTITY;
+    }
+    return product.availableQuantity;
+  }
+
+  // Increment selected quantity (before adding to cart)
+  incrementSelectedQuantity(product: Product): void {
+    const currentQty = this.getSelectedQuantity(product.id);
+    const maxQty = this.getMaxQuantity(product.id);
+    const newQty = Math.min(currentQty + 1, maxQty);
+    this.setSelectedQuantity(product.id, newQty);
+  }
+
+  // Decrement selected quantity (before adding to cart)
+  decrementSelectedQuantity(product: Product): void {
+    const currentQty = this.getSelectedQuantity(product.id);
+    if (currentQty > 0) {
+      this.setSelectedQuantity(product.id, currentQty - 1);
+    }
+  }
+
+  // Add selected quantity to cart
+  addSelectedToCart(product: Product): void {
+    const quantity = this.getSelectedQuantity(product.id);
+    if (quantity > 0) {
+      this.onAddToCart({ product, quantity });
+      this.setSelectedQuantity(product.id, 0); // Reset after adding
+    }
+  }
+
+  // Increment product quantity in cart
+  incrementProductQuantity(product: Product): void {
+    const currentQty = this.getCartQuantity(product.id);
+    const maxQty = this.getMaxQuantity(product.id);
+    const newQty = Math.min(currentQty + 1, maxQty);
+    
+    if (newQty > currentQty) {
+      this.onAddToCart({ product, quantity: 1 });
+    }
+  }
+
+  // Decrement product quantity in cart
+  decrementProductQuantity(product: Product): void {
+    const currentItem = this.cart().find(item => item.product.id === product.id);
+    if (currentItem) {
+      const newQty = currentItem.quantity - 1;
+      this.onQuantityChange(currentItem, newQty);
+    }
+  }
+
+  // Handle tile click - add 1 quantity to cart
+  onTileClick(product: Product, event: Event): void {
+    // Don't add if clicking on buttons or controls
+    const target = event.target as HTMLElement;
+    if (target.closest('button') || target.closest('.tile-controls')) {
+      return;
+    }
+    
+    // Don't add if out of stock
+    if (this.isOutOfStock(product)) {
+      return;
+    }
+
+    // Add 1 quantity to cart
+    this.onAddToCart({ product, quantity: 1 });
+  }
+
+  // Handle Add to Cart button click
+  onAddToCartClick(product: Product, event: Event): void {
+    event.stopPropagation();
+    if (!this.isOutOfStock(product)) {
+      this.onAddToCart({ product, quantity: 1 });
+    }
+  }
+
+  // Check if product is out of stock
+  isOutOfStock(product: Product): boolean {
+    if (product.availableQuantity === undefined || product.availableQuantity === null) {
+      return false; // Assume available if stock info not available
+    }
+    return product.availableQuantity === 0;
+  }
+
+  // Check if product is low stock (less than 10 or less than 20% of MRP)
+  isLowStock(product: Product): boolean {
+    if (product.availableQuantity === undefined || product.availableQuantity === null) {
+      return false;
+    }
+    if (product.availableQuantity === 0) {
+      return false; // Out of stock, not low stock
+    }
+    // Consider low stock if less than 10 units or less than 5% of a reasonable threshold
+    return product.availableQuantity < 10;
   }
 }

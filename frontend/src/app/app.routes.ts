@@ -16,7 +16,7 @@ export const routes: Routes = [
   {
     path: 'admin-imports-legacy',
     loadComponent: () =>
-      import('./admin/imports/import-upload.component').then(m => m.ImportUploadComponent),
+      import('./admin/features/admin/imports/import-upload/import-upload.component').then(m => m.ImportUploadComponent),
   },
   {
     path: 'admin',

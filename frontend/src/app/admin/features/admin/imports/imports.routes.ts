@@ -24,7 +24,7 @@ export const importRoutes: Routes = [
            path: 'upload',
            canActivate: [AdminGuard],
            loadComponent: () =>
-             import('../../../../admin/imports/import-upload.component').then(m => m.ImportUploadComponent),
+             import('./import-upload/import-upload.component').then(m => m.ImportUploadComponent),
          },
 ];
 
