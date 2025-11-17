@@ -26,15 +26,44 @@
       </div>
       <div class="filter-group">
         <label for="category" class="form-label">Category</label>
-        <input
-          id="category"
-          type="text"
-          class="form-control"
-          [value]="categoryFilter()"
-          (input)="categoryFilter.set($any($event.target).value)"
-          (change)="onFilterChange()"
-          placeholder="Filter by category"
-        />
+        <mat-form-field appearance="outline" class="category-filter-field">
+          <mat-select
+            id="category"
+            [value]="categoryFilter()"
+            (selectionChange)="categoryFilter.set($event.value); onFilterChange()"
+            placeholder="Select Categories"
+            multiple>
+            <mat-select-trigger>
+              @if (categoryFilter().length === 0) {
+                <span class="select-placeholder">All Categories</span>
+              } @else if (categoryFilter().length === 1) {
+                <span>{{ getCategoryName(categoryFilter()[0]) }}</span>
+              } @else {
+                <span>{{ categoryFilter().length }} selected</span>
+              }
+            </mat-select-trigger>
+            <!-- Search input -->
+            <div class="category-search-container">
+              <input
+                matInput
+                type="text"
+                placeholder="Search categories..."
+                [value]="categorySearchTerm()"
+                (input)="categorySearchTerm.set($any($event.target).value)"
+                (click)="$event.stopPropagation()"
+                class="category-search-input" />
+            </div>
+            <!-- Filtered category options -->
+            @for (category of filteredCategories(); track category.id) {
+              <mat-option [value]="category.id">
+                {{ category.name }}
+              </mat-option>
+            }
+            @if (filteredCategories().length === 0) {
+              <mat-option disabled>No categories found</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
       </div>
       <div class="filter-group">
         <label for="lowStock" class="form-label">Low Stock</label>
@@ -53,7 +82,7 @@
         <button class="btn btn-primary" (click)="onSearch()">Search</button>
         <button
           class="btn btn-secondary"
-          (click)="searchTerm.set(''); categoryFilter.set(''); supplierFilter.set(''); lowStockFilter.set(undefined); onFilterChange()">
+          (click)="searchTerm.set(''); categoryFilter.set([]); categorySearchTerm.set(''); supplierFilter.set(''); lowStockFilter.set(undefined); onFilterChange()">
           Clear
         </button>
       </div>

@@ -2,6 +2,7 @@ import { Injectable, Injector } from '@angular/core';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { tap, catchError, map, shareReplay } from 'rxjs/operators';
 import { ApiService } from './api.service';
+import { environment } from '@environments/environment';
 import {
   User,
   UserRole,
@@ -59,16 +60,21 @@ export class AuthService {
     const storedAccessToken = this.accessToken || this.getStoredAccessToken();
     const storedRefreshToken = this.refreshToken || this.getStoredRefreshToken();
 
-    console.log('Initializing auth:', {
-      hasUser: !!storedUser,
-      hasAccessToken: !!storedAccessToken,
-      hasRefreshToken: !!storedRefreshToken
-    });
+    // Log initialization status without sensitive data
+    if (!environment.production) {
+      console.debug('Initializing auth:', {
+        hasUser: !!storedUser,
+        hasAccessToken: !!storedAccessToken,
+        hasRefreshToken: !!storedRefreshToken
+      });
+    }
 
     // Update user subject if we have a stored user (synchronous - no HTTP calls)
     if (storedUser) {
       this.currentUserSubject.next(storedUser);
-      console.log('User restored from storage:', storedUser);
+      if (!environment.production) {
+        console.debug('User restored from storage');
+      }
     }
 
     // If we have a user and refresh token, we're good
@@ -78,10 +84,12 @@ export class AuthService {
       // Check if access token is expired (if it exists) - just for logging
       const isTokenExpired = storedAccessToken ? this.isTokenExpired(storedAccessToken) : true;
       
-      if (!storedAccessToken || isTokenExpired) {
-        console.log('Access token missing or expired. Will be refreshed by interceptor on first API call.');
-      } else {
-        console.log('Access token is still valid');
+      if (!environment.production) {
+        if (!storedAccessToken || isTokenExpired) {
+          console.debug('Access token missing or expired. Will be refreshed by interceptor on first API call.');
+        } else {
+          console.debug('Access token is still valid');
+        }
       }
     } else if (storedUser && !storedRefreshToken) {
       // User exists but no refresh token - clear user data
@@ -136,17 +144,21 @@ export class AuthService {
           role: mappedRole
         };
         
-        console.log('Setting user:', user);
+        if (!environment.production) {
+          console.debug('User authenticated successfully');
+        }
         this.setTokens(response.accessToken, response.refreshToken);
         this.setUser(user);
         this.currentUserSubject.next(user);
         
-        // Verify after setting
-        console.log('After setting user:', {
-          accessToken: this.accessToken ? 'present' : 'missing',
-          currentUser: this.getCurrentUser(),
-          isAuthenticated: this.isAuthenticated()
-        });
+        // Verify after setting (without logging sensitive data)
+        if (!environment.production) {
+          console.debug('Auth state verified:', {
+            hasAccessToken: !!this.accessToken,
+            hasUser: !!this.getCurrentUser(),
+            isAuthenticated: this.isAuthenticated()
+          });
+        }
       }),
       catchError((error) => {
         console.error('Login failed:', error);
@@ -304,12 +316,14 @@ export class AuthService {
     // If only refresh token exists, the interceptor will handle token refresh
     const result = hasUser && (hasAccessToken || hasRefreshToken);
     
-    console.log('isAuthenticated check:', {
-      hasUser,
-      hasAccessToken,
-      hasRefreshToken,
-      result
-    });
+    if (!environment.production) {
+      console.debug('isAuthenticated check:', {
+        hasUser,
+        hasAccessToken,
+        hasRefreshToken,
+        result
+      });
+    }
     
     return result;
   }
@@ -372,7 +386,9 @@ export class AuthService {
   hasRole(role: string): boolean {
     const user = this.getCurrentUser();
     if (!user) {
-      console.log('hasRole: No user found');
+      if (!environment.production) {
+        console.debug('hasRole: No user found');
+      }
       return false;
     }
     
@@ -385,12 +401,13 @@ export class AuthService {
                      userRole === (requestedRole as UserRole) ||
                      userRole.toLowerCase() === requestedRole.toLowerCase();
     
-    console.log('hasRole check:', { 
-      requestedRole, 
-      userRole, 
-      roleType: typeof user.role,
-      match: roleMatch 
-    });
+    if (!environment.production) {
+      console.debug('hasRole check:', { 
+        requestedRole, 
+        hasRole: !!userRole, 
+        match: roleMatch 
+      });
+    }
     return roleMatch;
   }
 

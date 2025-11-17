@@ -22,6 +22,77 @@
   gap: 8px;
 }
 
+.category-filter-field {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.category-filter-field ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+.category-filter-field ::ng-deep .mat-mdc-form-field-label {
+  display: none !important;
+}
+
+.category-filter-field ::ng-deep .mat-mdc-text-field-wrapper {
+  padding-bottom: 0;
+  height: 38px;
+  min-height: 38px;
+  align-items: center;
+}
+
+.category-filter-field ::ng-deep .mat-mdc-form-field-infix {
+  padding: 8px 12px !important;
+  min-height: 38px !important;
+  border-top: 0;
+  display: flex;
+  align-items: center;
+}
+
+.category-filter-field ::ng-deep .mat-mdc-select-trigger {
+  min-height: 22px;
+  line-height: 22px;
+  display: flex;
+  align-items: center;
+}
+
+.category-filter-field ::ng-deep .mat-mdc-select-placeholder {
+  color: var(--gray-500);
+}
+
+.select-placeholder {
+  color: var(--gray-500);
+}
+
+.category-search-container {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+.category-search-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 8px;
+  font-size: 14px;
+}
+
+.category-search-input::placeholder {
+  color: var(--gray-500);
+}
+
+::ng-deep .category-filter-field .mat-mdc-select-panel {
+  max-height: 400px !important;
+}
+
+::ng-deep .category-filter-field .mat-mdc-option {
+  padding: 8px 16px;
+}
+
 .filter-actions {
   display: flex;
   gap: 8px;

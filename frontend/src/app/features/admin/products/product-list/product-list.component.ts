@@ -10,10 +10,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ProductService } from '../product.service';
 import { Product, ProductFilters } from '@core/models/product.model';
 import { ToastService } from '@core/toast/toast.service';
-import { Subject, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
+import { CategoryService } from '@core/services/category.service';
+import { CategoryDto } from '@core/models/category.model';
+import { Subject, Subscription, debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
 import { environment } from '@environments/environment';
 
 export interface ProductTableItem extends Product {
@@ -35,6 +38,7 @@ export interface ProductTableItem extends Product {
     MatInputModule,
     MatFormFieldModule,
     MatSelectModule,
+    MatCheckboxModule,
   ],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css'],
@@ -44,6 +48,7 @@ export interface ProductTableItem extends Product {
 export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
   private productService = inject(ProductService);
   private toastService = inject(ToastService);
+  private categoryService = inject(CategoryService);
   private cdr = inject(ChangeDetectorRef);
   private subscriptions = new Subscription();
 
@@ -66,6 +71,7 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   dataSource = new MatTableDataSource<ProductTableItem>([]);
   products = signal<Product[]>([]);
+  categories = signal<CategoryDto[]>([]);
   isLoading = signal(false);
   totalCount = signal(0);
   currentPage = signal(1);
@@ -73,7 +79,8 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Filters
   searchTerm = signal('');
-  categoryFilter = signal<string>('');
+  categoryFilter = signal<string[]>([]);
+  categorySearchTerm = signal('');
   supplierFilter = signal<string>('');
   lowStockFilter = signal<boolean | undefined>(undefined);
 
@@ -87,6 +94,17 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   totalPages = computed(() => Math.ceil(this.totalCount() / this.pageSize()));
 
+  // Filtered categories for search
+  filteredCategories = computed(() => {
+    const search = this.categorySearchTerm().toLowerCase();
+    if (!search) {
+      return this.categories();
+    }
+    return this.categories().filter(cat => 
+      cat.name.toLowerCase().includes(search)
+    );
+  });
+
   ngOnInit(): void {
     // Set up debounced search
     this.searchSubscription = this.searchSubject
@@ -99,7 +117,22 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadProducts();
       });
 
+    // Load categories and products
+    this.loadCategories();
     this.loadProducts();
+  }
+
+  loadCategories(): void {
+    const sub = this.categoryService.getCategories().subscribe({
+      next: (categories) => {
+        this.categories.set(categories);
+      },
+      error: (error) => {
+        console.error('Error loading categories:', error);
+        // Don't show error toast for categories, just log it
+      },
+    });
+    this.subscriptions.add(sub);
   }
 
   ngAfterViewInit(): void {
@@ -112,6 +145,16 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.dataSource.sortingDataAccessor = (item: any, property: string) => {
       return item[property] || '';
     };
+
+    // Set initial sort state
+    if (this.sort) {
+      this.sort.active = this.sortBy();
+      this.sort.direction = this.sortOrder() === 'asc' ? 'asc' : 'desc';
+      this.sort.sortChange.emit({
+        active: this.sort.active,
+        direction: this.sort.direction,
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -127,7 +170,7 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const filters: ProductFilters = {
       search: this.searchTerm() || undefined,
-      categoryId: this.categoryFilter() || undefined,
+      categoryId: this.categoryFilter().length > 0 ? this.categoryFilter()[0] : undefined, // Backend may only support single category filter
       supplierId: this.supplierFilter() || undefined,
       lowStock: this.lowStockFilter(),
       sortBy: this.sortBy() || 'name', // Always provide a sort (default to name)
@@ -145,8 +188,18 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (response) => {
         this.products.set(response.items);
         this.totalCount.set(response.totalCount);
+        
+        // Map category names to products
+        const productsWithCategories: ProductTableItem[] = response.items.map(product => {
+          const category = this.categories().find(cat => cat.id === product.categoryId);
+          return {
+            ...product,
+            categoryName: category?.name || '-',
+          } as ProductTableItem;
+        });
+        
         // Simply update data - header stays static, only rows update
-        this.dataSource.data = response.items as ProductTableItem[];
+        this.dataSource.data = productsWithCategories;
         
         // Update paginator
         if (this.paginator) {
@@ -231,5 +284,11 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
       this.subscriptions.add(sub);
     }
   }
+
+  getCategoryName(categoryId: string): string {
+    const category = this.categories().find(cat => cat.id === categoryId);
+    return category?.name || categoryId;
+  }
+
 }
 

@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject, Subscription, debounceTime, distinctUntilChanged, firstValueFrom, switchMap, catchError, of } from 'rxjs';
 import { PosService } from './pos.service';
 import { VoiceToTextService, VoiceCommand } from '../core/services/voice-to-text.service';
@@ -21,6 +23,8 @@ import { CategoryMultiselectComponent } from '../shared/components/category-mult
   imports: [
     CommonModule, 
     FormsModule, 
+    MatIconModule,
+    MatTooltipModule,
     ProductTileComponent, 
     BarcodeInputComponent,
     QuantityPickerComponent,
@@ -69,10 +73,15 @@ export class PosComponent implements OnInit, OnDestroy {
       filtered = filtered.filter(
         (p) =>
           p.name.toLowerCase().includes(term) ||
+          p.sku?.toLowerCase().includes(term) ||
           p.description?.toLowerCase().includes(term) ||
           p.barcode?.toLowerCase().includes(term)
       );
     }
+
+    // Show all registered products (both active and inactive)
+    // You can optionally filter to show only active products by uncommenting the line below:
+    // filtered = filtered.filter((p) => p.isActive !== false);
 
     return filtered;
   });

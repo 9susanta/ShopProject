@@ -1,53 +1,73 @@
 <div
-  class="product-tile rounded-lg shadow-md overflow-hidden transition-shadow duration-200"
+  class="product-tile"
   [attr.aria-label]="product().name"
   tabindex="0"
   role="button"
   (keydown.enter)="onAddToCart()"
   (keydown.space)="onAddToCart()"
 >
-  <div class="relative">
+  <!-- Product Image -->
+  <div class="product-image-container">
     <img
       [src]="imageUrl()"
       [alt]="product().name"
-      class="w-full h-48 object-cover"
+      class="product-image"
       loading="lazy"
+      (error)="$event.target.src = imageUrl()"
     />
-    <div
-      *ngIf="isLowStock()"
-      class="absolute top-2 right-2 text-white text-xs px-2 py-1 rounded badge-gradient-notification"
-    >
-      Low Stock
-    </div>
+    @if (isLowStock()) {
+      <div class="low-stock-badge">
+        Low Stock
+      </div>
+    }
   </div>
-  <div class="p-4">
-    <h3 class="text-lg font-semibold mb-1 line-clamp-2" style="color: var(--gray-900);" [title]="product().name">
+
+  <!-- Product Info -->
+  <div class="product-info">
+    <h3 class="product-name" [title]="product().name">
       {{ product().name }}
     </h3>
-    <p *ngIf="product().categoryName" class="text-sm mb-2" style="color: var(--gray-600);">
-      {{ product().categoryName }}
-    </p>
-    <div class="flex items-center justify-between mb-3">
-      <span class="text-2xl font-bold" style="color: var(--vivid-pink);">
-        ₹{{ product().salePrice | number: '1.2-2' }}
-      </span>
+    @if (product().categoryName) {
+      <p class="product-category">
+        {{ product().categoryName }}
+      </p>
+    }
+    
+    <!-- Price -->
+    <div class="product-price">
+      <span class="price-amount">₹{{ product().salePrice | number: '1.2-2' }}</span>
+      @if (product().mrp && product().mrp > product().salePrice) {
+        <span class="price-mrp">₹{{ product().mrp | number: '1.2-2' }}</span>
+      }
     </div>
-    <div *ngIf="showQuantityPicker()" class="mb-3">
-      <grocery-quantity-picker
-        [min]="1"
-        [max]="product().availableQuantity ?? UNLIMITED_QUANTITY"
-        [initialValue]="quantity()"
-        (valueChange)="onQuantityChange($event)"
-      ></grocery-quantity-picker>
-    </div>
+
+    <!-- Quantity Picker -->
+    @if (showQuantityPicker()) {
+      <div class="quantity-section">
+        <grocery-quantity-picker
+          [min]="1"
+          [max]="product().availableQuantity ?? UNLIMITED_QUANTITY"
+          [initialValue]="quantity() || 1"
+          (valueChange)="onQuantityChange($event)"
+        ></grocery-quantity-picker>
+      </div>
+    }
+
+    <!-- Add to Cart Button -->
     <button
-      class="w-full btn-gradient-primary py-2 px-4 rounded-lg font-medium"
+      type="button"
+      class="add-to-cart-btn"
       (click)="onAddToCart()"
       [disabled]="product().availableQuantity === 0"
       [attr.aria-label]="'Add ' + product().name + ' to cart'"
     >
-      <span *ngIf="product().availableQuantity === 0">Out of Stock</span>
-      <span *ngIf="product().availableQuantity !== 0">Add to Cart</span>
+      @if (product().availableQuantity === 0) {
+        <span class="material-icons">block</span>
+        <span>Out of Stock</span>
+      } @else {
+        <span class="material-icons">shopping_cart</span>
+        <span class="button-text">Add to Cart</span>
+      }
     </button>
   </div>
 </div>
