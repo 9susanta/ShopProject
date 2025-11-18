@@ -65,7 +65,10 @@ export class ApiService {
         return data;
       }),
       catchError((error) => {
-        console.error(`API GET error for ${endpoint}:`, error);
+        // Only log non-connection errors (status 0 = connection refused)
+        if (error?.status !== 0) {
+          console.error(`API GET error for ${endpoint}:`, error);
+        }
         throw error;
       })
     );
@@ -83,7 +86,10 @@ export class ApiService {
 
     return this.http.post<T>(url, body, httpOptions).pipe(
       catchError((error) => {
-        console.error(`API POST error for ${endpoint}:`, error);
+        // Only log non-connection errors (status 0 = connection refused)
+        if (error?.status !== 0) {
+          console.error(`API POST error for ${endpoint}:`, error);
+        }
         throw error;
       })
     );
@@ -101,7 +107,10 @@ export class ApiService {
 
     return this.http.put<T>(url, body, httpOptions).pipe(
       catchError((error) => {
-        console.error(`API PUT error for ${endpoint}:`, error);
+        // Only log non-connection errors (status 0 = connection refused)
+        if (error?.status !== 0) {
+          console.error(`API PUT error for ${endpoint}:`, error);
+        }
         throw error;
       })
     );
@@ -119,7 +128,10 @@ export class ApiService {
 
     return this.http.delete<T>(url, httpOptions).pipe(
       catchError((error) => {
-        console.error(`API DELETE error for ${endpoint}:`, error);
+        // Only log non-connection errors (status 0 = connection refused)
+        if (error?.status !== 0) {
+          console.error(`API DELETE error for ${endpoint}:`, error);
+        }
         throw error;
       })
     );
@@ -141,7 +153,10 @@ export class ApiService {
 
     return this.http.post<T>(url, formData).pipe(
       catchError((error) => {
-        console.error(`API upload error for ${endpoint}:`, error);
+        // Only log non-connection errors (status 0 = connection refused)
+        if (error?.status !== 0) {
+          console.error(`API upload error for ${endpoint}:`, error);
+        }
         throw error;
       })
     );
@@ -164,7 +179,10 @@ export class ApiService {
         return blob;
       }),
       catchError((error) => {
-        console.error(`API download error for ${endpoint}:`, error);
+        // Only log non-connection errors (status 0 = connection refused)
+        if (error?.status !== 0) {
+          console.error(`API download error for ${endpoint}:`, error);
+        }
         throw error;
       })
     );

@@ -18,7 +18,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             errorMessage = error.error?.message || 'Bad request';
             break;
           case 401:
-            errorMessage = 'Unauthorized. Please login again.';
+            // Use the actual error message from the API for login errors
+            errorMessage = error.error?.message || error.error?.error || 'Invalid email or password';
             break;
           case 403:
             errorMessage = 'Forbidden. You do not have permission to perform this action.';

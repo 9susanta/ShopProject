@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { LoginRequest } from '../../core/models/user.model';
-import { firstValueFrom, Subscription } from 'rxjs';
+import { firstValueFrom, Subscription, catchError, throwError } from 'rxjs';
 
 @Component({
   selector: 'grocery-login',
@@ -69,7 +69,22 @@ export class LoginComponent implements OnInit, OnDestroy {
         password,
       };
 
-      await firstValueFrom(this.authService.login(loginRequest));
+      await firstValueFrom(
+        this.authService.login(loginRequest).pipe(
+          catchError((error) => {
+            // Extract error message from API response
+            let errorMsg = 'Login failed. Please check your credentials.';
+            if (error?.error?.message) {
+              errorMsg = error.error.message;
+            } else if (error?.message) {
+              errorMsg = error.message;
+            }
+            this.error.set(errorMsg);
+            this.isSubmitting.set(false);
+            return throwError(() => error);
+          })
+        )
+      );
 
       // Small delay to ensure state is fully updated
       const delayTimeoutId = window.setTimeout(() => {}, 100);
@@ -114,10 +129,27 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.error.set('Authentication failed. Please try again.');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
-      this.error.set(
-        error?.userMessage || error?.message || 'Login failed. Please check your credentials.'
-      );
+      // Only log non-connection errors
+      if (error?.status !== 0) {
+        console.error('Login error:', error);
+      }
+      
+      // Error message should already be set by catchError in the pipe above
+      // But fallback if it wasn't set (check multiple error formats)
+      if (!this.error()) {
+        let errorMsg = 'Login failed. Please check your credentials.';
+        
+        // Handle connection refused (API not running)
+        if (error?.status === 0 || error?.message?.includes('ERR_CONNECTION_REFUSED')) {
+          errorMsg = 'Unable to connect to server. Please ensure the API is running on http://localhost:5120';
+        } else {
+          errorMsg = error?.error?.message || 
+                    error?.userMessage || 
+                    error?.message || 
+                    errorMsg;
+        }
+        this.error.set(errorMsg);
+      }
     } finally {
       this.isSubmitting.set(false);
     }

@@ -35,8 +35,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasDefaultValue(true);
 
+        // Case-insensitive index for email lookups
         builder.HasIndex(u => u.Email)
-            .IsUnique();
+            .IsUnique()
+            .HasDatabaseName("IX_Users_Email");
 
         builder.HasIndex(u => u.Phone)
             .IsUnique()

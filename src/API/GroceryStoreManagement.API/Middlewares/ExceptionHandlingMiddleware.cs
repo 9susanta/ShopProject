@@ -34,6 +34,9 @@ public class ExceptionHandlingMiddleware
 
         switch (exception)
         {
+            case UnauthorizedAccessException:
+                code = HttpStatusCode.Unauthorized;
+                break;
             case ArgumentException:
             case InvalidOperationException:
                 code = HttpStatusCode.BadRequest;

@@ -48,12 +48,17 @@ public class AuthController : ControllerBase
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogWarning("Login failed: {Message}", ex.Message);
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized(new { message = ex.Message, error = "Invalid credentials" });
         }
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning("Login blocked: {Message}", ex.Message);
-            return StatusCode(423, new { message = ex.Message }); // 423 Locked
+            return StatusCode(423, new { message = ex.Message, error = "Account locked" }); // 423 Locked
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during login");
+            return StatusCode(500, new { message = "An error occurred during login. Please try again.", error = "Login failed" });
         }
     }
 

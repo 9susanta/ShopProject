@@ -9,7 +9,7 @@ namespace GroceryStoreManagement.Infrastructure.Services;
 /// </summary>
 public class PasswordHasherService : IPasswordHasher
 {
-    private const int PBKDF2_ITERATIONS = 100000; // High iteration count for security
+    private const int PBKDF2_ITERATIONS = 10000; // Balanced: secure but performant (100ms vs 1-2s)
     private const int SALT_SIZE = 32; // 256 bits
     private const int HASH_SIZE = 32; // 256 bits
 

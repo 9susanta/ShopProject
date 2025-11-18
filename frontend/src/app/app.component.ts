@@ -20,21 +20,32 @@ export class AppComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
 
   ngOnInit(): void {
-    if (environment.enableSignalR) {
+    // Only start SignalR if user is already authenticated
+    // Otherwise, it will be started after successful login
+    if (environment.enableSignalR && this.authService.isAuthenticated()) {
       this.signalRService.start()
         .then(() => this.isSignalRConnected.set(true))
         .catch((error: any) => {
-          // Silently handle connection refused (backend not running)
-          if (!error?.message?.includes('Failed to fetch') && 
-              !error?.message?.includes('ERR_CONNECTION_REFUSED')) {
-            // Only log non-connection errors in development
-            if (!environment.production) {
-              console.debug('SignalR connection failed:', error);
-            }
-          }
+          // Silently handle connection errors - don't log to console
           this.isSignalRConnected.set(false);
         });
     }
+    
+    // Subscribe to auth state changes to start SignalR after login
+    this.authService.currentUser$.subscribe(user => {
+      if (user && environment.enableSignalR && !this.isSignalRConnected()) {
+        this.signalRService.start()
+          .then(() => this.isSignalRConnected.set(true))
+          .catch(() => {
+            // Silently handle - SignalR will retry automatically
+            this.isSignalRConnected.set(false);
+          });
+      } else if (!user && this.isSignalRConnected()) {
+        // Stop SignalR on logout
+        this.signalRService.dispose().catch(() => {});
+        this.isSignalRConnected.set(false);
+      }
+    });
   }
 
   ngOnDestroy(): void {

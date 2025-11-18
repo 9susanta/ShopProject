@@ -108,7 +108,7 @@ export class SignalRService {
           return 30000;
         },
       })
-      .configureLogging(environment.production ? LogLevel.Error : LogLevel.Warning)
+      .configureLogging(LogLevel.None) // Suppress all SignalR logs to prevent console errors
       .build();
 
     this.setupImportHubHandlers();
@@ -136,7 +136,7 @@ export class SignalRService {
           return 30000;
         },
       })
-      .configureLogging(environment.production ? LogLevel.Error : LogLevel.Warning)
+      .configureLogging(LogLevel.None) // Suppress all SignalR logs to prevent console errors
       .build();
 
     this.setupInventoryHubHandlers();
@@ -207,21 +207,31 @@ export class SignalRService {
 
     this.isStarting = true;
     try {
-      // Start import hub
+      // Start import hub (silently fail if backend not available)
       if (this.importHubConnection && this.importHubConnection.state !== HubConnectionState.Connected) {
-        await this.startHub(this.importHubConnection, 'Import');
+        try {
+          await this.startHub(this.importHubConnection, 'Import');
+        } catch {
+          // Silently handle - will retry automatically when backend is available
+        }
       }
 
-      // Start inventory hub
+      // Start inventory hub (silently fail if backend not available)
       if (this.inventoryHubConnection && this.inventoryHubConnection.state !== HubConnectionState.Connected) {
-        await this.startHub(this.inventoryHubConnection, 'Inventory');
+        try {
+          await this.startHub(this.inventoryHubConnection, 'Inventory');
+        } catch {
+          // Silently handle - will retry automatically when backend is available
+        }
       }
 
-      this.connectionStateSubject.next(HubConnectionState.Connected);
-    } catch (error: any) {
-      if (!environment.production) {
-        console.debug('SignalR: Some hubs may not be available');
+      // Only update state if at least one hub is connected
+      if (this.importHubConnection?.state === HubConnectionState.Connected ||
+          this.inventoryHubConnection?.state === HubConnectionState.Connected) {
+        this.connectionStateSubject.next(HubConnectionState.Connected);
       }
+    } catch (error: any) {
+      // Silently handle - don't log connection errors
     } finally {
       this.isStarting = false;
     }
@@ -237,15 +247,17 @@ export class SignalRService {
         console.log(`SignalR ${hubName} hub connected`);
       }
     } catch (error: any) {
-      if (error?.message?.includes('Failed to fetch') || 
-          error?.message?.includes('ERR_CONNECTION_REFUSED') ||
-          error?.message?.includes('Failed to complete negotiation')) {
-        if (!environment.production) {
-          console.debug(`SignalR ${hubName} hub: Backend not available, will retry automatically`);
-        }
-      } else if (!environment.production) {
-        console.warn(`SignalR ${hubName} hub connection error:`, error);
+      // Silently handle connection errors - don't log to console
+      // SignalR will automatically retry when backend becomes available
+      // Only log in development if it's not a connection refused error
+      const isConnectionError = error?.message?.includes('Failed to fetch') || 
+                               error?.message?.includes('ERR_CONNECTION_REFUSED') ||
+                               error?.message?.includes('Failed to complete negotiation');
+      if (!environment.production && !isConnectionError) {
+        console.debug(`SignalR ${hubName} hub connection error:`, error);
       }
+      // Re-throw to allow caller to handle if needed
+      throw error;
     }
   }
 

@@ -161,7 +161,10 @@ export class AuthService {
         }
       }),
       catchError((error) => {
-        console.error('Login failed:', error);
+        // Only log non-connection errors
+        if (error?.status !== 0) {
+          console.error('Login failed:', error);
+        }
         return throwError(() => error);
       })
     );

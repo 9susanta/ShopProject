@@ -47,8 +47,18 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDto> LoginAsync(LoginRequestDto request, string? clientIp, string? deviceInfo, CancellationToken cancellationToken = default)
     {
+        // Use case-insensitive comparison - normalize email to lowercase for query
+        // Use AsNoTracking for read-only query (faster)
+        var emailLower = request.Email.ToLowerInvariant().Trim();
         var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower(), cancellationToken);
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == emailLower, cancellationToken);
+        
+        // If found, attach to context for updates
+        if (user != null)
+        {
+            _context.Users.Attach(user);
+        }
 
         if (user == null || !user.IsActive)
         {
@@ -63,13 +73,24 @@ public class AuthService : IAuthService
             throw new InvalidOperationException($"Account is locked until {user.LockoutUntil:yyyy-MM-dd HH:mm:ss} UTC");
         }
 
-        // Verify password
+        // Verify password using stored iterations (may be slow for old 100k iterations)
         var isValid = _passwordHasher.VerifyPassword(
             request.Password,
             user.PasswordHash,
             user.PasswordHashAlgorithm,
             user.PasswordSalt,
             user.PasswordIterations);
+        
+        // If password is valid but uses old high iterations (>20k), rehash with new iterations for future logins
+        // This migrates old passwords to faster hashing on next login
+        if (isValid && user.PasswordIterations.HasValue && user.PasswordIterations > 20000)
+        {
+            var newHashResult = _passwordHasher.HashPassword(request.Password);
+            user.ChangePassword(newHashResult.Hash);
+            user.SetPasswordMetadata(newHashResult.Algorithm, newHashResult.Salt, newHashResult.Iterations ?? 10000);
+            _logger.LogInformation("Password rehashed for user {Email} - migrated from {OldIterations} to {NewIterations} iterations", 
+                user.Email, user.PasswordIterations, newHashResult.Iterations ?? 10000);
+        }
 
         if (!isValid)
         {
@@ -92,7 +113,6 @@ public class AuthService : IAuthService
         // Successful login - reset failed attempts and record login
         user.ResetFailedLoginAttempts();
         user.RecordLogin();
-        await _context.SaveChangesAsync(cancellationToken);
 
         // Generate tokens
         var accessToken = _tokenService.GenerateAccessToken(user);
@@ -110,6 +130,8 @@ public class AuthService : IAuthService
         };
 
         await _context.Set<RefreshToken>().AddAsync(refreshToken, cancellationToken);
+        
+        // Single database save for both user update and refresh token (reduces round trips)
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Successful login for user {Email} from IP: {Ip}", user.Email, clientIp);

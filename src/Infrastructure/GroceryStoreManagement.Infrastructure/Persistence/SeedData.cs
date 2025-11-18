@@ -1,6 +1,7 @@
 using GroceryStoreManagement.Application.Interfaces;
 using GroceryStoreManagement.Domain.Entities;
 using GroceryStoreManagement.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GroceryStoreManagement.Infrastructure.Persistence;
@@ -14,10 +15,10 @@ public static class SeedData
         {
             var passwordHasher = serviceProvider.GetRequiredService<IPasswordHasher>();
             
-            // Create SuperAdmin user
-            var superAdminResult = passwordHasher.HashPassword("SuperAdmin@123"); // Default password
+            // Create SuperAdmin user (for E2E tests: superadmin@test.com)
+            var superAdminResult = passwordHasher.HashPassword("SuperAdmin123!"); // Test password
             var superAdmin = new User(
-                "superadmin@grocerystore.com",
+                "superadmin@test.com",
                 "Super Admin",
                 superAdminResult.Hash,
                 UserRole.SuperAdmin,
@@ -25,10 +26,10 @@ public static class SeedData
             );
             superAdmin.SetPasswordMetadata(superAdminResult.Algorithm, superAdminResult.Salt, superAdminResult.Iterations);
 
-            // Create Admin user
-            var adminResult = passwordHasher.HashPassword("Admin@123"); // Default password
+            // Create Admin user (for E2E tests: admin@test.com)
+            var adminResult = passwordHasher.HashPassword("Admin123!"); // Test password
             var admin = new User(
-                "admin@grocerystore.com",
+                "admin@test.com",
                 "Admin User",
                 adminResult.Hash,
                 UserRole.Admin,
@@ -36,10 +37,10 @@ public static class SeedData
             );
             admin.SetPasswordMetadata(adminResult.Algorithm, adminResult.Salt, adminResult.Iterations);
 
-            // Create Staff user
-            var staffResult = passwordHasher.HashPassword("Staff@123"); // Default password
+            // Create Staff user (for E2E tests: staff@test.com)
+            var staffResult = passwordHasher.HashPassword("Staff123!"); // Test password
             var staff = new User(
-                "staff@grocerystore.com",
+                "staff@test.com",
                 "Staff User",
                 staffResult.Hash,
                 UserRole.Staff,
@@ -48,6 +49,37 @@ public static class SeedData
             staff.SetPasswordMetadata(staffResult.Algorithm, staffResult.Salt, staffResult.Iterations);
 
             await context.Users.AddRangeAsync(superAdmin, admin, staff);
+            await context.SaveChangesAsync();
+        }
+        else if (context.Users.Any() && serviceProvider != null)
+        {
+            // Update existing users to test passwords if they exist
+            var passwordHasher = serviceProvider.GetRequiredService<IPasswordHasher>();
+            
+            var superAdmin = await context.Users.FirstOrDefaultAsync(u => u.Email == "superadmin@test.com" || u.Role == UserRole.SuperAdmin);
+            if (superAdmin != null)
+            {
+                var superAdminResult = passwordHasher.HashPassword("SuperAdmin123!");
+                superAdmin.ChangePassword(superAdminResult.Hash);
+                superAdmin.SetPasswordMetadata(superAdminResult.Algorithm, superAdminResult.Salt, superAdminResult.Iterations);
+            }
+            
+            var admin = await context.Users.FirstOrDefaultAsync(u => u.Email == "admin@test.com" || u.Role == UserRole.Admin);
+            if (admin != null)
+            {
+                var adminResult = passwordHasher.HashPassword("Admin123!");
+                admin.ChangePassword(adminResult.Hash);
+                admin.SetPasswordMetadata(adminResult.Algorithm, adminResult.Salt, adminResult.Iterations);
+            }
+            
+            var staff = await context.Users.FirstOrDefaultAsync(u => u.Email == "staff@test.com" || u.Role == UserRole.Staff);
+            if (staff != null)
+            {
+                var staffResult = passwordHasher.HashPassword("Staff123!");
+                staff.ChangePassword(staffResult.Hash);
+                staff.SetPasswordMetadata(staffResult.Algorithm, staffResult.Salt, staffResult.Iterations);
+            }
+            
             await context.SaveChangesAsync();
         }
 

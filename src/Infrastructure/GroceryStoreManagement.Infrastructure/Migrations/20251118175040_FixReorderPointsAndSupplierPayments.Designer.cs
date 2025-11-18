@@ -4,6 +4,7 @@ using GroceryStoreManagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GroceryStoreManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251118175040_FixReorderPointsAndSupplierPayments")]
+    partial class FixReorderPointsAndSupplierPayments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -706,7 +709,7 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                     b.HasIndex("SaleId")
                         .IsUnique();
 
-                    b.ToTable("Invoices", (string)null);
+                    b.ToTable("Invoices");
                 });
 
             modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.LedgerEntry", b =>
@@ -793,7 +796,7 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
 
                     b.HasIndex("SaleId");
 
-                    b.ToTable("LoyaltyTransactions", (string)null);
+                    b.ToTable("LoyaltyTransactions");
                 });
 
             modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.Offer", b =>
@@ -954,7 +957,7 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
 
                     b.HasIndex("SaleId");
 
-                    b.ToTable("PayLaterLedgers", (string)null);
+                    b.ToTable("PayLaterLedgers");
                 });
 
             modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.Permission", b =>
@@ -1179,7 +1182,7 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
 
                     b.HasIndex("PurchaseOrderId");
 
-                    b.ToTable("PurchaseOrderItems", (string)null);
+                    b.ToTable("PurchaseOrderItems");
                 });
 
             modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.Refund", b =>
@@ -1423,7 +1426,7 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
 
                     b.HasIndex("SaleId");
 
-                    b.ToTable("SaleItems", (string)null);
+                    b.ToTable("SaleItems");
                 });
 
             modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.SaleReturn", b =>
@@ -1711,7 +1714,7 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Suppliers", (string)null);
+                    b.ToTable("Suppliers");
                 });
 
             modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.SupplierPayment", b =>
