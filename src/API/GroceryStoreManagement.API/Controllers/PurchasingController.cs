@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GroceryStoreManagement.Application.Commands.Purchases;
 using GroceryStoreManagement.Application.Queries.Purchases;
+using GroceryStoreManagement.Application.Commands.Purchasing;
+using GroceryStoreManagement.Application.Queries.Purchasing;
 
 namespace GroceryStoreManagement.API.Controllers;
 
@@ -108,6 +110,52 @@ public class PurchasingController : ControllerBase
 
         var purchaseOrder = await _mediator.Send(cancelCommand);
         return Ok(purchaseOrder);
+    }
+
+    /// <summary>
+    /// Create a new supplier return
+    /// </summary>
+    [HttpPost("supplier-returns")]
+    public async Task<ActionResult<Application.DTOs.SupplierReturnDto>> CreateSupplierReturn([FromBody] CreateSupplierReturnCommand command)
+    {
+        var supplierReturn = await _mediator.Send(command);
+        return CreatedAtAction(nameof(GetSupplierReturn), new { id = supplierReturn.Id }, supplierReturn);
+    }
+
+    /// <summary>
+    /// Get list of supplier returns with optional filters
+    /// </summary>
+    [HttpGet("supplier-returns")]
+    public async Task<ActionResult<List<Application.DTOs.SupplierReturnDto>>> GetSupplierReturns(
+        [FromQuery] Guid? supplierId = null,
+        [FromQuery] Guid? grnId = null,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null)
+    {
+        var query = new GetSupplierReturnsQuery
+        {
+            SupplierId = supplierId,
+            GRNId = grnId,
+            StartDate = startDate,
+            EndDate = endDate
+        };
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get supplier return by ID
+    /// </summary>
+    [HttpGet("supplier-returns/{id}")]
+    public async Task<ActionResult<Application.DTOs.SupplierReturnDto>> GetSupplierReturn(Guid id)
+    {
+        var query = new GetSupplierReturnByIdQuery { Id = id };
+        var supplierReturn = await _mediator.Send(query);
+
+        if (supplierReturn == null)
+            return NotFound();
+
+        return Ok(supplierReturn);
     }
 }
 

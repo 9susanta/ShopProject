@@ -59,6 +59,22 @@ export const purchasingRoutes: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'supplier-returns',
+    loadComponent: () =>
+      import('./supplier-returns-list/supplier-returns-list.component').then(
+        (m) => m.SupplierReturnsListComponent
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'supplier-returns/new',
+    loadComponent: () =>
+      import('./supplier-return-form/supplier-return-form.component').then(
+        (m) => m.SupplierReturnFormComponent
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: '',
     redirectTo: 'purchase-orders',
     pathMatch: 'full',

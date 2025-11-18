@@ -217,3 +217,50 @@ export interface SupplierListResponse {
   totalCount: number;
 }
 
+// Supplier Return Models
+export interface SupplierReturn {
+  id: string;
+  returnNumber: string;
+  supplierId: string;
+  supplierName: string;
+  grnId?: string;
+  grnNumber?: string;
+  returnDate: string;
+  totalAmount: number;
+  reason: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+  items: SupplierReturnItem[];
+}
+
+export interface SupplierReturnItem {
+  id: string;
+  productId: string;
+  productName: string;
+  productSKU: string;
+  batchId?: string;
+  batchNumber?: string;
+  quantity: number;
+  unitCost: number;
+  totalCost: number;
+  reason: string;
+}
+
+export interface CreateSupplierReturnRequest {
+  supplierId: string;
+  grnId?: string;
+  returnDate: string;
+  reason: string;
+  notes?: string;
+  items: CreateSupplierReturnItemRequest[];
+}
+
+export interface CreateSupplierReturnItemRequest {
+  productId: string;
+  batchId?: string;
+  quantity: number;
+  unitCost: number;
+  reason: string;
+}
+

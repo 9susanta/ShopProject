@@ -10,8 +10,11 @@ import { Subject, Subscription, debounceTime, distinctUntilChanged, firstValueFr
 import { PosService } from '../services/pos.service';
 import { VoiceToTextService, VoiceCommand } from '../../../../core/services/voice-to-text.service';
 import { CacheService } from '../../../../core/services/cache.service';
+import { WeightScaleService } from '../../../../core/services/weight-scale.service';
 import { Product, Category, CartItem, SaleRequest } from '../../../../core/models/product.model';
 import { SaleResponse } from '../../../../core/models/product.model';
+import { MatDialog } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 import { BarcodeInputComponent } from '../../../shared/components/barcode-input/barcode-input.component';
 import { CategoryMultiselectComponent } from '../../../shared/components/category-multiselect/category-multiselect.component';
 import { CheckoutModalComponent } from '../../../shared/components/checkout-modal/checkout-modal.component';
@@ -27,6 +30,7 @@ import { POSKeyboardShortcuts } from './pos-keyboard-shortcuts';
     FormsModule, 
     MatIconModule,
     MatTooltipModule,
+    MatDialogModule,
     BarcodeInputComponent,
     CategoryMultiselectComponent,
     CheckoutModalComponent,
@@ -48,6 +52,8 @@ export class PosComponent implements OnInit, OnDestroy {
   private voiceService = inject(VoiceToTextService);
   private cache = inject(CacheService);
   private keyboardShortcuts = inject(POSKeyboardShortcuts);
+  private weightScaleService = inject(WeightScaleService);
+  private dialog = inject(MatDialog);
 
   // Signal-based state management
   products = signal<Product[]>([]);
@@ -273,9 +279,47 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   onAddToCart(event: { product: Product; quantity: number }): void {
+    // Check if product is weight-based
+    const isWeightBased = this.isWeightBasedProduct(event.product);
+    
+    if (isWeightBased) {
+      // Read weight from scale
+      this.weightScaleService.readWeight().subscribe({
+        next: (reading) => {
+          const weightQuantity = reading.weight;
+          if (weightQuantity > 0) {
+            this.addToCartInternal(event.product, weightQuantity);
+          } else {
+            alert('Please place item on scale and try again.');
+          }
+        },
+        error: (error) => {
+          console.error('Error reading weight:', error);
+          // Fallback to manual quantity input
+          const manualWeight = prompt(`Enter weight for ${event.product.name} (kg):`);
+          if (manualWeight) {
+            const weight = parseFloat(manualWeight);
+            if (!isNaN(weight) && weight > 0) {
+              this.addToCartInternal(event.product, weight);
+            }
+          }
+        }
+      });
+    } else {
+      this.addToCartInternal(event.product, event.quantity);
+    }
+  }
+
+  private isWeightBasedProduct(product: Product): boolean {
+    const unitName = (product.unitName || '').toLowerCase();
+    return unitName.includes('kg') || unitName.includes('kilogram') || 
+           unitName.includes('gram') || unitName.includes('gm');
+  }
+
+  private addToCartInternal(product: Product, quantity: number): void {
     this.cart.update(currentCart => {
       const existingItemIndex = currentCart.findIndex(
-        (item) => item.product.id === event.product.id
+        (item) => item.product.id === product.id
       );
 
       if (existingItemIndex > -1) {
@@ -283,8 +327,8 @@ export class PosComponent implements OnInit, OnDestroy {
         const existingItem = currentCart[existingItemIndex];
         const updatedItem = {
           ...existingItem,
-          quantity: existingItem.quantity + event.quantity,
-          subtotal: existingItem.product.salePrice * (existingItem.quantity + event.quantity),
+          quantity: existingItem.quantity + quantity,
+          subtotal: existingItem.product.salePrice * (existingItem.quantity + quantity),
         };
         return [
           ...currentCart.slice(0, existingItemIndex),
@@ -295,9 +339,9 @@ export class PosComponent implements OnInit, OnDestroy {
         return [
           ...currentCart,
           {
-            product: event.product,
-            quantity: event.quantity,
-            subtotal: event.product.salePrice * event.quantity,
+            product: product,
+            quantity: quantity,
+            subtotal: product.salePrice * quantity,
           },
         ];
       }
@@ -387,7 +431,9 @@ export class PosComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.posService.getProductByBarcode(barcode.trim()).subscribe({
         next: (product) => {
-          this.onAddToCart({ product, quantity: 1 });
+          // For weight-based products, read from scale; otherwise use quantity 1
+          const quantity = this.isWeightBasedProduct(product) ? 0 : 1;
+          this.onAddToCart({ product, quantity });
         },
         error: (error) => {
           console.error('Barcode scan failed:', error);

@@ -57,6 +57,7 @@ public static class DependencyInjection
         services.AddScoped<IVoiceToTextService, VoiceToTextService>();
         services.AddScoped<IUnitConversionService, UnitConversionService>();
         services.AddScoped<ISmsService, SmsService>();
+        services.AddSingleton<IWeightScaleService, WeightScaleService>();
         // NotificationService is registered separately in NotificationServiceRegistration to avoid circular dependency
         
         // Security Services

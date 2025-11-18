@@ -15,6 +15,8 @@ import {
   ConfirmGRNResponse,
   Supplier,
   SupplierListResponse,
+  SupplierReturn,
+  CreateSupplierReturnRequest,
 } from '@core/models/purchasing.model';
 
 @Injectable({
@@ -113,6 +115,24 @@ export class PurchasingService {
 
   createSupplier(supplier: Partial<Supplier>): Observable<Supplier> {
     return this.api.post<Supplier>('master/suppliers', supplier);
+  }
+
+  // Supplier Return endpoints
+  getSupplierReturns(params?: {
+    supplierId?: string;
+    grnId?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Observable<SupplierReturn[]> {
+    return this.api.get<SupplierReturn[]>('purchasing/supplier-returns', { params });
+  }
+
+  getSupplierReturnById(id: string): Observable<SupplierReturn> {
+    return this.api.get<SupplierReturn>(`purchasing/supplier-returns/${id}`);
+  }
+
+  createSupplierReturn(request: CreateSupplierReturnRequest): Observable<SupplierReturn> {
+    return this.api.post<SupplierReturn>('purchasing/supplier-returns', request);
   }
 }
 
