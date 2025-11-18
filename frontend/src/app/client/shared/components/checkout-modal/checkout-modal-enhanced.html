@@ -175,7 +175,7 @@
           <input
             type="text"
             class="form-control"
-            [formControl]="checkoutForm.get('couponCode')!"
+            [formControl]="$any(checkoutForm.get('couponCode'))"
             placeholder="Enter coupon code"
             [class.valid]="couponCodeValid() === true"
             [class.invalid]="couponCodeValid() === false"

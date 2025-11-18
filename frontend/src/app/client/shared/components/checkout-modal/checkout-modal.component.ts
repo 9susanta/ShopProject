@@ -184,7 +184,7 @@ export class CheckoutModalComponent {
       if (result) {
         if (result.isValid) {
           this.couponCodeValid.set(true);
-          this.couponValidationMessage.set(`Valid coupon! Discount: ${result.discountAmount | currency: 'INR'}`);
+          this.couponValidationMessage.set(`Valid coupon! Discount: ₹${result.discountAmount.toFixed(2)}`);
           this.couponDiscountAmount.set(result.discountAmount || 0);
           if (result.offer) {
             this.toastService.success(`Coupon "${result.offer.name}" applied successfully!`);

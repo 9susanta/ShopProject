@@ -4,6 +4,7 @@ using GroceryStoreManagement.Application.Interfaces;
 using GroceryStoreManagement.Domain.Entities;
 using GroceryStoreManagement.Domain.Events;
 using GroceryStoreManagement.Domain.Enums;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using InventoryEntity = GroceryStoreManagement.Domain.Entities.Inventory;
 using StoreSettingsEntity = GroceryStoreManagement.Domain.Entities.StoreSettings;

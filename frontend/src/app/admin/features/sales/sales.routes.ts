@@ -14,5 +14,11 @@ export const salesRoutes: Routes = [
       import('./sale-details/sale-details.component').then(m => m.SaleDetailsComponent),
     canActivate: [AuthGuard],
   },
+  {
+    path: ':id/return',
+    loadComponent: () =>
+      import('./sale-return-form/sale-return-form.component').then(m => m.SaleReturnFormComponent),
+    canActivate: [AuthGuard],
+  },
 ];
 

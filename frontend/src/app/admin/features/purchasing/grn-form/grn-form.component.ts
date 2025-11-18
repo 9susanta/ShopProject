@@ -166,10 +166,10 @@ export class GRNFormComponent implements OnInit {
         console.error('Error loading units:', error);
         // Use default units if API fails
         const defaultUnits: UnitDto[] = [
-          { id: '1', name: 'pcs', symbol: 'pcs', isActive: true },
-          { id: '2', name: 'kg', symbol: 'kg', isActive: true },
-          { id: '3', name: 'gm', symbol: 'gm', isActive: true },
-          { id: '4', name: 'litre', symbol: 'L', isActive: true },
+          { id: '1', name: 'pcs', symbol: 'pcs', isActive: true, type: 'Count' as any, sortOrder: 1 },
+          { id: '2', name: 'kg', symbol: 'kg', isActive: true, type: 'Weight' as any, sortOrder: 2 },
+          { id: '3', name: 'gm', symbol: 'gm', isActive: true, type: 'Weight' as any, sortOrder: 3 },
+          { id: '4', name: 'litre', symbol: 'L', isActive: true, type: 'Volume' as any, sortOrder: 4 },
         ];
         this.units.set(defaultUnits);
       },
@@ -235,11 +235,11 @@ export class GRNFormComponent implements OnInit {
     this.form.patchValue({ supplierId: supplier.id });
   }
 
-  addItem(item?: CreateGRNItemRequest): void {
+  addItem(item?: Partial<CreateGRNItemRequest> & { productName?: string; quantity?: number }): void {
     const itemForm = this.fb.group({
       productId: [item?.productId || '', Validators.required],
       productName: [item?.productName || '', Validators.required],
-      quantity: [item?.quantity || 1, [Validators.required, Validators.min(0.01)]],
+      quantity: [item?.quantity || item?.receivedQuantity || 1, [Validators.required, Validators.min(0.01)]],
       unitCost: [item?.unitCost || 0, [Validators.required, Validators.min(0)]],
       batchNumber: [item?.batchNumber || ''],
       expiryDate: [item?.expiryDate ? new Date(item.expiryDate) : null],

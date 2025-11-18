@@ -113,7 +113,7 @@
                       <input
                         matInput
                         [formControl]="item.get('productName')!"
-                        [matAutocomplete]="productAuto[i]"
+                        [matAutocomplete]="productAuto"
                         placeholder="Search product"
                         required
                       />
@@ -203,11 +203,11 @@
                     <mat-form-field appearance="outline" class="w-full">
                       <input
                         matInput
-                        [matDatepicker]="expiryPicker[i]"
+                        [matDatepicker]="expiryPicker"
                         [formControl]="item.get('expiryDate')!"
                         placeholder="Optional"
                       />
-                      <mat-datepicker-toggle matSuffix [for]="expiryPicker[i]"></mat-datepicker-toggle>
+                      <mat-datepicker-toggle matSuffix [for]="expiryPicker"></mat-datepicker-toggle>
                       <mat-datepicker #expiryPicker="matDatepicker"></mat-datepicker>
                     </mat-form-field>
                   </td>

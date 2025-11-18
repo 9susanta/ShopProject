@@ -1,17 +1,16 @@
+using GroceryStoreManagement.Domain.Common;
 using GroceryStoreManagement.Domain.Enums;
 
 namespace GroceryStoreManagement.Domain.Entities;
 
-public class ServiceToken
+public class ServiceToken : BaseEntity
 {
-    public Guid Id { get; private set; }
     public int TokenNumber { get; private set; }
     public Guid? CustomerId { get; private set; }
     public string? CustomerName { get; private set; }
     public string? CustomerPhone { get; private set; }
     public TokenStatus Status { get; private set; }
     public TokenType Type { get; private set; }
-    public DateTime CreatedAt { get; private set; }
     public DateTime? CalledAt { get; private set; }
     public DateTime? ServedAt { get; private set; }
     public Guid? ServedByUserId { get; private set; }
@@ -26,7 +25,6 @@ public class ServiceToken
 
     public ServiceToken(int tokenNumber, TokenType type, Guid? customerId = null, string? customerName = null, string? customerPhone = null, int priority = 0, string? notes = null)
     {
-        Id = Guid.NewGuid();
         TokenNumber = tokenNumber;
         Type = type;
         CustomerId = customerId;
@@ -35,7 +33,6 @@ public class ServiceToken
         Status = TokenStatus.Waiting;
         Priority = priority;
         Notes = notes;
-        CreatedAt = DateTime.UtcNow;
     }
 
     public void Call(Guid servedByUserId)

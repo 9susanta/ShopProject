@@ -6,6 +6,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using Microsoft.Extensions.Logging;
+using QuestPDFUnit = QuestPDF.Infrastructure.Unit;
 
 namespace GroceryStoreManagement.Infrastructure.Services;
 
@@ -43,7 +44,7 @@ public class PdfService : IPdfService
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A4);
-                    page.Margin(2, Unit.Centimetre);
+                    page.Margin(2, QuestPDFUnit.Centimetre);
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(10));
 
@@ -52,28 +53,28 @@ public class PdfService : IPdfService
                         {
                             row.RelativeColumn().Column(column =>
                             {
-                                column.Item().Text("INVOICE").FontSize(20).FontWeight(FontWeight.Bold);
+                                column.Item().Text("INVOICE").FontSize(20).Bold();
                                 column.Item().Text($"Invoice #: {invoiceNumber}").FontSize(12);
                                 column.Item().Text($"Date: {sale.SaleDate:dd MMM yyyy HH:mm}").FontSize(10);
                             });
 
                             row.ConstantColumn(100).AlignRight().Column(column =>
                             {
-                                column.Item().Text("Grocery Store").FontSize(14).FontWeight(FontWeight.Bold);
+                                column.Item().Text("Grocery Store").FontSize(14).Bold();
                                 column.Item().Text("Retail Invoice").FontSize(10);
                             });
                         });
 
                     page.Content()
-                        .PaddingVertical(1, Unit.Centimetre)
+                        .PaddingVertical(1, QuestPDFUnit.Centimetre)
                         .Column(column =>
                         {
                             // Customer Info
                             if (!string.IsNullOrEmpty(sale.CustomerName))
                             {
-                                column.Item().PaddingBottom(0.5f, Unit.Centimetre).Column(c =>
+                                column.Item().PaddingBottom(0.5f, QuestPDFUnit.Centimetre).Column(c =>
                                 {
-                                    c.Item().Text("Bill To:").FontWeight(FontWeight.Bold);
+                                    c.Item().Text("Bill To:").Bold();
                                     c.Item().Text(sale.CustomerName);
                                     if (!string.IsNullOrEmpty(sale.CustomerPhone))
                                         c.Item().Text($"Phone: {sale.CustomerPhone}");
@@ -95,11 +96,11 @@ public class PdfService : IPdfService
                                 // Header
                                 table.Header(header =>
                                 {
-                                    header.Cell().Element(CellStyle).Text("#").FontWeight(FontWeight.Bold);
-                                    header.Cell().Element(CellStyle).Text("Item").FontWeight(FontWeight.Bold);
-                                    header.Cell().Element(CellStyle).AlignRight().Text("Qty").FontWeight(FontWeight.Bold);
-                                    header.Cell().Element(CellStyle).AlignRight().Text("Price").FontWeight(FontWeight.Bold);
-                                    header.Cell().Element(CellStyle).AlignRight().Text("Total").FontWeight(FontWeight.Bold);
+                                    header.Cell().Element(CellStyle).Text("#").Bold();
+                                    header.Cell().Element(CellStyle).Text("Item").Bold();
+                                    header.Cell().Element(CellStyle).AlignRight().Text("Qty").Bold();
+                                    header.Cell().Element(CellStyle).AlignRight().Text("Price").Bold();
+                                    header.Cell().Element(CellStyle).AlignRight().Text("Total").Bold();
                                 });
 
                                 // Items
@@ -115,7 +116,7 @@ public class PdfService : IPdfService
                             });
 
                             // Summary
-                            column.Item().PaddingTop(1, Unit.Centimetre).Column(summary =>
+                            column.Item().PaddingTop(1, QuestPDFUnit.Centimetre).Column(summary =>
                             {
                                 summary.Item().Row(row =>
                                 {
@@ -143,26 +144,23 @@ public class PdfService : IPdfService
                                                 r.ConstantColumn(80).AlignRight().Text($"₹{sale.TaxAmount:F2}");
                                             });
                                         }
-                                        col.Item().PaddingTop(0.5f, Unit.Centimetre).Row(r =>
+                                        col.Item().PaddingTop(0.5f, QuestPDFUnit.Centimetre).Row(r =>
                                         {
-                                            r.RelativeColumn().Text("Total:").FontWeight(FontWeight.Bold).FontSize(12);
-                                            r.ConstantColumn(80).AlignRight().Text($"₹{sale.TotalAmount:F2}").FontWeight(FontWeight.Bold).FontSize(12);
+                                            r.RelativeColumn().Text("Total:").Bold().FontSize(12);
+                                            r.ConstantColumn(80).AlignRight().Text($"₹{sale.TotalAmount:F2}").Bold().FontSize(12);
                                         });
                                     });
                                 });
                             });
 
                             // Payment Method
-                            column.Item().PaddingTop(0.5f, Unit.Centimetre).Text($"Payment: {sale.PaymentMethod}").FontSize(9);
+                            column.Item().PaddingTop(0.5f, QuestPDFUnit.Centimetre).Text($"Payment: {sale.PaymentMethod}").FontSize(9);
                         });
 
                     page.Footer()
                         .AlignCenter()
-                        .Text(x =>
-                        {
-                            x.Span("Thank you for your business!");
-                            x.FontSize(9);
-                        });
+                        .Text("Thank you for your business!")
+                        .FontSize(9);
                 });
             })
             .GeneratePdf();

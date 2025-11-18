@@ -231,13 +231,14 @@ export class GstSummaryComponent implements OnInit {
     }
 
     const report = this.report()!;
-    const data = report.items.map(item => ({
-      'Product': item.productName,
-      'SKU': item.sku,
-      'Quantity Sold': item.quantitySold,
-      'GST Rate': `${item.gstRate}%`,
-      'GST Amount': item.gstAmount,
-      'Total Value': item.totalValue,
+    const items = report.slabSummaries || [];
+    const data = items.map((item: any) => ({
+      'GST Rate': `${item.rate}%`,
+      'Taxable Amount': item.taxableAmount,
+      'CGST Amount': item.cgstAmount,
+      'SGST Amount': item.sgstAmount,
+      'Total GST': item.totalGSTAmount,
+      'Transaction Count': item.transactionCount,
     }));
 
     this.exportService.exportToPDF(
@@ -255,13 +256,14 @@ export class GstSummaryComponent implements OnInit {
     }
 
     const report = this.report()!;
-    const data = report.items.map(item => ({
-      'Product': item.productName,
-      'SKU': item.sku,
-      'Quantity Sold': item.quantitySold,
-      'GST Rate': `${item.gstRate}%`,
-      'GST Amount': item.gstAmount,
-      'Total Value': item.totalValue,
+    const items = report.slabSummaries || [];
+    const data = items.map((item: any) => ({
+      'GST Rate': `${item.rate}%`,
+      'Taxable Amount': item.taxableAmount,
+      'CGST Amount': item.cgstAmount,
+      'SGST Amount': item.sgstAmount,
+      'Total GST': item.totalGSTAmount,
+      'Transaction Count': item.transactionCount,
     }));
 
     this.exportService.exportToExcel(

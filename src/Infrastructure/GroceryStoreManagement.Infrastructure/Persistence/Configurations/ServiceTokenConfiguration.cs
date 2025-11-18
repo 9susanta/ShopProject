@@ -30,8 +30,10 @@ public class ServiceTokenConfiguration : IEntityTypeConfiguration<ServiceToken>
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.HasIndex(t => new { t.CreatedAt.Date, t.TokenNumber })
-            .IsUnique();
+        // Note: Unique constraint on (Date, TokenNumber) should be enforced at application level
+        // EF Core doesn't support .Date in index expressions
+        builder.HasIndex(t => t.CreatedAt);
+        builder.HasIndex(t => t.TokenNumber);
 
         builder.HasOne(t => t.Customer)
             .WithMany()

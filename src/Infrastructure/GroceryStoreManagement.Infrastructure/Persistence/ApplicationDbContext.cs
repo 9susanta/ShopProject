@@ -41,6 +41,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<Entities.AuditEntry> AuditEntries { get; set; } = null!;
     public DbSet<Entities.RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<ServiceToken> ServiceTokens { get; set; } = null!;
+    public DbSet<SaleReturn> SaleReturns { get; set; } = null!;
+    public DbSet<SaleReturnItem> SaleReturnItems { get; set; } = null!;
+    public DbSet<Refund> Refunds { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
