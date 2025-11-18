@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { UserDialogComponent, UserDialogData } from './user-dialog/user-dialog.component';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { UserService, CreateUserRequest, UpdateUserRequest } from '@core/services/user.service';
@@ -219,68 +220,65 @@ export class RolesPermissionsComponent implements OnInit {
   }
 
   openCreateUserDialog(): void {
-    // Simple prompt for now - can be enhanced with a proper dialog component
-    const email = prompt('Enter email:');
-    if (!email) return;
+    const dialogRef = this.dialog.open(UserDialogComponent, {
+      width: '500px',
+      data: {
+        mode: 'create',
+      } as UserDialogData,
+    });
 
-    const name = prompt('Enter name:');
-    if (!name) return;
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        const request: CreateUserRequest = {
+          email: result.email,
+          name: result.name,
+          password: result.password,
+          role: result.role,
+          phone: result.phone,
+        };
 
-    const password = prompt('Enter password:');
-    if (!password) return;
-
-    const roleStr = prompt('Enter role (SuperAdmin/Admin/Staff):');
-    if (!roleStr) return;
-
-    const role = roleStr as UserRole;
-    if (!['SuperAdmin', 'Admin', 'Staff'].includes(role)) {
-      this.toastService.error('Invalid role');
-      return;
-    }
-
-    const phone = prompt('Enter phone (optional):') || undefined;
-
-    const request: CreateUserRequest = {
-      email,
-      name,
-      password,
-      role,
-      phone,
-    };
-
-    this.userService.createUser(request).subscribe({
-      next: () => {
-        this.toastService.success('User created successfully');
-        this.loadUsers();
-      },
-      error: (error) => {
-        console.error('Error creating user:', error);
-        this.toastService.error(error?.error?.message || 'Failed to create user');
-      },
+        this.userService.createUser(request).subscribe({
+          next: () => {
+            this.toastService.success('User created successfully');
+            this.loadUsers();
+          },
+          error: (error) => {
+            console.error('Error creating user:', error);
+            this.toastService.error(error?.error?.message || 'Failed to create user');
+          },
+        });
+      }
     });
   }
 
   editUser(user: User): void {
-    const name = prompt('Enter new name:', user.name);
-    if (!name) return;
+    const dialogRef = this.dialog.open(UserDialogComponent, {
+      width: '500px',
+      data: {
+        mode: 'edit',
+        user: user,
+      } as UserDialogData,
+    });
 
-    const phone = prompt('Enter phone (optional):', user.phone || '') || undefined;
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        const request: UpdateUserRequest = {
+          id: result.id,
+          name: result.name,
+          phone: result.phone,
+        };
 
-    const request: UpdateUserRequest = {
-      id: user.id,
-      name,
-      phone,
-    };
-
-    this.userService.updateUser(request).subscribe({
-      next: () => {
-        this.toastService.success('User updated successfully');
-        this.loadUsers();
-      },
-      error: (error) => {
-        console.error('Error updating user:', error);
-        this.toastService.error(error?.error?.message || 'Failed to update user');
-      },
+        this.userService.updateUser(request).subscribe({
+          next: () => {
+            this.toastService.success('User updated successfully');
+            this.loadUsers();
+          },
+          error: (error) => {
+            console.error('Error updating user:', error);
+            this.toastService.error(error?.error?.message || 'Failed to update user');
+          },
+        });
+      }
     });
   }
 

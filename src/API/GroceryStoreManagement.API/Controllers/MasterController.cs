@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GroceryStoreManagement.Application.Queries.Suppliers;
+using GroceryStoreManagement.Application.Commands.Suppliers;
 
 namespace GroceryStoreManagement.API.Controllers;
 
@@ -53,6 +54,31 @@ public class MasterController : ControllerBase
         if (supplier == null)
             return NotFound();
 
+        return Ok(supplier);
+    }
+
+    /// <summary>
+    /// Create a new supplier
+    /// </summary>
+    [HttpPost("suppliers")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public async Task<ActionResult<Application.DTOs.SupplierDto>> CreateSupplier([FromBody] CreateSupplierCommand command)
+    {
+        var supplier = await _mediator.Send(command);
+        return CreatedAtAction(nameof(GetSupplier), new { id = supplier.Id }, supplier);
+    }
+
+    /// <summary>
+    /// Update an existing supplier
+    /// </summary>
+    [HttpPut("suppliers/{id}")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public async Task<ActionResult<Application.DTOs.SupplierDto>> UpdateSupplier(Guid id, [FromBody] UpdateSupplierCommand command)
+    {
+        if (id != command.Id)
+            return BadRequest("ID mismatch");
+
+        var supplier = await _mediator.Send(command);
         return Ok(supplier);
     }
 }

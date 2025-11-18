@@ -40,6 +40,7 @@ export class AdminHeaderComponent implements OnDestroy {
     { label: 'Purchasing', route: '/admin/purchasing', icon: 'shopping_cart' },
     { label: 'Sales', route: '/admin/sales', icon: 'point_of_sale' },
     { label: 'Customers', route: '/admin/customers', icon: 'people' },
+    { label: 'Suppliers', route: '/admin/suppliers', icon: 'business' },
     { label: 'Offers', route: '/admin/offers', icon: 'local_offer' },
     { label: 'Accounting', route: '/admin/accounting', icon: 'account_balance' },
     { label: 'Reports', route: '/admin/reports', icon: 'assessment' },

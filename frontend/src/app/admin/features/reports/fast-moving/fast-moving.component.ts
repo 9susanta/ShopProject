@@ -13,6 +13,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ReportsService, FastMovingProductsReport } from '@core/services/reports.service';
 import { ToastService } from '@core/toast/toast.service';
+import { ExportService } from '@core/services/export.service';
 
 @Component({
   selector: 'grocery-fast-moving',
@@ -39,10 +40,20 @@ import { ToastService } from '@core/toast/toast.service';
           <h1 class="text-2xl font-bold">Fast Moving Products</h1>
           <p class="text-gray-600">Top selling products by quantity</p>
         </div>
-        <button mat-button routerLink="/admin/reports">
-          <mat-icon>arrow_back</mat-icon>
-          Back to Reports
-        </button>
+        <div class="flex gap-2">
+          <button mat-raised-button color="primary" (click)="exportToPDF()" [disabled]="!report() || loading()">
+            <mat-icon>picture_as_pdf</mat-icon>
+            Export PDF
+          </button>
+          <button mat-raised-button color="accent" (click)="exportToExcel()" [disabled]="!report() || loading()">
+            <mat-icon>table_chart</mat-icon>
+            Export Excel
+          </button>
+          <button mat-button routerLink="/admin/reports">
+            <mat-icon>arrow_back</mat-icon>
+            Back to Reports
+          </button>
+        </div>
       </div>
 
       <!-- Date Range Filter -->
@@ -146,6 +157,7 @@ import { ToastService } from '@core/toast/toast.service';
 export class FastMovingComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private toastService = inject(ToastService);
+  private exportService = inject(ExportService);
 
   loading = signal(false);
   report = signal<FastMovingProductsReport | null>(null);
@@ -172,5 +184,55 @@ export class FastMovingComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  exportToPDF(): void {
+    if (!this.report() || !this.report()!.products || this.report()!.products.length === 0) {
+      this.toastService.error('No report data to export');
+      return;
+    }
+
+    const report = this.report()!;
+    const data = report.products.map((product, index) => ({
+      'Rank': index + 1,
+      'Product': product.productName,
+      'SKU': product.sku,
+      'Quantity Sold': product.totalQuantitySold || product.quantitySold,
+      'Total Revenue': product.totalRevenue || product.revenue,
+      'Sales Count': product.numberOfSales,
+      'Average Sale Price': product.averageSalePrice,
+    }));
+
+    this.exportService.exportToPDF(
+      `Fast Moving Products Report - Top ${this.topN}`,
+      data,
+      `fast-moving-${this.startDate.toISOString().split('T')[0]}-${this.endDate.toISOString().split('T')[0]}`
+    );
+    this.toastService.success('PDF export initiated');
+  }
+
+  exportToExcel(): void {
+    if (!this.report() || !this.report()!.products || this.report()!.products.length === 0) {
+      this.toastService.error('No report data to export');
+      return;
+    }
+
+    const report = this.report()!;
+    const data = report.products.map((product, index) => ({
+      'Rank': index + 1,
+      'Product': product.productName,
+      'SKU': product.sku,
+      'Quantity Sold': product.totalQuantitySold || product.quantitySold,
+      'Total Revenue': product.totalRevenue || product.revenue,
+      'Sales Count': product.numberOfSales,
+      'Average Sale Price': product.averageSalePrice,
+    }));
+
+    this.exportService.exportToExcel(
+      data,
+      `fast-moving-${this.startDate.toISOString().split('T')[0]}-${this.endDate.toISOString().split('T')[0]}`,
+      'Fast Moving Products'
+    );
+    this.toastService.success('Excel file exported successfully');
   }
 }

@@ -9,13 +9,16 @@ namespace GroceryStoreManagement.Infrastructure.Services;
 public class NotificationService<THub> : INotificationService where THub : Hub
 {
     private readonly IHubContext<THub> _hubContext;
+    private readonly ISmsService _smsService;
     private readonly ILogger<NotificationService<THub>> _logger;
 
     public NotificationService(
         IHubContext<THub> hubContext,
+        ISmsService smsService,
         ILogger<NotificationService<THub>> logger)
     {
         _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+        _smsService = smsService;
         _logger = logger;
     }
 
@@ -34,8 +37,13 @@ public class NotificationService<THub> : INotificationService where THub : Hub
 
             _logger.LogInformation("Low stock notification sent for product: {ProductName}", productName);
 
-            // TODO: Send SMS/WhatsApp notification (stub)
-            // await SendSMSNotificationAsync(...);
+            // Send SMS/WhatsApp to admin (if configured)
+            var adminPhone = Environment.GetEnvironmentVariable("ADMIN_PHONE");
+            if (!string.IsNullOrEmpty(adminPhone))
+            {
+                var message = $"Low stock alert: {productName} has only {availableQuantity} units left (threshold: {threshold})";
+                await _smsService.SendNotificationAsync(adminPhone, message, false, cancellationToken);
+            }
         }
         catch (Exception ex)
         {
@@ -78,10 +86,58 @@ public class NotificationService<THub> : INotificationService where THub : Hub
             }, cancellationToken);
 
             _logger.LogInformation("Expiry soon notification sent for product: {ProductName}", productName);
+
+            // Send SMS/WhatsApp to admin (if configured)
+            var adminPhone = Environment.GetEnvironmentVariable("ADMIN_PHONE");
+            if (!string.IsNullOrEmpty(adminPhone))
+            {
+                var daysUntilExpiry = (expiryDate - DateTime.UtcNow).Days;
+                var message = $"Expiry alert: {productName} (Qty: {quantity}) expires in {daysUntilExpiry} days on {expiryDate:dd MMM yyyy}";
+                await _smsService.SendNotificationAsync(adminPhone, message, false, cancellationToken);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending expiry soon notification");
+        }
+    }
+
+    public async Task NotifySaleCompletedAsync(string customerPhone, string invoiceNumber, decimal totalAmount, int? loyaltyPointsEarned, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(customerPhone))
+                return;
+
+            var message = $"Thank you for your purchase! Invoice: {invoiceNumber}, Amount: ₹{totalAmount:F2}";
+            if (loyaltyPointsEarned.HasValue && loyaltyPointsEarned.Value > 0)
+            {
+                message += $". You earned {loyaltyPointsEarned.Value} loyalty points!";
+            }
+
+            await _smsService.SendNotificationAsync(customerPhone, message, false, cancellationToken);
+            _logger.LogInformation("Sale completion notification sent to {Phone} for invoice {InvoiceNumber}", customerPhone, invoiceNumber);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending sale completion notification to {Phone}", customerPhone);
+        }
+    }
+
+    public async Task NotifyOrderReadyAsync(string customerPhone, string orderNumber, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(customerPhone))
+                return;
+
+            var message = $"Your order {orderNumber} is ready for pickup! Thank you for shopping with us.";
+            await _smsService.SendNotificationAsync(customerPhone, message, false, cancellationToken);
+            _logger.LogInformation("Order ready notification sent to {Phone} for order {OrderNumber}", customerPhone, orderNumber);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending order ready notification to {Phone}", customerPhone);
         }
     }
 }

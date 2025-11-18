@@ -23,6 +23,7 @@ public class SaleDto
     public string? Notes { get; set; }
     public int? LoyaltyPointsEarned { get; set; }
     public int? LoyaltyPointsRedeemed { get; set; }
+    public string? PdfUrl { get; set; }
     public List<SaleItemDto> Items { get; set; } = new();
 }
 

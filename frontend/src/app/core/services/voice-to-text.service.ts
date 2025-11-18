@@ -112,54 +112,167 @@ export class VoiceToTextService {
   }
 
   /**
-   * Parse voice transcript into command (stub implementation)
-   * In production, this would use NLP/LLM to parse natural language
+   * Parse voice transcript into command with enhanced NLP patterns
    */
   private parseCommand(transcript: string): VoiceCommand | null {
-    // Simple keyword-based parsing (stub)
-    // Production would use more sophisticated NLP
-
     const lower = transcript.toLowerCase().trim();
 
-    // Checkout commands
-    if (lower.includes('checkout') || lower.includes('complete') || lower.includes('finish')) {
+    // Normalize common variations
+    const normalized = this.normalizeTranscript(lower);
+
+    // Checkout commands - multiple patterns
+    const checkoutPatterns = [
+      /^(checkout|complete|finish|finalize|pay|process payment|bill|invoice)/,
+      /^(proceed to checkout|go to checkout|ready to pay)/,
+      /^(done|complete sale|finish sale)/
+    ];
+    if (checkoutPatterns.some(pattern => pattern.test(normalized))) {
       return { action: 'checkout' };
     }
 
-    // Clear cart
-    if (lower.includes('clear') || lower.includes('remove all')) {
+    // Clear cart commands
+    const clearPatterns = [
+      /^(clear|empty|remove all|delete all|reset)/,
+      /^(clear cart|empty cart|remove everything|delete everything)/
+    ];
+    if (clearPatterns.some(pattern => pattern.test(normalized))) {
       return { action: 'clear' };
     }
 
-    // Search commands
-    if (lower.startsWith('search') || lower.startsWith('find')) {
-      const searchTerm = lower.replace(/^(search|find)\s+/, '').trim();
-      if (searchTerm) {
-        return { action: 'search', searchTerm };
+    // Search commands - enhanced patterns
+    const searchPatterns = [
+      /^(search|find|look for|show me|display|list)\s+(.+)/,
+      /^(where is|where are|find me|get me)\s+(.+)/,
+      /^(i need|i want|show|need)\s+(.+)/,
+    ];
+    for (const pattern of searchPatterns) {
+      const match = normalized.match(pattern);
+      if (match && match[2]) {
+        const searchTerm = this.cleanProductName(match[2]);
+        if (searchTerm) {
+          return { action: 'search', searchTerm };
+        }
       }
     }
 
-    // Add product commands (e.g., "add 2 apples", "add apple")
-    const addMatch = lower.match(/add\s+(\d+)?\s*(.+)/);
-    if (addMatch) {
-      const quantity = addMatch[1] ? parseInt(addMatch[1], 10) : 1;
-      const productName = addMatch[2].trim();
-      if (productName) {
-        return { action: 'add', productName, quantity };
+    // Add product commands - enhanced with quantity variations
+    const addPatterns = [
+      /^(add|put|include|get|take|buy|purchase)\s+(\d+)\s+(.+)/,  // "add 2 apples"
+      /^(add|put|include|get|take|buy|purchase)\s+(.+)/,          // "add apples"
+      /^(\d+)\s+(.+)/,                                             // "2 apples"
+      /^(i want|i need|give me|i'll take)\s+(\d+)?\s*(.+)/,       // "i want 2 apples"
+      /^(quantity|qty|qty of)\s+(\d+)\s+(.+)/,                    // "quantity 2 apples"
+    ];
+    for (const pattern of addPatterns) {
+      const match = normalized.match(pattern);
+      if (match) {
+        let quantity = 1;
+        let productName = '';
+
+        if (match.length === 4) {
+          // Pattern with quantity: "add 2 apples"
+          quantity = parseInt(match[2], 10) || 1;
+          productName = this.cleanProductName(match[3]);
+        } else if (match.length === 3) {
+          // Check if second group is number or product name
+          const secondGroup = match[2];
+          if (/^\d+$/.test(secondGroup)) {
+            // "2 apples" or "add 2 apples" (action already matched)
+            quantity = parseInt(secondGroup, 10) || 1;
+            productName = this.cleanProductName(match[3] || match[2]);
+          } else {
+            // "add apples"
+            productName = this.cleanProductName(secondGroup);
+          }
+        } else if (match.length === 2) {
+          // Just product name
+          productName = this.cleanProductName(match[1]);
+        }
+
+        if (productName && quantity > 0) {
+          return { action: 'add', productName, quantity };
+        }
       }
     }
 
-    // Remove product commands
-    const removeMatch = lower.match(/remove\s+(\d+)?\s*(.+)/);
-    if (removeMatch) {
-      const quantity = removeMatch[1] ? parseInt(removeMatch[1], 10) : 1;
-      const productName = removeMatch[2].trim();
-      if (productName) {
-        return { action: 'remove', productName, quantity };
+    // Remove product commands - enhanced patterns
+    const removePatterns = [
+      /^(remove|delete|take out|take off|exclude|drop)\s+(\d+)\s+(.+)/,  // "remove 2 apples"
+      /^(remove|delete|take out|take off|exclude|drop)\s+(.+)/,          // "remove apples"
+      /^(cancel|undo|don't want|don't need)\s+(\d+)?\s*(.+)/,            // "cancel apples"
+      /^(minus|subtract|less)\s+(\d+)?\s*(.+)/,                          // "minus 2 apples"
+    ];
+    for (const pattern of removePatterns) {
+      const match = normalized.match(pattern);
+      if (match) {
+        let quantity = 1;
+        let productName = '';
+
+        if (match.length === 4) {
+          quantity = parseInt(match[2], 10) || 1;
+          productName = this.cleanProductName(match[3]);
+        } else if (match.length === 3) {
+          const secondGroup = match[2];
+          if (/^\d+$/.test(secondGroup)) {
+            quantity = parseInt(secondGroup, 10) || 1;
+            productName = this.cleanProductName(match[3] || match[2]);
+          } else {
+            productName = this.cleanProductName(secondGroup);
+          }
+        }
+
+        if (productName) {
+          return { action: 'remove', productName, quantity };
+        }
       }
     }
 
     return null;
+  }
+
+  /**
+   * Normalize transcript to handle common speech variations
+   */
+  private normalizeTranscript(transcript: string): string {
+    // Remove filler words
+    let normalized = transcript
+      .replace(/\b(um|uh|ah|er|like|you know)\b/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Normalize numbers (spoken to digits)
+    const numberWords: Record<string, string> = {
+      'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4',
+      'five': '5', 'six': '6', 'seven': '7', 'eight': '8', 'nine': '9',
+      'ten': '10', 'eleven': '11', 'twelve': '12', 'thirteen': '13',
+      'fourteen': '14', 'fifteen': '15', 'twenty': '20', 'thirty': '30'
+    };
+
+    for (const [word, digit] of Object.entries(numberWords)) {
+      normalized = normalized.replace(new RegExp(`\\b${word}\\b`, 'gi'), digit);
+    }
+
+    // Normalize common product name variations
+    normalized = normalized
+      .replace(/\b(kg|kilogram|kilograms)\b/gi, 'kg')
+      .replace(/\b(gm|gram|grams)\b/gi, 'gm')
+      .replace(/\b(l|liter|liters|litre|litres)\b/gi, 'l')
+      .replace(/\b(pcs|piece|pieces|pcs)\b/gi, 'pcs');
+
+    return normalized;
+  }
+
+  /**
+   * Clean product name from common speech artifacts
+   */
+  private cleanProductName(name: string): string {
+    if (!name) return '';
+
+    return name
+      .replace(/\b(please|thanks|thank you|okay|ok)\b/gi, '')
+      .replace(/\b(to|the|a|an|some|any)\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   /**

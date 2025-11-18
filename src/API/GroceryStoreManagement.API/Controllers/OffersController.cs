@@ -77,5 +77,40 @@ public class OffersController : ControllerBase
         await _mediator.Send(command);
         return NoContent();
     }
+
+    /// <summary>
+    /// Validate a coupon code
+    /// </summary>
+    [HttpPost("validate-coupon")]
+    public async Task<ActionResult<Application.DTOs.CouponValidationResultDto>> ValidateCoupon([FromBody] Application.Commands.Offers.ValidateCouponCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get applicable offers for given products
+    /// </summary>
+    [HttpGet("for-cart")]
+    public async Task<ActionResult<List<Application.DTOs.OfferDto>>> GetApplicableOffers(
+        [FromQuery] string productIds, // Comma-separated GUIDs
+        [FromQuery] bool includeAutoApply = true,
+        [FromQuery] bool includeCouponOnly = false)
+    {
+        var productIdList = productIds?
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(id => Guid.TryParse(id.Trim(), out var guid) ? guid : Guid.Empty)
+            .Where(id => id != Guid.Empty)
+            .ToList() ?? new List<Guid>();
+
+        var query = new GetApplicableOffersQuery
+        {
+            ProductIds = productIdList,
+            IncludeAutoApply = includeAutoApply,
+            IncludeCouponOnly = includeCouponOnly
+        };
+        var offers = await _mediator.Send(query);
+        return Ok(offers);
+    }
 }
 

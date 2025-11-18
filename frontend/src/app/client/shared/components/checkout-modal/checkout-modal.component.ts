@@ -14,6 +14,7 @@ import { CartItem } from '@core/models/cart.model';
 import { PaymentMethod, CreateSaleRequest } from '@core/models/sale.model';
 import { SaleService } from '@core/services/sale.service';
 import { CustomerService } from '@core/services/customer.service';
+import { OfferService } from '@core/services/offer.service';
 import { ToastService } from '@core/toast/toast.service';
 import { AuthService } from '@core/services/auth.service';
 import { Product } from '@core/models/product.model';
@@ -56,6 +57,7 @@ export class CheckoutModalComponent {
 
   private saleService = inject(SaleService);
   private customerService = inject(CustomerService);
+  private offerService = inject(OfferService);
   private toastService = inject(ToastService);
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
@@ -82,6 +84,10 @@ export class CheckoutModalComponent {
   discountType = signal<'percentage' | 'amount'>('percentage');
   discountValue = signal(0);
   couponCode = signal('');
+  couponCodeValidating = signal(false);
+  couponCodeValid = signal<boolean | null>(null);
+  couponValidationMessage = signal('');
+  couponDiscountAmount = signal(0);
   appliedOffers = signal<any[]>([]);
 
   // Loyalty
@@ -134,6 +140,61 @@ export class CheckoutModalComponent {
       couponCode: [''],
       loyaltyPointsRedeem: [0],
       notes: [''],
+    });
+
+    // Setup coupon code validation with debounce
+    this.checkoutForm.get('couponCode')?.valueChanges.pipe(
+      debounceTime(500),
+      distinctUntilChanged(),
+      switchMap(code => {
+        const coupon = code?.trim();
+        if (!coupon || coupon.length === 0) {
+          this.couponCodeValid.set(null);
+          this.couponValidationMessage.set('');
+          this.couponDiscountAmount.set(0);
+          this.couponCode.set('');
+          return of(null);
+        }
+        
+        this.couponCodeValidating.set(true);
+        this.couponCode.set(coupon);
+        
+        // Get product IDs from cart
+        const productIds = this.cart
+          .map(item => {
+            if ('product' in item) {
+              return item.product.id;
+            }
+            return null;
+          })
+          .filter(id => id !== null) as string[];
+
+        return this.offerService.validateCoupon(coupon, productIds).pipe(
+          catchError(error => {
+            this.couponCodeValid.set(false);
+            this.couponValidationMessage.set(error?.error?.message || 'Invalid coupon code');
+            this.couponDiscountAmount.set(0);
+            this.couponCodeValidating.set(false);
+            return of(null);
+          })
+        );
+      })
+    ).subscribe(result => {
+      this.couponCodeValidating.set(false);
+      if (result) {
+        if (result.isValid) {
+          this.couponCodeValid.set(true);
+          this.couponValidationMessage.set(`Valid coupon! Discount: ${result.discountAmount | currency: 'INR'}`);
+          this.couponDiscountAmount.set(result.discountAmount || 0);
+          if (result.offer) {
+            this.toastService.success(`Coupon "${result.offer.name}" applied successfully!`);
+          }
+        } else {
+          this.couponCodeValid.set(false);
+          this.couponValidationMessage.set(result.errorMessage || 'Invalid coupon code');
+          this.couponDiscountAmount.set(0);
+        }
+      }
     });
   }
 
@@ -303,13 +364,31 @@ export class CheckoutModalComponent {
         payLaterAmount: payLaterAmount,
         discountAmount: this.discountAmount(),
         loyaltyPointsRedeemed: this.loyaltyPointsToRedeem(),
-        couponCode: this.couponCode() || undefined,
+        couponCode: this.checkoutForm.get('couponCode')?.value?.trim() || undefined,
         notes: this.checkoutForm.get('notes')?.value || undefined,
       };
 
       const response = await firstValueFrom(this.saleService.createSale(saleRequest));
       
       if (response) {
+        // Extract applied offers from sale items
+        const offersMap = new Map<string, { id: string; name: string; discountAmount: number }>();
+        if (response.items) {
+          response.items.forEach(item => {
+            if (item.offerId && item.offerName && item.discountAmount && item.discountAmount > 0) {
+              if (!offersMap.has(item.offerId)) {
+                offersMap.set(item.offerId, {
+                  id: item.offerId,
+                  name: item.offerName,
+                  discountAmount: 0
+                });
+              }
+              offersMap.get(item.offerId)!.discountAmount += item.discountAmount;
+            }
+          });
+        }
+        this.appliedOffers.set(Array.from(offersMap.values()));
+        
         // Show success state with points earned
         this.saleResponse.set(response);
         this.showSuccess.set(true);

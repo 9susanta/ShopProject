@@ -53,8 +53,10 @@ public static class DependencyInjection
         // Add Services
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IFileStorageService, FileStorageService>();
+        services.AddScoped<IPdfService, PdfService>();
         services.AddScoped<IVoiceToTextService, VoiceToTextService>();
         services.AddScoped<IUnitConversionService, UnitConversionService>();
+        services.AddScoped<ISmsService, SmsService>();
         // NotificationService is registered separately in NotificationServiceRegistration to avoid circular dependency
         
         // Security Services

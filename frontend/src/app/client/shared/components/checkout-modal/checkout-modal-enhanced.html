@@ -94,7 +94,9 @@
         <div class="summary-items">
           @for (item of cart; track getProductId(item)) {
             <div class="summary-item">
-              <span>{{ getProductName(item) }} × {{ item.quantity }}</span>
+              <div class="flex flex-col">
+                <span>{{ getProductName(item) }} × {{ item.quantity }}</span>
+              </div>
               <span>{{ formatCurrency(item.subtotal) }}</span>
             </div>
           }
@@ -103,9 +105,25 @@
           <span>Subtotal:</span>
           <span>{{ formatCurrency(subtotal()) }}</span>
         </div>
+        @if (appliedOffers().length > 0) {
+          <div class="summary-section offers-section">
+            <div class="summary-line offers-header">
+              <span class="flex items-center gap-1">
+                <mat-icon class="text-sm">local_offer</mat-icon>
+                Applied Offers:
+              </span>
+            </div>
+            @for (offer of appliedOffers(); track offer.id) {
+              <div class="summary-line offer-item">
+                <span class="text-sm">{{ offer.name }}</span>
+                <span class="text-sm text-green-600">-{{ formatCurrency(offer.discountAmount || 0) }}</span>
+              </div>
+            }
+          </div>
+        }
         @if (discountAmount() > 0) {
           <div class="summary-line discount">
-            <span>Discount:</span>
+            <span>Manual Discount:</span>
             <span>-{{ formatCurrency(discountAmount()) }}</span>
           </div>
         }
@@ -113,6 +131,12 @@
           <div class="summary-line discount">
             <span>Loyalty Points ({{ loyaltyPointsToRedeem() }}):</span>
             <span>-{{ formatCurrency(loyaltyPointsValue()) }}</span>
+          </div>
+        }
+        @if (couponCode()) {
+          <div class="summary-line coupon-code">
+            <span class="text-sm text-gray-600">Coupon Code:</span>
+            <span class="text-sm font-semibold">{{ couponCode() }}</span>
           </div>
         }
         <div class="summary-total">
@@ -147,13 +171,28 @@
       <!-- Coupon Code -->
       <div class="form-section">
         <label class="form-label">Coupon Code (Optional)</label>
-        <input
-          type="text"
-          class="form-control"
-          [value]="couponCode()"
-          (input)="couponCode.set($any($event.target).value)"
-          placeholder="Enter coupon code"
-        />
+        <div class="coupon-input-wrapper">
+          <input
+            type="text"
+            class="form-control"
+            [formControl]="checkoutForm.get('couponCode')!"
+            placeholder="Enter coupon code"
+            [class.valid]="couponCodeValid() === true"
+            [class.invalid]="couponCodeValid() === false"
+          />
+          @if (couponCodeValidating()) {
+            <mat-spinner diameter="20" class="coupon-spinner"></mat-spinner>
+          } @else if (couponCodeValid() === true) {
+            <mat-icon class="coupon-icon valid-icon">check_circle</mat-icon>
+          } @else if (couponCodeValid() === false) {
+            <mat-icon class="coupon-icon invalid-icon">cancel</mat-icon>
+          }
+        </div>
+        @if (couponValidationMessage()) {
+          <div class="coupon-message" [class.valid]="couponCodeValid() === true" [class.invalid]="couponCodeValid() === false">
+            {{ couponValidationMessage() }}
+          </div>
+        }
       </div>
 
       <!-- Loyalty Points -->

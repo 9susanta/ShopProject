@@ -23,6 +23,9 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
     private readonly IMediator _mediator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cacheService;
+    private readonly IPdfService _pdfService;
+    private readonly IFileStorageService _fileStorageService;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CreatePOSSaleCommandHandler> _logger;
 
     public CreatePOSSaleCommandHandler(
@@ -37,6 +40,9 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
         IMediator mediator,
         IUnitOfWork unitOfWork,
         ICacheService cacheService,
+        IPdfService pdfService,
+        IFileStorageService fileStorageService,
+        IServiceProvider serviceProvider,
         ILogger<CreatePOSSaleCommandHandler> logger)
     {
         _saleRepository = saleRepository;
@@ -50,6 +56,9 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
         _mediator = mediator;
         _unitOfWork = unitOfWork;
         _cacheService = cacheService;
+        _pdfService = pdfService;
+        _fileStorageService = fileStorageService;
+        _serviceProvider = serviceProvider;
         _logger = logger;
     }
 
@@ -339,12 +348,48 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
 
             _logger.LogInformation("POS sale created successfully: {SaleId}, Invoice: {InvoiceNumber}", sale.Id, sale.InvoiceNumber);
 
+            // Send notification to customer if phone number available (async, don't block)
+            if (!string.IsNullOrWhiteSpace(sale.CustomerPhone) && customer != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        using var scope = _serviceProvider.CreateScope();
+                        var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                        await notificationService.NotifySaleCompletedAsync(
+                            sale.CustomerPhone,
+                            sale.InvoiceNumber,
+                            sale.TotalAmount,
+                            pointsEarnedForSale,
+                            cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to send sale completion notification");
+                    }
+                }, cancellationToken);
+            }
+
             // Load offers for sale items
             var offerIds = sale.Items.Where(i => i.OfferId.HasValue).Select(i => i.OfferId!.Value).Distinct().ToList();
             var appliedOffers = offerIds.Any()
                 ? (await _offerRepository.FindAsync(o => offerIds.Contains(o.Id), cancellationToken)).ToList()
                 : new List<Offer>();
             var offerLookup = appliedOffers.ToDictionary(o => o.Id);
+
+            // Generate PDF invoice (async, don't block response)
+            string? pdfUrl = null;
+            try
+            {
+                var pdfPath = await _pdfService.GenerateInvoicePdfAsync(sale.Id, sale.InvoiceNumber, cancellationToken);
+                pdfUrl = _fileStorageService.GetFileUrl(pdfPath);
+                _logger.LogInformation("PDF invoice generated: {PdfPath}", pdfPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not generate PDF invoice, will be available later via API endpoint");
+            }
 
             return new SaleDto
             {
@@ -367,6 +412,7 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
                 Notes = null,
                 LoyaltyPointsEarned = pointsEarnedForSale,
                 LoyaltyPointsRedeemed = request.LoyaltyPointsToRedeem > 0 ? (int)request.LoyaltyPointsToRedeem : null,
+                PdfUrl = pdfUrl,
                 Items = sale.Items.Select(i =>
                 {
                     var offer = i.OfferId.HasValue ? offerLookup.GetValueOrDefault(i.OfferId.Value) : null;

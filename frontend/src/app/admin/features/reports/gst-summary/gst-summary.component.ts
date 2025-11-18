@@ -13,6 +13,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ReportsService, GSTSummaryReport } from '@core/services/reports.service';
 import { ToastService } from '@core/toast/toast.service';
+import { ExportService } from '@core/services/export.service';
 
 @Component({
   selector: 'grocery-gst-summary',
@@ -39,10 +40,20 @@ import { ToastService } from '@core/toast/toast.service';
           <h1 class="text-2xl font-bold">GST Summary Report</h1>
           <p class="text-gray-600">View GST breakdown by tax slabs</p>
         </div>
-        <button mat-button routerLink="/admin/reports">
-          <mat-icon>arrow_back</mat-icon>
-          Back to Reports
-        </button>
+        <div class="flex gap-2">
+          <button mat-raised-button color="primary" (click)="exportToPDF()" [disabled]="!report() || loading()">
+            <mat-icon>picture_as_pdf</mat-icon>
+            Export PDF
+          </button>
+          <button mat-raised-button color="accent" (click)="exportToExcel()" [disabled]="!report() || loading()">
+            <mat-icon>table_chart</mat-icon>
+            Export Excel
+          </button>
+          <button mat-button routerLink="/admin/reports">
+            <mat-icon>arrow_back</mat-icon>
+            Back to Reports
+          </button>
+        </div>
       </div>
 
       <!-- Date Range Filter -->
@@ -185,6 +196,7 @@ import { ToastService } from '@core/toast/toast.service';
 export class GstSummaryComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private toastService = inject(ToastService);
+  private exportService = inject(ExportService);
 
   loading = signal(false);
   report = signal<GSTSummaryReport | null>(null);
@@ -210,5 +222,53 @@ export class GstSummaryComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  exportToPDF(): void {
+    if (!this.report()) {
+      this.toastService.error('No report data to export');
+      return;
+    }
+
+    const report = this.report()!;
+    const data = report.items.map(item => ({
+      'Product': item.productName,
+      'SKU': item.sku,
+      'Quantity Sold': item.quantitySold,
+      'GST Rate': `${item.gstRate}%`,
+      'GST Amount': item.gstAmount,
+      'Total Value': item.totalValue,
+    }));
+
+    this.exportService.exportToPDF(
+      `GST Summary Report - ${this.startDate.toLocaleDateString()} to ${this.endDate.toLocaleDateString()}`,
+      data,
+      `gst-summary-${this.startDate.toISOString().split('T')[0]}-${this.endDate.toISOString().split('T')[0]}`
+    );
+    this.toastService.success('PDF export initiated');
+  }
+
+  exportToExcel(): void {
+    if (!this.report()) {
+      this.toastService.error('No report data to export');
+      return;
+    }
+
+    const report = this.report()!;
+    const data = report.items.map(item => ({
+      'Product': item.productName,
+      'SKU': item.sku,
+      'Quantity Sold': item.quantitySold,
+      'GST Rate': `${item.gstRate}%`,
+      'GST Amount': item.gstAmount,
+      'Total Value': item.totalValue,
+    }));
+
+    this.exportService.exportToExcel(
+      data,
+      `gst-summary-${this.startDate.toISOString().split('T')[0]}-${this.endDate.toISOString().split('T')[0]}`,
+      'GST Summary'
+    );
+    this.toastService.success('Excel file exported successfully');
   }
 }

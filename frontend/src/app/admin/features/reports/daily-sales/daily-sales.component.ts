@@ -13,6 +13,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ReportsService, DailySalesReport } from '@core/services/reports.service';
 import { ToastService } from '@core/toast/toast.service';
+import { ExportService } from '@core/services/export.service';
 
 @Component({
   selector: 'grocery-daily-sales',
@@ -39,10 +40,20 @@ import { ToastService } from '@core/toast/toast.service';
           <h1 class="text-2xl font-bold">Daily Sales Report</h1>
           <p class="text-gray-600">View sales summary for a specific date</p>
         </div>
-        <button mat-button routerLink="/admin/reports">
-          <mat-icon>arrow_back</mat-icon>
-          Back to Reports
-        </button>
+        <div class="flex gap-2">
+          <button mat-raised-button color="primary" (click)="exportToPDF()" [disabled]="!report() || loading()">
+            <mat-icon>picture_as_pdf</mat-icon>
+            Export PDF
+          </button>
+          <button mat-raised-button color="accent" (click)="exportToExcel()" [disabled]="!report() || loading()">
+            <mat-icon>table_chart</mat-icon>
+            Export Excel
+          </button>
+          <button mat-button routerLink="/admin/reports">
+            <mat-icon>arrow_back</mat-icon>
+            Back to Reports
+          </button>
+        </div>
       </div>
 
       <!-- Date Filter -->
@@ -207,6 +218,7 @@ import { ToastService } from '@core/toast/toast.service';
 export class DailySalesComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private toastService = inject(ToastService);
+  private exportService = inject(ExportService);
 
   loading = signal(false);
   report = signal<DailySalesReport | null>(null);
@@ -230,5 +242,57 @@ export class DailySalesComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  exportToPDF(): void {
+    if (!this.report()) {
+      this.toastService.error('No report data to export');
+      return;
+    }
+
+    const report = this.report()!;
+    const data = report.sales.map(sale => ({
+      'Invoice Number': sale.invoiceNumber,
+      'Customer': sale.customerName || 'Guest',
+      'Date': new Date(sale.saleDate).toLocaleDateString(),
+      'Subtotal': sale.subTotal,
+      'Tax': sale.taxAmount,
+      'Discount': sale.discountAmount,
+      'Total': sale.totalAmount,
+      'Payment Method': sale.paymentMethod,
+    }));
+
+    this.exportService.exportToPDF(
+      `Daily Sales Report - ${this.selectedDate.toLocaleDateString()}`,
+      data,
+      `daily-sales-${this.selectedDate.toISOString().split('T')[0]}`
+    );
+    this.toastService.success('PDF export initiated');
+  }
+
+  exportToExcel(): void {
+    if (!this.report()) {
+      this.toastService.error('No report data to export');
+      return;
+    }
+
+    const report = this.report()!;
+    const data = report.sales.map(sale => ({
+      'Invoice Number': sale.invoiceNumber,
+      'Customer': sale.customerName || 'Guest',
+      'Date': new Date(sale.saleDate).toLocaleDateString(),
+      'Subtotal': sale.subTotal,
+      'Tax': sale.taxAmount,
+      'Discount': sale.discountAmount,
+      'Total': sale.totalAmount,
+      'Payment Method': sale.paymentMethod,
+    }));
+
+    this.exportService.exportToExcel(
+      data,
+      `daily-sales-${this.selectedDate.toISOString().split('T')[0]}`,
+      'Daily Sales'
+    );
+    this.toastService.success('Excel file exported successfully');
   }
 }

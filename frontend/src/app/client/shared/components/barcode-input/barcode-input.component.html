@@ -14,10 +14,20 @@
     <button
       type="button"
       class="barcode-scan-button"
+      (click)="openCameraScanner()"
+      [attr.aria-label]="'Open camera scanner'"
+      matTooltip="Scan with camera"
+    >
+      <span class="material-icons">camera_alt</span>
+    </button>
+    <button
+      type="button"
+      class="barcode-scan-button"
       (click)="onBarcodeEntered()"
       [attr.aria-label]="'Submit barcode'"
+      matTooltip="Submit barcode"
     >
-      <span class="material-icons">qr_code_scanner</span>
+      <span class="material-icons">search</span>
     </button>
   </div>
 </div>

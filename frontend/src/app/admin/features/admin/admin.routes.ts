@@ -75,6 +75,11 @@ export const adminRoutes: Routes = [
           import('./offers/offers.routes').then(m => m.offerRoutes),
       },
       {
+        path: 'suppliers',
+        loadChildren: () =>
+          import('../suppliers/suppliers.routes').then(m => m.suppliersRoutes),
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('../profile/profile.component').then(m => m.ProfileComponent),

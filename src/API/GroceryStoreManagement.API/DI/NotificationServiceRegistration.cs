@@ -13,8 +13,9 @@ public static class NotificationServiceRegistration
         services.AddScoped<INotificationService>(sp =>
         {
             var hubContext = sp.GetRequiredService<IHubContext<InventoryHub>>();
+            var smsService = sp.GetRequiredService<ISmsService>();
             var logger = sp.GetRequiredService<ILogger<NotificationService<InventoryHub>>>();
-            return new NotificationService<InventoryHub>(hubContext, logger);
+            return new NotificationService<InventoryHub>(hubContext, smsService, logger);
         });
 
         return services;

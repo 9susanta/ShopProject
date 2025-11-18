@@ -40,5 +40,23 @@ export class OfferService {
   deleteOffer(id: string): Observable<void> {
     return this.api.delete<void>(`offers/${id}`);
   }
+
+  validateCoupon(couponCode: string, productIds?: string[]): Observable<any> {
+    return this.api.post<any>('offers/validate-coupon', {
+      couponCode,
+      productIds: productIds || [],
+    });
+  }
+
+  getApplicableOffers(productIds: string[], includeAutoApply: boolean = true, includeCouponOnly: boolean = false): Observable<Offer[]> {
+    const productIdsParam = productIds.join(',');
+    return this.api.get<Offer[]>('offers/for-cart', {
+      params: {
+        productIds: productIdsParam,
+        includeAutoApply: includeAutoApply.toString(),
+        includeCouponOnly: includeCouponOnly.toString(),
+      },
+    });
+  }
 }
 

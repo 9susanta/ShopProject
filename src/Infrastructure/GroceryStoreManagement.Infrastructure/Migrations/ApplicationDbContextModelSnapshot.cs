@@ -137,6 +137,49 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                     b.ToTable("Customers", (string)null);
                 });
 
+            modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.CustomerSavedItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsFavorite")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastPurchasedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("PurchaseCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("CustomerId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("CustomerSavedItems", (string)null);
+                });
+
             modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.GRNItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1750,6 +1793,25 @@ namespace GroceryStoreManagement.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("TaxSlab");
+                });
+
+            modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.CustomerSavedItem", b =>
+                {
+                    b.HasOne("GroceryStoreManagement.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GroceryStoreManagement.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("GroceryStoreManagement.Domain.Entities.GRNItem", b =>

@@ -93,17 +93,19 @@ public class InventoryController : ControllerBase
     }
 
     /// <summary>
-    /// Get stock valuation (FIFO/LIFO stub)
+    /// Get stock valuation (FIFO/LIFO)
     /// </summary>
     [HttpGet("valuation")]
-    public async Task<ActionResult> GetValuation([FromQuery] string method = "FIFO")
+    public async Task<ActionResult<Application.DTOs.InventoryValuationDto>> GetValuation(
+        [FromQuery] string method = "FIFO",
+        [FromQuery] Guid? productId = null)
     {
-        // Stub implementation - returns basic valuation
-        return Ok(new
+        var query = new Application.Queries.Inventory.GetInventoryValuationQuery
         {
             Method = method,
-            TotalValue = 0m,
-            Message = "Valuation calculation not yet implemented"
-        });
+            ProductId = productId
+        };
+        var result = await _mediator.Send(query);
+        return Ok(result);
     }
 }

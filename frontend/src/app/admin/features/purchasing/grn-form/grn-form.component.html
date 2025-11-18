@@ -1,0 +1,280 @@
+<div class="grn-form-container p-4 max-w-7xl mx-auto">
+  <div class="mb-4 flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold">Create Goods Receive Note</h1>
+      <p class="text-gray-600">Record received goods from supplier</p>
+    </div>
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to GRNs
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center p-8">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <mat-card class="mb-4">
+        <mat-card-header>
+          <mat-card-title>GRN Details</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Supplier -->
+            <mat-form-field appearance="outline">
+              <mat-label>Supplier *</mat-label>
+              <input
+                matInput
+                formControlName="supplierId"
+                [matAutocomplete]="supplierAuto"
+                [value]="form.get('supplierId')?.value"
+                placeholder="Search supplier"
+                required
+              />
+              <mat-autocomplete
+                #supplierAuto="matAutocomplete"
+                [displayWith]="displaySupplier"
+                (optionSelected)="onSupplierSelected($event)"
+              >
+                @for (supplier of filteredSuppliers$ | async; track supplier.id) {
+                  <mat-option [value]="supplier">{{ supplier.name }}</mat-option>
+                }
+              </mat-autocomplete>
+              <mat-icon matPrefix>business</mat-icon>
+              @if (form.get('supplierId')?.hasError('required') && form.get('supplierId')?.touched) {
+                <mat-error>Supplier is required</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Receive Date -->
+            <mat-form-field appearance="outline">
+              <mat-label>Receive Date *</mat-label>
+              <input matInput [matDatepicker]="receiveDatePicker" formControlName="receiveDate" required />
+              <mat-datepicker-toggle matSuffix [for]="receiveDatePicker"></mat-datepicker-toggle>
+              <mat-datepicker #receiveDatePicker></mat-datepicker>
+              <mat-icon matPrefix>calendar_today</mat-icon>
+              @if (form.get('receiveDate')?.hasError('required') && form.get('receiveDate')?.touched) {
+                <mat-error>Receive date is required</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Invoice Number -->
+            <mat-form-field appearance="outline">
+              <mat-label>Invoice Number</mat-label>
+              <input matInput formControlName="invoiceNumber" placeholder="Optional" />
+              <mat-icon matPrefix>receipt</mat-icon>
+            </mat-form-field>
+
+            <!-- Purchase Order (if from PO) -->
+            @if (purchaseOrder()) {
+              <mat-form-field appearance="outline">
+                <mat-label>Purchase Order</mat-label>
+                <input matInput [value]="purchaseOrder()!.orderNumber" readonly />
+                <mat-icon matPrefix>shopping_cart</mat-icon>
+              </mat-form-field>
+            }
+          </div>
+
+          <!-- Remarks -->
+          <mat-form-field appearance="outline" class="w-full mt-4">
+            <mat-label>Remarks</mat-label>
+            <textarea matInput formControlName="remarks" rows="2" placeholder="Optional remarks"></textarea>
+          </mat-form-field>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Items Section -->
+      <mat-card class="mb-4">
+        <mat-card-header>
+          <div class="flex justify-between items-center w-full">
+            <mat-card-title>Items</mat-card-title>
+            <button
+              type="button"
+              mat-raised-button
+              color="primary"
+              (click)="addItem()"
+            >
+              <mat-icon>add</mat-icon>
+              Add Item
+            </button>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          @if (hasItems()) {
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="items.controls" class="w-full">
+                <!-- Product Column -->
+                <ng-container matColumnDef="product">
+                  <th mat-header-cell *matHeaderCellDef>Product *</th>
+                  <td mat-cell *matCellDef="let item; let i = index">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <input
+                        matInput
+                        [formControl]="item.get('productName')!"
+                        [matAutocomplete]="productAuto[i]"
+                        placeholder="Search product"
+                        required
+                      />
+                      <mat-autocomplete
+                        #productAuto="matAutocomplete"
+                        [displayWith]="displayProduct"
+                        (optionSelected)="onProductSelected($event, i)"
+                      >
+                        @if (filteredProductsForItem[i]) {
+                          @for (product of filteredProductsForItem[i] | async; track product.id) {
+                            <mat-option [value]="product">{{ displayProduct(product) }}</mat-option>
+                          }
+                        } @else {
+                          @for (product of products().slice(0, 20); track product.id) {
+                            <mat-option [value]="product">{{ displayProduct(product) }}</mat-option>
+                          }
+                        }
+                      </mat-autocomplete>
+                      @if (item.get('productName')?.hasError('required') && item.get('productName')?.touched) {
+                        <mat-error>Product is required</mat-error>
+                      }
+                    </mat-form-field>
+                  </td>
+                </ng-container>
+
+                <!-- Quantity Column -->
+                <ng-container matColumnDef="quantity">
+                  <th mat-header-cell *matHeaderCellDef>Quantity *</th>
+                  <td mat-cell *matCellDef="let item">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <input
+                        matInput
+                        type="number"
+                        [formControl]="item.get('quantity')!"
+                        min="0.01"
+                        step="0.01"
+                        required
+                      />
+                      @if (item.get('quantity')?.hasError('required') && item.get('quantity')?.touched) {
+                        <mat-error>Required</mat-error>
+                      }
+                      @if (item.get('quantity')?.hasError('min') && item.get('quantity')?.touched) {
+                        <mat-error>Must be > 0</mat-error>
+                      }
+                    </mat-form-field>
+                  </td>
+                </ng-container>
+
+                <!-- Unit Cost Column -->
+                <ng-container matColumnDef="unitCost">
+                  <th mat-header-cell *matHeaderCellDef>Unit Cost *</th>
+                  <td mat-cell *matCellDef="let item">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <input
+                        matInput
+                        type="number"
+                        [formControl]="item.get('unitCost')!"
+                        min="0"
+                        step="0.01"
+                        required
+                      />
+                      <span matPrefix>₹&nbsp;</span>
+                      @if (item.get('unitCost')?.hasError('required') && item.get('unitCost')?.touched) {
+                        <mat-error>Required</mat-error>
+                      }
+                      @if (item.get('unitCost')?.hasError('min') && item.get('unitCost')?.touched) {
+                        <mat-error>Must be ≥ 0</mat-error>
+                      }
+                    </mat-form-field>
+                  </td>
+                </ng-container>
+
+                <!-- Batch Number Column -->
+                <ng-container matColumnDef="batchNumber">
+                  <th mat-header-cell *matHeaderCellDef>Batch Number</th>
+                  <td mat-cell *matCellDef="let item">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <input matInput [formControl]="item.get('batchNumber')!" placeholder="Optional" />
+                    </mat-form-field>
+                  </td>
+                </ng-container>
+
+                <!-- Expiry Date Column -->
+                <ng-container matColumnDef="expiryDate">
+                  <th mat-header-cell *matHeaderCellDef>Expiry Date</th>
+                  <td mat-cell *matCellDef="let item">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <input
+                        matInput
+                        [matDatepicker]="expiryPicker[i]"
+                        [formControl]="item.get('expiryDate')!"
+                        placeholder="Optional"
+                      />
+                      <mat-datepicker-toggle matSuffix [for]="expiryPicker[i]"></mat-datepicker-toggle>
+                      <mat-datepicker #expiryPicker="matDatepicker"></mat-datepicker>
+                    </mat-form-field>
+                  </td>
+                </ng-container>
+
+                <!-- Total Column -->
+                <ng-container matColumnDef="total">
+                  <th mat-header-cell *matHeaderCellDef>Total</th>
+                  <td mat-cell *matCellDef="let item; let i = index">
+                    <strong>{{ getItemTotal(i) | currency: 'INR' }}</strong>
+                  </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>Actions</th>
+                  <td mat-cell *matCellDef="let item; let i = index">
+                    <button
+                      type="button"
+                      mat-icon-button
+                      color="warn"
+                      (click)="removeItem(i)"
+                      matTooltip="Remove item"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+              </table>
+            </div>
+
+            <!-- Total Amount -->
+            <mat-divider class="my-4"></mat-divider>
+            <div class="flex justify-end">
+              <div class="text-right">
+                <div class="text-sm text-gray-600 mb-1">Total Amount</div>
+                <div class="text-2xl font-bold text-green-600">{{ totalAmount() | currency: 'INR' }}</div>
+              </div>
+            </div>
+          } @else {
+            <div class="text-center py-8 text-gray-500">
+              <mat-icon class="text-6xl mb-4">inventory_2</mat-icon>
+              <p>No items added yet. Click "Add Item" to start.</p>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Form Actions -->
+      <div class="flex justify-end gap-2">
+        <button type="button" mat-button (click)="goBack()">Cancel</button>
+        <button
+          type="submit"
+          mat-raised-button
+          color="primary"
+          [disabled]="form.invalid || !hasItems() || submitting()"
+        >
+          @if (submitting()) {
+            <mat-spinner diameter="20" class="inline-block mr-2"></mat-spinner>
+          }
+          Create GRN
+        </button>
+      </div>
+    </form>
+  }
+</div>
+

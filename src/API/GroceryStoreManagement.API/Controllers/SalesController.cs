@@ -45,14 +45,15 @@ public class SalesController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Get sale by ID
+    /// </summary>
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,Staff,SuperAdmin")]
     public async Task<ActionResult<Application.DTOs.SaleDto>> GetSale(Guid id)
     {
-        // For now, use GetSales and filter by ID
-        var query = new GetSalesQuery { PageSize = 1 };
-        var result = await _mediator.Send(query);
-        var sale = result.Items.FirstOrDefault(s => s.Id == id);
+        var query = new GetSaleByIdQuery { Id = id };
+        var sale = await _mediator.Send(query);
         
         if (sale == null)
             return NotFound();

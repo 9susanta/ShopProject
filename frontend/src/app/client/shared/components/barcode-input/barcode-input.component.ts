@@ -3,11 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { BarcodeScannerService } from '../../../../core/services/barcode-scanner.service';
+import { MatDialog } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule } from '@angular/material/dialog';
+import { BarcodeCameraComponent } from '../barcode-camera/barcode-camera.component';
 
 @Component({
   selector: 'grocery-barcode-input',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatTooltipModule, MatDialogModule],
   templateUrl: './barcode-input.component.html',
   styleUrls: ['./barcode-input.component.css'],
 })
@@ -22,6 +28,7 @@ export class BarcodeInputComponent implements OnInit, OnDestroy {
   barcodeScanned = output<string>();
 
   private barcodeScannerService = inject(BarcodeScannerService);
+  private dialog = inject(MatDialog);
   private scannerSubscription?: Subscription;
 
   ngOnInit(): void {
@@ -60,5 +67,25 @@ export class BarcodeInputComponent implements OnInit, OnDestroy {
 
   clear(): void {
     this.barcode.set('');
+  }
+
+  openCameraScanner(): void {
+    const dialogRef = this.dialog.open(BarcodeCameraComponent, {
+      width: '90vw',
+      maxWidth: '640px',
+      disableClose: false,
+      panelClass: 'barcode-camera-dialog',
+    });
+
+    dialogRef.componentInstance.barcodeScanned.subscribe((barcode: string) => {
+      if (barcode) {
+        this.barcodeScanned.emit(barcode);
+        dialogRef.close();
+      }
+    });
+
+    dialogRef.componentInstance.closeDialog.subscribe(() => {
+      dialogRef.close();
+    });
   }
 }
