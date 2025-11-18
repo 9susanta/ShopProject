@@ -146,6 +146,9 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
                 // Get unit price (override if provided)
                 var unitPrice = itemRequest.OverridePrice ?? product.SalePrice;
 
+                // TODO: Validate sale price >= cost price (need to calculate from inventory batches)
+                // Cost price validation can be added when cost tracking is implemented
+
                 // Get GST rates from product's tax slab (split equally between CGST and SGST)
                 var totalGSTRate = product.TaxSlab?.Rate ?? 0;
                 var cgstRate = totalGSTRate / 2; // CGST is half of total GST

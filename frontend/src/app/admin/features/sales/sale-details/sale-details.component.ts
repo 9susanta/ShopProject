@@ -9,6 +9,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { ToastService } from '@core/toast/toast.service';
 import { SaleService } from '@core/services/sale.service';
+import { ReceiptPrinterService } from '@core/services/receipt-printer.service';
 import { Sale } from '@core/models/sale.model';
 
 @Component({
@@ -26,11 +27,27 @@ import { Sale } from '@core/models/sale.model';
   ],
   template: `
     <div class="sale-details-container p-4 max-w-6xl mx-auto">
-      <div class="mb-4">
+      <div class="mb-4 flex justify-between items-center">
         <button mat-button (click)="goBack()">
           <mat-icon>arrow_back</mat-icon>
           Back to Sales
         </button>
+        @if (sale()) {
+          <button 
+            mat-raised-button 
+            color="primary" 
+            (click)="printReceipt()"
+            [disabled]="printing()"
+          >
+            @if (printing()) {
+              <mat-icon class="animate-spin">hourglass_empty</mat-icon>
+              Printing...
+            } @else {
+              <mat-icon>print</mat-icon>
+              Print Receipt
+            }
+          </button>
+        }
       </div>
 
       @if (loading()) {
@@ -187,10 +204,12 @@ export class SaleDetailsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private toastService = inject(ToastService);
   private saleService = inject(SaleService);
+  private receiptPrinterService = inject(ReceiptPrinterService);
 
   saleId = signal<string | null>(null);
   sale = signal<Sale | null>(null);
   loading = signal(false);
+  printing = signal(false);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -220,6 +239,31 @@ export class SaleDetailsComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/admin/sales']);
+  }
+
+  printReceipt(): void {
+    const sale = this.sale();
+    if (!sale || !sale.id) {
+      this.toastService.error('Sale information not available');
+      return;
+    }
+
+    this.printing.set(true);
+    this.receiptPrinterService.printReceipt(sale.id).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.toastService.success('Receipt sent to printer');
+        } else {
+          this.toastService.error('Failed to print receipt');
+        }
+        this.printing.set(false);
+      },
+      error: (error) => {
+        console.error('Error printing receipt:', error);
+        this.toastService.error(error?.error?.message || 'Failed to print receipt');
+        this.printing.set(false);
+      },
+    });
   }
 }
 

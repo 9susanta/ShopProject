@@ -17,6 +17,8 @@ public class Product : BaseEntity
     public Guid UnitId { get; private set; }
     public Guid? TaxSlabId { get; private set; } // Nullable - can be auto-filled from Category
     public int LowStockThreshold { get; private set; } = 10;
+    public int ReorderPoint { get; private set; } = 0; // Minimum stock level before reordering
+    public int SuggestedReorderQuantity { get; private set; } = 0; // Suggested quantity to reorder
     public bool IsWeightBased { get; private set; } = false;
     public decimal? WeightPerUnit { get; private set; } // For weight-based products
     public ProductStatus Status { get; private set; } = ProductStatus.Active;
@@ -72,6 +74,18 @@ public class Product : BaseEntity
             throw new ArgumentException("TaxSlabId cannot be empty", nameof(taxSlabId));
         
         TaxSlabId = taxSlabId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateReorderPoint(int reorderPoint, int suggestedReorderQuantity)
+    {
+        if (reorderPoint < 0)
+            throw new ArgumentException("Reorder point cannot be negative", nameof(reorderPoint));
+        if (suggestedReorderQuantity < 0)
+            throw new ArgumentException("Suggested reorder quantity cannot be negative", nameof(suggestedReorderQuantity));
+
+        ReorderPoint = reorderPoint;
+        SuggestedReorderQuantity = suggestedReorderQuantity;
         UpdatedAt = DateTime.UtcNow;
     }
 

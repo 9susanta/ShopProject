@@ -16,6 +16,8 @@ public class ProductDto
     public string? UnitName { get; set; }
     public int? AvailableQuantity { get; set; }
     public int LowStockThreshold { get; set; }
+    public int ReorderPoint { get; set; }
+    public int SuggestedReorderQuantity { get; set; }
     public bool IsActive { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

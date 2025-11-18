@@ -44,6 +44,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<SaleReturn> SaleReturns { get; set; } = null!;
     public DbSet<SaleReturnItem> SaleReturnItems { get; set; } = null!;
     public DbSet<Refund> Refunds { get; set; } = null!;
+    public DbSet<SupplierPayment> SupplierPayments { get; set; } = null!;
+    public DbSet<Permission> Permissions { get; set; } = null!;
+    public DbSet<RolePermission> RolePermissions { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

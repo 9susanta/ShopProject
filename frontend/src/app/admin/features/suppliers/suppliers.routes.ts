@@ -26,5 +26,11 @@ export const suppliersRoutes: Routes = [
       import('./supplier-form/supplier-form.component').then(m => m.SupplierFormComponent),
     canActivate: [AuthGuard],
   },
+  {
+    path: 'payments',
+    loadComponent: () =>
+      import('./supplier-payments/supplier-payments.component').then(m => m.SupplierPaymentsComponent),
+    canActivate: [AuthGuard],
+  },
 ];
 

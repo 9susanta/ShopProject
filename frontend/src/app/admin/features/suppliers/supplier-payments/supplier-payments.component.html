@@ -1,0 +1,182 @@
+<div class="supplier-payments-container p-4 max-w-7xl mx-auto">
+  <mat-card class="mb-4">
+    <mat-card-header>
+      <mat-card-title>Supplier Payments</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-tab-group>
+        <!-- Record Payment Tab -->
+        <mat-tab label="Record Payment">
+          <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" class="mt-4">
+            <div class="grid grid-cols-2 gap-4">
+              <mat-form-field>
+                <mat-label>Supplier</mat-label>
+                <mat-select formControlName="supplierId" (selectionChange)="onSupplierSelected($event.value)">
+                  <mat-option *ngFor="let supplier of suppliers()" [value]="supplier.id">
+                    {{ supplier.name }}
+                  </mat-option>
+                </mat-select>
+                @if (paymentForm.get('supplierId')?.hasError('required') && paymentForm.get('supplierId')?.touched) {
+                  <mat-error>Supplier is required</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field>
+                <mat-label>Amount</mat-label>
+                <input matInput type="number" formControlName="amount" step="0.01" min="0.01">
+                @if (paymentForm.get('amount')?.hasError('required') && paymentForm.get('amount')?.touched) {
+                  <mat-error>Amount is required</mat-error>
+                }
+                @if (paymentForm.get('amount')?.hasError('min') && paymentForm.get('amount')?.touched) {
+                  <mat-error>Amount must be greater than 0</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field>
+                <mat-label>Payment Method</mat-label>
+                <mat-select formControlName="paymentMethod">
+                  <mat-option value="Cash">Cash</mat-option>
+                  <mat-option value="UPI">UPI</mat-option>
+                  <mat-option value="Card">Card</mat-option>
+                  <mat-option value="BankTransfer">Bank Transfer</mat-option>
+                  <mat-option value="Cheque">Cheque</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field>
+                <mat-label>Payment Date</mat-label>
+                <input matInput [matDatepicker]="picker" formControlName="paymentDate">
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+
+              <mat-form-field>
+                <mat-label>Reference Number</mat-label>
+                <input matInput formControlName="referenceNumber" placeholder="Optional">
+              </mat-form-field>
+
+              <mat-form-field>
+                <mat-label>Notes</mat-label>
+                <textarea matInput formControlName="notes" rows="3" placeholder="Optional"></textarea>
+              </mat-form-field>
+            </div>
+
+            <div class="mt-4 flex justify-end gap-2">
+              <button mat-button type="button" (click)="paymentForm.reset()">Reset</button>
+              <button mat-raised-button color="primary" type="submit" [disabled]="submitting()">
+                @if (submitting()) {
+                  <mat-icon class="animate-spin">hourglass_empty</mat-icon>
+                  Recording...
+                } @else {
+                  <mat-icon>payment</mat-icon>
+                  Record Payment
+                }
+              </button>
+            </div>
+          </form>
+        </mat-tab>
+
+        <!-- Outstanding Payments Tab -->
+        <mat-tab label="Outstanding Payments">
+          @if (loading()) {
+            <div class="flex justify-center p-8">
+              <mat-spinner diameter="40"></mat-spinner>
+            </div>
+          } @else if (outstandingPayments().length === 0) {
+            <div class="text-center py-8 text-gray-500">
+              <mat-icon class="text-6xl mb-4">check_circle</mat-icon>
+              <p>No outstanding payments</p>
+            </div>
+          } @else {
+            <table mat-table [dataSource]="outstandingPayments()" class="w-full mt-4">
+              <ng-container matColumnDef="supplierName">
+                <th mat-header-cell *matHeaderCellDef>Supplier</th>
+                <td mat-cell *matCellDef="let payment">{{ payment.supplierName }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="totalOutstanding">
+                <th mat-header-cell *matHeaderCellDef>Outstanding Amount</th>
+                <td mat-cell *matCellDef="let payment">₹{{ payment.totalOutstanding | number: '1.2-2' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="unpaidGRNs">
+                <th mat-header-cell *matHeaderCellDef>Unpaid GRNs</th>
+                <td mat-cell *matCellDef="let payment">{{ payment.unpaidGRNs }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="lastPaymentDate">
+                <th mat-header-cell *matHeaderCellDef>Last Payment</th>
+                <td mat-cell *matCellDef="let payment">
+                  {{ payment.lastPaymentDate ? (payment.lastPaymentDate | date: 'short') : 'Never' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let payment">
+                  <button mat-button color="primary" (click)="onSupplierSelected(payment.supplierId)">
+                    View Payments
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+          }
+        </mat-tab>
+
+        <!-- Payment History Tab -->
+        <mat-tab label="Payment History">
+          @if (selectedSupplierId()) {
+            @if (loading()) {
+              <div class="flex justify-center p-8">
+                <mat-spinner diameter="40"></mat-spinner>
+              </div>
+            } @else if (supplierPayments().length === 0) {
+              <div class="text-center py-8 text-gray-500">
+                <mat-icon class="text-6xl mb-4">history</mat-icon>
+                <p>No payment history</p>
+              </div>
+            } @else {
+              <table mat-table [dataSource]="supplierPayments()" class="w-full mt-4">
+                <ng-container matColumnDef="date">
+                  <th mat-header-cell *matHeaderCellDef>Date</th>
+                  <td mat-cell *matCellDef="let payment">{{ payment.paymentDate | date: 'short' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="amount">
+                  <th mat-header-cell *matHeaderCellDef>Amount</th>
+                  <td mat-cell *matCellDef="let payment">₹{{ payment.amount | number: '1.2-2' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="paymentMethod">
+                  <th mat-header-cell *matHeaderCellDef>Method</th>
+                  <td mat-cell *matCellDef="let payment">{{ payment.paymentMethod }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="referenceNumber">
+                  <th mat-header-cell *matHeaderCellDef>Reference</th>
+                  <td mat-cell *matCellDef="let payment">{{ payment.referenceNumber || '-' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="notes">
+                  <th mat-header-cell *matHeaderCellDef>Notes</th>
+                  <td mat-cell *matCellDef="let payment">{{ payment.notes || '-' }}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="paymentColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: paymentColumns"></tr>
+              </table>
+            }
+          } @else {
+            <div class="text-center py-8 text-gray-500">
+              <p>Select a supplier to view payment history</p>
+            </div>
+          }
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+</div>
+

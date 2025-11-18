@@ -19,6 +19,7 @@ public class CreatePOSSaleCommand : IRequest<SaleDto>
     public string? DeliveryAddress { get; set; }
     public decimal LoyaltyPointsToRedeem { get; set; } = 0;
     public string? CouponCode { get; set; }
+    public bool AllowPriceOverride { get; set; } = false; // Admin override for price < cost
     public List<POSSaleItemCommand> Items { get; set; } = new();
 }
 

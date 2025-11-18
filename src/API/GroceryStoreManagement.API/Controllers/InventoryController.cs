@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GroceryStoreManagement.Application.Queries.Inventory;
+using GroceryStoreManagement.Application.Commands.Products;
 
 namespace GroceryStoreManagement.API.Controllers;
 
@@ -105,6 +106,31 @@ public class InventoryController : ControllerBase
             Method = method,
             ProductId = productId
         };
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Update reorder point for a product
+    /// </summary>
+    [HttpPut("products/{productId}/reorder-point")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public async Task<ActionResult<object>> UpdateReorderPoint(
+        Guid productId,
+        [FromBody] UpdateReorderPointCommand command)
+    {
+        command.ProductId = productId;
+        var result = await _mediator.Send(command);
+        return Ok(new { success = result });
+    }
+
+    /// <summary>
+    /// Get reorder suggestions
+    /// </summary>
+    [HttpGet("reorder-suggestions")]
+    public async Task<ActionResult> GetReorderSuggestions([FromQuery] bool onlyBelowReorderPoint = true)
+    {
+        var query = new GetReorderSuggestionsQuery { OnlyBelowReorderPoint = onlyBelowReorderPoint };
         var result = await _mediator.Send(query);
         return Ok(result);
     }

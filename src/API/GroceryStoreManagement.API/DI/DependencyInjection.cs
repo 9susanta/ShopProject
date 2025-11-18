@@ -1,5 +1,6 @@
 using FluentValidation;
 using GroceryStoreManagement.Application.Interfaces;
+using GroceryStoreManagement.Application.Services;
 using GroceryStoreManagement.Domain.Entities;
 using GroceryStoreManagement.Infrastructure.EventBus;
 using GroceryStoreManagement.Infrastructure.Persistence;
@@ -58,6 +59,10 @@ public static class DependencyInjection
         services.AddScoped<IUnitConversionService, UnitConversionService>();
         services.AddScoped<ISmsService, SmsService>();
         services.AddSingleton<IWeightScaleService, WeightScaleService>();
+        services.AddSingleton<IReceiptPrinterService, ReceiptPrinterService>();
+        services.AddScoped<IGSTExportService, GSTExportService>();
+        services.AddScoped<IPermissionService, PermissionService>();
+        services.AddSingleton<IBarcodePrintService, BarcodePrintService>();
         // NotificationService is registered separately in NotificationServiceRegistration to avoid circular dependency
         
         // Security Services
