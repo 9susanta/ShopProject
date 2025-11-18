@@ -1,0 +1,16 @@
+.batch-details-container {
+  min-height: calc(100vh - 64px);
+}
+
+.border-l-4 {
+  border-left-width: 4px;
+}
+
+.border-blue-500 {
+  border-color: #3b82f6;
+}
+
+.border-red-500 {
+  border-color: #ef4444;
+}
+

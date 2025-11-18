@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AdminGuard } from '@core/auth/admin.guard';
+import { AuthGuard } from '@core/auth/auth.guard';
 
 export const adminRoutes: Routes = [
   {
@@ -29,6 +30,11 @@ export const adminRoutes: Routes = [
           import('../inventory/inventory.routes').then(m => m.inventoryRoutes),
       },
       {
+        path: 'purchasing',
+        loadChildren: () =>
+          import('../purchasing/purchasing.routes').then(m => m.purchasingRoutes),
+      },
+      {
         path: 'sales',
         loadChildren: () =>
           import('../sales/sales.routes').then(m => m.salesRoutes),
@@ -47,6 +53,16 @@ export const adminRoutes: Routes = [
         path: 'settings',
         loadChildren: () =>
           import('../settings/settings.routes').then(m => m.settingsRoutes),
+      },
+      {
+        path: 'inventory/adjustments',
+        loadChildren: () =>
+          import('../adjustments/adjustments.routes').then(m => m.adjustmentsRoutes),
+      },
+      {
+        path: 'audit',
+        loadChildren: () =>
+          import('../audit/audit.routes').then(m => m.auditRoutes),
       },
       {
         path: '',

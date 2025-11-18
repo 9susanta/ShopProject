@@ -1,166 +1,314 @@
-<div class="po-form-container p-4 max-w-6xl mx-auto">
-  <h1 class="text-2xl font-bold mb-6">{{ isEditMode() ? 'Edit' : 'Create' }} Purchase Order</h1>
-
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
-    <!-- Header Section -->
-    <div class="bg-white p-6 rounded-lg shadow">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Supplier *</mat-label>
-          <input
-            matInput
-            formControlName="supplierId"
-            [matAutocomplete]="supplierAuto"
-            (input)="filterSuppliers($any($event.target).value || '')" />
-          <mat-autocomplete #supplierAuto="matAutocomplete">
-            @for (supplier of filteredSuppliers(); track supplier.id) {
-              <mat-option [value]="supplier.id">{{ supplier.name }}</mat-option>
-            }
-          </mat-autocomplete>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Expected Delivery Date</mat-label>
-          <input matInput formControlName="expectedDeliveryDate" [matDatepicker]="picker" />
-          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
+<div class="po-form-container">
+  @if (loading()) {
+    <div class="flex justify-center items-center min-h-screen">
+      <div class="text-center">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p class="mt-4 text-gray-600">Loading purchase order...</p>
       </div>
-
-      <mat-form-field appearance="outline" class="w-full mt-4">
-        <mat-label>Remarks</mat-label>
-        <textarea matInput formControlName="remarks" rows="2"></textarea>
-      </mat-form-field>
+    </div>
+  } @else {
+    <!-- Header -->
+    <div class="form-header mb-6">
+      <div class="flex items-center gap-3 mb-2">
+        <button mat-icon-button (click)="onCancel()" matTooltip="Back to Purchase Orders">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <h1 class="text-3xl font-bold text-gray-800">
+          {{ isEditMode() ? 'Edit' : 'Create' }} Purchase Order
+        </h1>
+      </div>
+      <p class="text-gray-600 ml-12">Fill in the details below to {{ isEditMode() ? 'update' : 'create' }} a purchase order</p>
     </div>
 
-    <!-- Items Section -->
-    <div class="bg-white p-6 rounded-lg shadow">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold">Items</h2>
-        <button type="button" mat-raised-button color="primary" (click)="addItem()">
-          <mat-icon>add</mat-icon>
-          Add Item
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+      <!-- Supplier & Date Section -->
+      <mat-card class="form-section">
+        <mat-card-header>
+          <div class="flex items-center gap-2 w-full">
+            <mat-icon class="text-primary">business</mat-icon>
+            <mat-card-title>Supplier & Order Details</mat-card-title>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Supplier Selection -->
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Supplier *</mat-label>
+              <input
+                matInput
+                formControlName="supplierName"
+                [matAutocomplete]="supplierAuto"
+                placeholder="Search and select supplier"
+                required />
+              <mat-icon matPrefix>business</mat-icon>
+              <mat-autocomplete #supplierAuto="matAutocomplete" [displayWith]="displaySupplier" (optionSelected)="onSupplierSelected($event)">
+                @for (supplier of filteredSuppliers$ | async; track supplier.id) {
+                  <mat-option [value]="supplier">
+                    <div class="flex items-center gap-2">
+                      <mat-icon class="text-gray-400">store</mat-icon>
+                      <span>{{ supplier.name }}</span>
+                      @if (supplier.phone) {
+                        <span class="text-gray-500 text-sm ml-auto">{{ supplier.phone }}</span>
+                      }
+                    </div>
+                  </mat-option>
+                }
+                @if ((filteredSuppliers$ | async)?.length === 0) {
+                  <mat-option disabled>No suppliers found</mat-option>
+                }
+              </mat-autocomplete>
+              @if (form.get('supplierId')?.invalid && form.get('supplierId')?.touched) {
+                <mat-error>Supplier is required</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Expected Delivery Date -->
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Expected Delivery Date</mat-label>
+              <input matInput formControlName="expectedDeliveryDate" [matDatepicker]="picker" placeholder="Select delivery date" />
+              <mat-icon matPrefix>event</mat-icon>
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+          </div>
+
+          <!-- Remarks -->
+          <mat-form-field appearance="outline" class="w-full mt-4">
+            <mat-label>Remarks / Notes</mat-label>
+            <textarea matInput formControlName="remarks" rows="3" placeholder="Add any additional notes or remarks"></textarea>
+            <mat-icon matPrefix>notes</mat-icon>
+          </mat-form-field>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Items Section -->
+      <mat-card class="form-section">
+        <mat-card-header>
+          <div class="flex items-center justify-between w-full">
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-primary">shopping_cart</mat-icon>
+              <mat-card-title>Order Items</mat-card-title>
+              @if (hasItems()) {
+                <mat-chip color="primary">{{ items.length }} item{{ items.length !== 1 ? 's' : '' }}</mat-chip>
+              }
+            </div>
+            <button type="button" mat-raised-button color="primary" (click)="addItem()" [disabled]="submitting()">
+              <mat-icon>add</mat-icon>
+              Add Item
+            </button>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          @if (!hasItems()) {
+            <div class="empty-state text-center py-12">
+              <mat-icon class="text-gray-300 text-6xl mb-4">inventory_2</mat-icon>
+              <h3 class="text-xl font-semibold text-gray-600 mb-2">No items added yet</h3>
+              <p class="text-gray-500 mb-6">Click "Add Item" to start adding products to this purchase order</p>
+              <button type="button" mat-raised-button color="primary" (click)="addItem()">
+                <mat-icon>add</mat-icon>
+                Add First Item
+              </button>
+            </div>
+          } @else {
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="items.controls" class="items-table">
+                <!-- Product Column -->
+                <ng-container matColumnDef="product">
+                  <th mat-header-cell *matHeaderCellDef>Product *</th>
+                  <td mat-cell *matCellDef="let item; let i = index">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <input
+                        matInput
+                        [formControl]="item.get('productName')!"
+                        [matAutocomplete]="productAuto"
+                        placeholder="Search product, SKU, or scan barcode"
+                        required />
+                      <mat-icon matPrefix>inventory_2</mat-icon>
+                      <mat-autocomplete 
+                        #productAuto="matAutocomplete"
+                        [displayWith]="displayProduct"
+                        (optionSelected)="onProductSelected($event, i)">
+                        @if (filteredProductsForItem[i]) {
+                          @for (product of filteredProductsForItem[i] | async; track product.id) {
+                            <mat-option [value]="product">
+                              <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                  <span class="font-medium">{{ product.name }}</span>
+                                  @if (product.sku) {
+                                    <span class="text-gray-500 text-sm">({{ product.sku }})</span>
+                                  }
+                                </div>
+                                <div class="flex items-center gap-2 text-sm text-gray-500">
+                                  @if (product.salePrice) {
+                                    <span>{{ product.salePrice | currency: 'INR' }}</span>
+                                  }
+                                  @if (product.availableQuantity !== null && product.availableQuantity !== undefined) {
+                                    <mat-chip class="text-xs">Stock: {{ product.availableQuantity }}</mat-chip>
+                                  }
+                                </div>
+                              </div>
+                            </mat-option>
+                          }
+                          @if ((filteredProductsForItem[i] | async)?.length === 0) {
+                            <mat-option disabled>No products found</mat-option>
+                          }
+                        } @else {
+                          @for (product of products().slice(0, 20); track product.id) {
+                            <mat-option [value]="product">
+                              <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                  <span class="font-medium">{{ product.name }}</span>
+                                  @if (product.sku) {
+                                    <span class="text-gray-500 text-sm">({{ product.sku }})</span>
+                                  }
+                                </div>
+                                <div class="flex items-center gap-2 text-sm text-gray-500">
+                                  @if (product.salePrice) {
+                                    <span>{{ product.salePrice | currency: 'INR' }}</span>
+                                  }
+                                </div>
+                              </div>
+                            </mat-option>
+                          }
+                        }
+                      </mat-autocomplete>
+                      @if (item.get('productId')?.invalid && item.get('productId')?.touched) {
+                        <mat-error>Product is required</mat-error>
+                      }
+                    </mat-form-field>
+                  </td>
+                </ng-container>
+
+                <!-- Quantity Column -->
+                <ng-container matColumnDef="quantity">
+                  <th mat-header-cell *matHeaderCellDef>Quantity *</th>
+                  <td mat-cell *matCellDef="let item">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <input matInput type="number" [formControl]="item.get('quantity')!" min="0.01" step="0.01" placeholder="0.00" />
+                      <mat-icon matPrefix>numbers</mat-icon>
+                      @if (item.get('quantity')?.invalid && item.get('quantity')?.touched) {
+                        <mat-error>Invalid quantity</mat-error>
+                      }
+                    </mat-form-field>
+                  </td>
+                </ng-container>
+
+                <!-- Unit Column -->
+                <ng-container matColumnDef="unit">
+                  <th mat-header-cell *matHeaderCellDef>Unit *</th>
+                  <td mat-cell *matCellDef="let item">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <mat-select [formControl]="item.get('unit')!" required>
+                        @for (unit of units(); track unit.id) {
+                          <mat-option [value]="unit.symbol">{{ unit.name }} ({{ unit.symbol }})</mat-option>
+                        }
+                      </mat-select>
+                      <mat-icon matPrefix>straighten</mat-icon>
+                    </mat-form-field>
+                  </td>
+                </ng-container>
+
+                <!-- Unit Price Column -->
+                <ng-container matColumnDef="unitPrice">
+                  <th mat-header-cell *matHeaderCellDef>Unit Price *</th>
+                  <td mat-cell *matCellDef="let item">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <input matInput type="number" [formControl]="item.get('unitPrice')!" min="0" step="0.01" placeholder="0.00" />
+                      <span matPrefix class="mr-2">₹</span>
+                      @if (item.get('unitPrice')?.invalid && item.get('unitPrice')?.touched) {
+                        <mat-error>Invalid price</mat-error>
+                      }
+                    </mat-form-field>
+                  </td>
+                </ng-container>
+
+                <!-- GST Rate Column -->
+                <ng-container matColumnDef="gstRate">
+                  <th mat-header-cell *matHeaderCellDef>GST % *</th>
+                  <td mat-cell *matCellDef="let item">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <input matInput type="number" [formControl]="item.get('gstRate')!" min="0" max="100" step="0.01" placeholder="0.00" />
+                      <span matSuffix class="ml-2">%</span>
+                      @if (item.get('gstRate')?.invalid && item.get('gstRate')?.touched) {
+                        <mat-error>Invalid GST rate</mat-error>
+                      }
+                    </mat-form-field>
+                  </td>
+                </ng-container>
+
+                <!-- Total Column -->
+                <ng-container matColumnDef="total">
+                  <th mat-header-cell *matHeaderCellDef>Total</th>
+                  <td mat-cell *matCellDef="let item">
+                    <div class="font-semibold text-lg text-primary">
+                      {{ getItemTotal(item) | currency: 'INR' }}
+                    </div>
+                  </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>Actions</th>
+                  <td mat-cell *matCellDef="let item; let i = index">
+                    <button type="button" mat-icon-button color="warn" (click)="removeItem(i)" matTooltip="Remove item">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns" class="item-row"></tr>
+              </table>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Summary Section -->
+      @if (hasItems()) {
+        <mat-card class="form-section summary-card">
+          <mat-card-header>
+            <div class="flex items-center gap-2 w-full">
+              <mat-icon class="text-primary">receipt</mat-icon>
+              <mat-card-title>Order Summary</mat-card-title>
+            </div>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="summary-details">
+              <div class="summary-row">
+                <span class="summary-label">Subtotal:</span>
+                <span class="summary-value">{{ subtotal() | currency: 'INR' }}</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">GST:</span>
+                <span class="summary-value">{{ totalGST() | currency: 'INR' }}</span>
+              </div>
+              <mat-divider class="my-4"></mat-divider>
+              <div class="summary-row total-row">
+                <span class="summary-label">Total Amount:</span>
+                <span class="summary-value total-amount">{{ totalAmount() | currency: 'INR' }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Action Buttons -->
+      <div class="form-actions">
+        <button type="button" mat-stroked-button (click)="onCancel()" [disabled]="submitting()">
+          <mat-icon>close</mat-icon>
+          Cancel
+        </button>
+        <button type="submit" mat-raised-button color="primary" [disabled]="submitting() || form.invalid || !hasItems()">
+          @if (submitting()) {
+            <mat-spinner diameter="20" class="mr-2"></mat-spinner>
+            {{ isEditMode() ? 'Updating...' : 'Creating...' }}
+          } @else {
+            <mat-icon>{{ isEditMode() ? 'save' : 'add_shopping_cart' }}</mat-icon>
+            {{ isEditMode() ? 'Update' : 'Create' }} Purchase Order
+          }
         </button>
       </div>
-
-      <div class="overflow-x-auto">
-        <table mat-table [dataSource]="items.controls" class="w-full">
-          <ng-container matColumnDef="product">
-            <th mat-header-cell *matHeaderCellDef>Product *</th>
-            <td mat-cell *matCellDef="let item; let i = index">
-              <mat-form-field appearance="outline" class="w-full">
-            <input
-              matInput
-              [formControl]="item.get('productId')!"
-              [matAutocomplete]="productAuto"
-              (input)="filterProducts($any($event.target).value || '')"
-              placeholder="Search product or scan barcode" />
-                <mat-autocomplete #productAuto="matAutocomplete">
-                  @for (product of filteredProducts(); track product.id) {
-                    <mat-option [value]="product.id">{{ product.name }} ({{ product.sku }})</mat-option>
-                  }
-                </mat-autocomplete>
-              </mat-form-field>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="quantity">
-            <th mat-header-cell *matHeaderCellDef>Quantity *</th>
-            <td mat-cell *matCellDef="let item">
-              <mat-form-field appearance="outline" class="w-full">
-                <input matInput type="number" [formControl]="item.get('quantity')!" min="0.01" step="0.01" />
-              </mat-form-field>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="unit">
-            <th mat-header-cell *matHeaderCellDef>Unit *</th>
-            <td mat-cell *matCellDef="let item">
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-select [formControl]="item.get('unit')!">
-                  @for (unit of units(); track unit.id) {
-                    <mat-option [value]="unit.id">{{ unit.name }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="unitPrice">
-            <th mat-header-cell *matHeaderCellDef>Unit Price *</th>
-            <td mat-cell *matCellDef="let item">
-              <mat-form-field appearance="outline" class="w-full">
-                <input matInput type="number" [formControl]="item.get('unitPrice')!" min="0" step="0.01" />
-              </mat-form-field>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="gstRate">
-            <th mat-header-cell *matHeaderCellDef>GST % *</th>
-            <td mat-cell *matCellDef="let item">
-              <mat-form-field appearance="outline" class="w-full">
-                <input matInput type="number" [formControl]="item.get('gstRate')!" min="0" max="100" step="0.01" />
-              </mat-form-field>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="total">
-            <th mat-header-cell *matHeaderCellDef>Total</th>
-            <td mat-cell *matCellDef="let item">
-              {{ getItemTotal(item) | currency: 'INR' }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let item; let i = index">
-              <button type="button" mat-icon-button color="warn" (click)="removeItem(i)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
-      </div>
-
-      @if (items.length === 0) {
-        <p class="text-gray-500 text-center py-8">No items added. Click "Add Item" to start.</p>
-      }
-    </div>
-
-    <!-- Summary Section -->
-    <div class="bg-white p-6 rounded-lg shadow">
-      <div class="flex justify-end">
-        <div class="summary-box">
-          <div class="flex justify-between mb-2">
-            <span class="font-semibold">Subtotal:</span>
-            <span>{{ getTotalAmount() - getTotalGST() | currency: 'INR' }}</span>
-          </div>
-          <div class="flex justify-between mb-2">
-            <span class="font-semibold">GST:</span>
-            <span>{{ getTotalGST() | currency: 'INR' }}</span>
-          </div>
-          <div class="flex justify-between text-xl font-bold pt-2 border-t">
-            <span>Total:</span>
-            <span>{{ getTotalAmount() | currency: 'INR' }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="flex justify-end gap-4">
-      <button type="button" mat-button (click)="onCancel()">Cancel</button>
-      <button type="submit" mat-raised-button color="primary" [disabled]="loading() || form.invalid">
-        @if (loading()) {
-          <mat-spinner diameter="20"></mat-spinner>
-        } @else {
-          {{ isEditMode() ? 'Update' : 'Create' }} Purchase Order
-        }
-      </button>
-    </div>
-  </form>
+    </form>
+  }
 </div>
-

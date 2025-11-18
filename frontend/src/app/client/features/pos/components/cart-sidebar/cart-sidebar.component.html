@@ -1,0 +1,119 @@
+<aside class="cart-sidebar">
+  <div class="cart-header">
+    <div class="cart-title-wrapper">
+      <h2 class="cart-title">
+        <span class="material-icons cart-title-icon">shopping_cart</span>
+        Shopping Cart
+      </h2>
+      <span class="cart-badge">{{ cartItemCount() }}</span>
+    </div>
+    <div class="customer-phone-section">
+      <label class="customer-phone-label">
+        <span class="material-icons label-icon">phone</span>
+        Customer Phone (Optional)
+      </label>
+      <input
+        type="tel"
+        [value]="customerPhone()"
+        (input)="onPhoneChange($event)"
+        placeholder="Enter phone number"
+        class="customer-phone-input"
+        [attr.aria-label]="'Customer phone number'"
+      />
+    </div>
+  </div>
+
+  <div class="cart-items-container">
+    @if (isEmpty()) {
+      <div class="cart-empty-state">
+        <span class="material-icons cart-empty-icon">shopping_cart</span>
+        <p class="cart-empty-text">Your cart is empty</p>
+        <p class="cart-empty-subtext">Add products to get started</p>
+      </div>
+    } @else {
+      <div class="cart-items-list">
+        @for (item of cart(); track item.product.id) {
+          <div class="cart-item-card" [attr.aria-label]="'Cart item: ' + item.product.name">
+            <div class="cart-item-header">
+              <div class="cart-item-info">
+                <h3 class="cart-item-name">{{ item.product.name }}</h3>
+                <p class="cart-item-price">₹{{ item.product.salePrice | number: '1.2-2' }} each</p>
+              </div>
+              <button
+                type="button"
+                class="cart-item-remove-btn"
+                (click)="onRemoveItem(item)"
+                [attr.aria-label]="'Remove ' + item.product.name + ' from cart'"
+                matTooltip="Remove item"
+              >
+                <span class="material-icons">delete_outline</span>
+              </button>
+            </div>
+            <div class="cart-item-footer">
+              <div class="cart-item-quantity">
+                <grocery-quantity-picker
+                  [min]="1"
+                  [max]="item.product.availableQuantity ?? unlimitedQuantity()"
+                  [initialValue]="item.quantity"
+                  (valueChange)="onQuantityChange(item, $event)"
+                ></grocery-quantity-picker>
+              </div>
+              <div class="cart-item-total">
+                <span class="cart-item-total-label">Subtotal</span>
+                <span class="cart-item-total-amount">₹{{ item.subtotal | number: '1.2-2' }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Cart Summary -->
+  <div class="cart-summary">
+    <div class="cart-summary-content">
+      <div class="cart-total-row">
+        <span class="cart-total-label">
+          <span class="material-icons total-icon">receipt</span>
+          Total Amount
+        </span>
+        <span class="cart-total-amount">₹{{ cartTotal() | number: '1.2-2' }}</span>
+      </div>
+      <button
+        type="button"
+        class="checkout-button"
+        (click)="onCheckout()"
+        [disabled]="isEmpty() || showCheckoutModal()"
+        [attr.aria-label]="'Checkout'"
+      >
+        <span class="material-icons button-icon">payment</span>
+        <span>Checkout</span>
+      </button>
+    </div>
+
+    <!-- Sale Confirmation -->
+    @if (lastSaleResponse()) {
+      <div class="sale-confirmation">
+        <div class="sale-confirmation-header">
+          <span class="material-icons success-icon">check_circle</span>
+          <p class="sale-confirmation-title">Sale completed successfully!</p>
+        </div>
+        <p class="sale-confirmation-id">Sale ID: {{ lastSaleResponse()!.id }}</p>
+        @if (lastSaleResponse()!.pdfUrl) {
+          <button
+            type="button"
+            class="download-invoice-btn"
+            (click)="onDownloadInvoice()"
+            [attr.aria-label]="'Download invoice'"
+          >
+            <span class="material-icons">download</span>
+            Download Invoice
+          </button>
+        }
+      </div>
+    }
+  </div>
+</aside>
+
+
+

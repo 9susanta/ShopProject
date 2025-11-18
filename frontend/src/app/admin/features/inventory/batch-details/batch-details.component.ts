@@ -6,9 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { FormsModule } from '@angular/forms';
 import { InventoryService } from '../services/inventory.service';
 import { ToastService } from '@core/toast/toast.service';
-import { ProductInventory, InventoryBatch } from '@core/models/inventory-batch.model';
+import { ProductInventory, InventoryBatch, InventoryAdjustmentType } from '@core/models/inventory-batch.model';
 
 @Component({
   selector: 'grocery-batch-details',
@@ -20,104 +24,34 @@ import { ProductInventory, InventoryBatch } from '@core/models/inventory-batch.m
     MatIconModule,
     MatChipsModule,
     MatProgressSpinnerModule,
+    MatDialogModule,
+    MatInputModule,
+    MatFormFieldModule,
+    FormsModule,
   ],
-  template: `
-    <div class="batch-details-container p-4 max-w-4xl mx-auto">
-      <div class="mb-4">
-        <button mat-button (click)="goBack()">
-          <mat-icon>arrow_back</mat-icon>
-          Back
-        </button>
-      </div>
-
-      @if (loading()) {
-        <div class="flex justify-center p-8">
-          <mat-spinner diameter="40"></mat-spinner>
-        </div>
-      } @else if (product()) {
-        <mat-card class="mb-4">
-          <mat-card-header>
-            <mat-card-title>{{ product()!.productName }}</mat-card-title>
-            <mat-card-subtitle>SKU: {{ product()!.productSKU }}</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <strong>Total Quantity:</strong> {{ product()!.totalQuantity }}
-              </div>
-              <div>
-                <strong>Available:</strong> {{ product()!.availableQuantity }}
-              </div>
-              <div>
-                <strong>Reserved:</strong> {{ product()!.reservedQuantity }}
-              </div>
-              @if (product()!.isLowStock) {
-                <div>
-                  <mat-chip color="warn">Low Stock</mat-chip>
-                </div>
-              }
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>Batches</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            @if (product()!.batches && product()!.batches.length > 0) {
-              <div class="space-y-4">
-                @for (batch of product()!.batches; track batch.id) {
-                  <div class="border rounded p-4">
-                    <div class="flex justify-between items-start mb-2">
-                      <div>
-                        <div class="font-semibold">Batch: {{ batch.batchNumber }}</div>
-                        <div class="text-sm text-gray-500">Quantity: {{ batch.quantity }} | Available: {{ batch.availableQuantity }}</div>
-                      </div>
-                      @if (batch.isExpiringSoon) {
-                        <mat-chip color="warn">
-                          Expires in {{ batch.daysUntilExpiry }} days
-                        </mat-chip>
-                      }
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-sm">
-                      <div><strong>Unit Cost:</strong> {{ batch.unitCost | currency: 'INR' }}</div>
-                      <div><strong>Expiry Date:</strong> @if (batch.expiryDate) { {{ batch.expiryDate | date: 'short' }} } @else { N/A }</div>
-                      @if (batch.location) {
-                        <div><strong>Location:</strong> {{ batch.location }}</div>
-                      }
-                    </div>
-                    <div class="mt-4 flex gap-2">
-                      <button mat-raised-button color="warn" (click)="markDamaged(batch.id)">
-                        <mat-icon>cancel</mat-icon>
-                        Mark Damaged
-                      </button>
-                      <button mat-raised-button color="accent" (click)="returnToSupplier(batch.id)">
-                        <mat-icon>reply</mat-icon>
-                        Return to Supplier
-                      </button>
-                    </div>
-                  </div>
-                }
-              </div>
-            } @else {
-              <p class="text-gray-500 text-center py-4">No batches found</p>
-            }
-          </mat-card-content>
-        </mat-card>
-      }
-    </div>
-  `,
-  styles: ['.batch-details-container { min-height: calc(100vh - 64px); }'],
+  templateUrl: './batch-details.component.html',
+  styleUrls: ['./batch-details.component.css'],
 })
 export class BatchDetailsComponent implements OnInit {
   private inventoryService = inject(InventoryService);
   private toastService = inject(ToastService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private dialog = inject(MatDialog);
 
   product = signal<ProductInventory | null>(null);
   loading = signal(false);
+  adjustments = signal<any[]>([]);
+  loadingAdjustments = signal(false);
+  
+  // Damage adjustment dialog state
+  showDamageDialog = signal(false);
+  damageQuantity = signal(0);
+  damageReason = signal('');
+  selectedBatchId = signal<string | null>(null);
+
+  // Computed signal for selected batch available quantity
+  selectedBatchAvailableQuantity = signal(0);
 
   ngOnInit(): void {
     const productId = this.route.snapshot.paramMap.get('productId');
@@ -132,6 +66,7 @@ export class BatchDetailsComponent implements OnInit {
       next: (product) => {
         this.product.set(product);
         this.loading.set(false);
+        this.loadAdjustments(productId);
       },
       error: (error) => {
         this.toastService.error('Failed to load product');
@@ -141,20 +76,87 @@ export class BatchDetailsComponent implements OnInit {
     });
   }
 
+  loadAdjustments(productId: string): void {
+    this.loadingAdjustments.set(true);
+    this.inventoryService.getAdjustments({ productId, pageSize: 10 }).subscribe({
+      next: (response) => {
+        this.adjustments.set(response.items);
+        this.loadingAdjustments.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading adjustments:', error);
+        this.loadingAdjustments.set(false);
+      },
+    });
+  }
+
   markDamaged(batchId: string): void {
-    // TODO: Implement mark damaged API call
-    this.toastService.info('Marking batch as damaged...');
+    const batch = this.product()?.batches.find(b => b.id === batchId);
+    if (!batch) return;
+    
+    this.selectedBatchId.set(batchId);
+    this.selectedBatchAvailableQuantity.set(batch.availableQuantity || 0);
+    this.damageQuantity.set(0);
+    this.damageReason.set('');
+    this.showDamageDialog.set(true);
+  }
+
+  confirmDamage(): void {
+    const batchId = this.selectedBatchId();
+    const productId = this.product()?.productId;
+    if (!batchId || !productId) return;
+
+    const quantity = this.damageQuantity();
+    const reason = this.damageReason().trim();
+
+    if (quantity <= 0) {
+      this.toastService.error('Please enter a valid quantity');
+      return;
+    }
+
+    if (!reason) {
+      this.toastService.error('Please enter a reason for damage');
+      return;
+    }
+
+    const request = {
+      productId,
+      batchId,
+      adjustmentType: InventoryAdjustmentType.Damage,
+      quantityChange: -quantity,
+      reason: `Damage: ${reason}`,
+      notes: `Batch ${this.product()?.batches.find(b => b.id === batchId)?.batchNumber} marked as damaged`,
+    };
+
+    this.inventoryService.createAdjustment(request).subscribe({
+      next: () => {
+        this.toastService.success('Batch marked as damaged successfully');
+        this.showDamageDialog.set(false);
+        this.loadProduct(productId);
+      },
+      error: (error) => {
+        this.toastService.error('Failed to mark batch as damaged');
+        console.error(error);
+      },
+    });
+  }
+
+  cancelDamage(): void {
+    this.showDamageDialog.set(false);
+    this.selectedBatchId.set(null);
+    this.damageQuantity.set(0);
+    this.damageReason.set('');
   }
 
   returnToSupplier(batchId: string): void {
     // Navigate to supplier return form
-    this.router.navigate(['/purchasing/grn/return'], {
+    this.router.navigate(['/admin/purchasing/grn/return'], {
       queryParams: { batchId },
     });
   }
 
   goBack(): void {
-    this.router.navigate(['/inventory/products']);
+    this.router.navigate(['/admin/inventory/products']);
   }
 }
 

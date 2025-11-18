@@ -11,7 +11,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { InventoryService } from '../../inventory/services/inventory.service';
 import { ToastService } from '@core/toast/toast.service';
-import { ApiService } from '@core/services/api.service';
+import { ApiService } from '@core/api/api.service';
 import {
   CreateAdjustmentRequest,
   InventoryAdjustmentType,

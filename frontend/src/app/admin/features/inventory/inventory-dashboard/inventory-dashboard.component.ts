@@ -1,17 +1,21 @@
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTableModule } from '@angular/material/table';
+import { MatChipsModule } from '@angular/material/chips';
 import { InventoryService } from '../services/inventory.service';
+import { PurchasingService } from '@core/services/purchasing.service';
 import { StockValuation, LowStockProduct, ExpirySoonBatch } from '@core/models/inventory-batch.model';
 import { SignalRService } from '@core/services/signalr.service';
 import { ToastService } from '@core/toast/toast.service';
 import { AuthService } from '@core/services/auth.service';
 import { UserRole } from '@core/models/user.model';
 import { environment } from '@environments/environment';
+import { PurchaseOrder, GoodsReceiveNote, PurchaseOrderStatus, GRNStatus } from '@core/models/purchasing.model';
 
 @Component({
   selector: 'grocery-inventory-dashboard',
@@ -23,21 +27,31 @@ import { environment } from '@environments/environment';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatTableModule,
+    MatChipsModule,
   ],
   templateUrl: './inventory-dashboard.component.html',
   styleUrl: './inventory-dashboard.component.css',
 })
 export class InventoryDashboardComponent implements OnInit {
   private inventoryService = inject(InventoryService);
+  private purchasingService = inject(PurchasingService);
   private signalRService = inject(SignalRService);
   private toastService = inject(ToastService);
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   loading = signal(false);
   valuation = signal<StockValuation | null>(null);
   lowStockCount = signal(0);
   expirySoonCount = signal(0);
   hasAccess = signal(false);
+  
+  // Purchase Order and GRN data
+  recentPurchaseOrders = signal<PurchaseOrder[]>([]);
+  recentGRNs = signal<GoodsReceiveNote[]>([]);
+  loadingPOs = signal(false);
+  loadingGRNs = signal(false);
 
   // Computed values for display
   totalSKUs = computed(() => this.valuation()?.totalSKUs || 0);
@@ -104,6 +118,8 @@ export class InventoryDashboardComponent implements OnInit {
     }
     
     this.loadDashboardData();
+    this.loadRecentPurchaseOrders();
+    this.loadRecentGRNs();
     this.setupSignalRSubscriptions();
   }
 
@@ -182,8 +198,111 @@ export class InventoryDashboardComponent implements OnInit {
     });
   }
 
+  loadRecentPurchaseOrders(): void {
+    this.loadingPOs.set(true);
+    this.purchasingService.getPurchaseOrders({
+      pageNumber: 1,
+      pageSize: 5,
+      status: PurchaseOrderStatus.Approved,
+    }).subscribe({
+      next: (response) => {
+        this.recentPurchaseOrders.set(response.items);
+        this.loadingPOs.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading purchase orders:', error);
+        this.loadingPOs.set(false);
+      },
+    });
+  }
+
+  loadRecentGRNs(): void {
+    this.loadingGRNs.set(true);
+    this.purchasingService.getGRNs({
+      pageNumber: 1,
+      pageSize: 5,
+      status: GRNStatus.Confirmed,
+    }).subscribe({
+      next: (response) => {
+        this.recentGRNs.set(response.items);
+        this.loadingGRNs.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading GRNs:', error);
+        this.loadingGRNs.set(false);
+      },
+    });
+  }
+
   refresh(): void {
     this.loadDashboardData();
+    this.loadRecentPurchaseOrders();
+    this.loadRecentGRNs();
+  }
+
+  viewPurchaseOrder(poId: string): void {
+    this.router.navigate(['/admin/purchasing/purchase-orders', poId]);
+  }
+
+  viewGRN(grnId: string): void {
+    this.router.navigate(['/admin/purchasing/grn', grnId]);
+  }
+
+  getPOStatusText(status: PurchaseOrderStatus): string {
+    switch (status) {
+      case PurchaseOrderStatus.Draft:
+        return 'Draft';
+      case PurchaseOrderStatus.Pending:
+        return 'Pending';
+      case PurchaseOrderStatus.Approved:
+        return 'Approved';
+      case PurchaseOrderStatus.Received:
+        return 'Received';
+      case PurchaseOrderStatus.Cancelled:
+        return 'Cancelled';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  getPOStatusColor(status: PurchaseOrderStatus): string {
+    switch (status) {
+      case PurchaseOrderStatus.Approved:
+        return 'primary';
+      case PurchaseOrderStatus.Received:
+        return 'accent';
+      case PurchaseOrderStatus.Cancelled:
+        return 'warn';
+      default:
+        return '';
+    }
+  }
+
+  getGRNStatusText(status: GRNStatus): string {
+    switch (status) {
+      case GRNStatus.Draft:
+        return 'Draft';
+      case GRNStatus.Confirmed:
+        return 'Confirmed';
+      case GRNStatus.Cancelled:
+        return 'Cancelled';
+      case GRNStatus.Voided:
+        return 'Voided';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  getGRNStatusColor(status: GRNStatus): string {
+    switch (status) {
+      case GRNStatus.Confirmed:
+        return 'primary';
+      case GRNStatus.Cancelled:
+      case GRNStatus.Voided:
+        return 'warn';
+      default:
+        return '';
+    }
   }
 }
 

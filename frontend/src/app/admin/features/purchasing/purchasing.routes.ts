@@ -58,5 +58,10 @@ export const purchasingRoutes: Routes = [
       import('./grn-confirm/grn-confirm.component').then((m) => m.GRNConfirmComponent),
     canActivate: [AuthGuard],
   },
+  {
+    path: '',
+    redirectTo: 'purchase-orders',
+    pathMatch: 'full',
+  },
 ];
 

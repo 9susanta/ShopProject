@@ -38,8 +38,7 @@
             ],
             "styles": [
               "src/styles.css",
-              "src/theme/material-m3-theme.scss",
-              "src/styles.tailwind.css"
+              "src/theme/material-m3-theme.scss"
             ],
             "scripts": [],
             "optimization": true,

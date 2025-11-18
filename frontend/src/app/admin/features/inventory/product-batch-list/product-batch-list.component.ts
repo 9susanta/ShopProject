@@ -11,6 +11,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { InventoryService } from '../services/inventory.service';
 import { ProductInventory, InventoryBatch } from '@core/models/inventory-batch.model';
 
@@ -30,6 +32,8 @@ import { ProductInventory, InventoryBatch } from '@core/models/inventory-batch.m
     MatPaginatorModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatCardModule,
+    MatFormFieldModule,
   ],
   templateUrl: './product-batch-list.component.html',
   styleUrl: './product-batch-list.component.css',
@@ -66,8 +70,9 @@ export class ProductBatchListComponent implements OnInit {
       pageSize: this.pageSize(),
     };
 
-    if (this.searchTerm()) {
-      // Note: Backend may need to support search
+    // Add search filter if search term is provided
+    if (this.searchTerm() && this.searchTerm().trim()) {
+      filters.search = this.searchTerm().trim();
     }
 
     this.inventoryService.getProducts(filters).subscribe({
@@ -94,12 +99,28 @@ export class ProductBatchListComponent implements OnInit {
     this.loadProducts();
   }
 
-  viewBatches(productId: string): void {
-    this.router.navigate(['/inventory/product', productId, 'batches']);
+  clearSearch(): void {
+    this.searchTerm.set('');
+    this.pageNumber.set(1);
+    this.loadProducts();
   }
 
-  viewDetails(productId: string): void {
-    this.router.navigate(['/inventory/product', productId]);
+  viewBatches(product: ProductInventory): void {
+    const productId = product.productId || product.id;
+    if (!productId) {
+      console.error('Product ID is missing', product);
+      return;
+    }
+    this.router.navigate(['/admin/inventory/product', productId, 'batches']);
+  }
+
+  viewDetails(product: ProductInventory): void {
+    const productId = product.productId || product.id;
+    if (!productId) {
+      console.error('Product ID is missing', product);
+      return;
+    }
+    this.router.navigate(['/admin/inventory/product', productId]);
   }
 
   getBatchSummary(batches: InventoryBatch[]): string {
@@ -110,6 +131,11 @@ export class ProductBatchListComponent implements OnInit {
       return `${totalBatches} batches (${expiringSoon} expiring soon)`;
     }
     return `${totalBatches} batch${totalBatches > 1 ? 'es' : ''}`;
+  }
+
+  hasExpiringBatches(batches: InventoryBatch[] | undefined): boolean {
+    if (!batches || batches.length === 0) return false;
+    return batches.some(b => b.isExpiringSoon);
   }
 }
 

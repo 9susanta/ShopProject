@@ -70,7 +70,7 @@ export class GRNConfirmComponent implements OnInit {
         this.toastService.success(response.message || 'GRN confirmed successfully');
         this.loading.set(false);
         // Navigate to GRN details or inventory
-        this.router.navigate(['/purchasing/grn', id]);
+        this.router.navigate(['/admin/purchasing/grn', id]);
       },
       error: (error) => {
         this.toastService.error('Failed to confirm GRN');
@@ -82,7 +82,7 @@ export class GRNConfirmComponent implements OnInit {
 
   goBack(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    this.router.navigate(['/purchasing/grn', id]);
+    this.router.navigate(['/admin/purchasing/grn', id]);
   }
 }
 

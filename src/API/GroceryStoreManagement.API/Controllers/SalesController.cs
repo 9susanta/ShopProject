@@ -1,11 +1,14 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GroceryStoreManagement.Application.Commands.Sales;
+using GroceryStoreManagement.Application.Queries.Sales;
 
 namespace GroceryStoreManagement.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class SalesController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -15,6 +18,46 @@ public class SalesController : ControllerBase
     {
         _mediator = mediator;
         _logger = logger;
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Admin,Staff,SuperAdmin")]
+    public async Task<ActionResult<Application.DTOs.SaleListResponseDto>> GetSales(
+        [FromQuery] string? search = null,
+        [FromQuery] Guid? customerId = null,
+        [FromQuery] string? status = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var query = new GetSalesQuery
+        {
+            Search = search,
+            CustomerId = customerId,
+            Status = status,
+            FromDate = fromDate,
+            ToDate = toDate,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    [Authorize(Roles = "Admin,Staff,SuperAdmin")]
+    public async Task<ActionResult<Application.DTOs.SaleDto>> GetSale(Guid id)
+    {
+        // For now, use GetSales and filter by ID
+        var query = new GetSalesQuery { PageSize = 1 };
+        var result = await _mediator.Send(query);
+        var sale = result.Items.FirstOrDefault(s => s.Id == id);
+        
+        if (sale == null)
+            return NotFound();
+
+        return Ok(sale);
     }
 
     [HttpPost]

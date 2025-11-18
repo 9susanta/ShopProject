@@ -14,6 +14,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatCardModule } from '@angular/material/card';
 import { PurchasingService } from '@core/services/purchasing.service';
 import { ToastService } from '@core/toast/toast.service';
 import {
@@ -21,6 +23,7 @@ import {
   PurchaseOrderListResponse,
   PurchaseOrderFilters,
   PurchaseOrderStatus,
+  Supplier,
 } from '@core/models/purchasing.model';
 import { AuthService } from '@core/services/auth.service';
 
@@ -43,6 +46,8 @@ import { AuthService } from '@core/services/auth.service';
     MatChipsModule,
     MatTooltipModule,
     MatPaginatorModule,
+    MatFormFieldModule,
+    MatCardModule,
   ],
   templateUrl: './purchase-order-list.component.html',
   styleUrl: './purchase-order-list.component.css',
@@ -60,22 +65,48 @@ export class PurchaseOrderListComponent implements OnInit {
   pageNumber = signal(1);
   pageSize = signal(20);
 
-  // Filters
-  filters = signal<PurchaseOrderFilters>({
-    pageNumber: 1,
-    pageSize: 20,
-  });
+  // Suppliers for dropdown
+  suppliers = signal<Supplier[]>([]);
+  loadingSuppliers = signal(false);
+
+  // Filter values (using individual signals for proper two-way binding)
+  selectedSupplierId = signal<string | null>(null);
+  selectedStatus = signal<PurchaseOrderStatus | null>(null);
+  fromDate = signal<Date | null>(null);
+  toDate = signal<Date | null>(null);
 
   // Selection for bulk operations
   selectedPOs = signal<Set<string>>(new Set());
 
   // Computed
-  isAdmin = computed(() => this.authService.hasRole('Admin'));
+  isAdmin = computed(() => 
+    this.authService.hasRole('Admin') || 
+    this.authService.hasRole('SuperAdmin') || 
+    this.authService.isAdmin() || 
+    this.authService.isSuperAdmin()
+  );
   hasSelection = computed(() => this.selectedPOs().size > 0);
   allSelected = computed(() => {
     const selected = this.selectedPOs();
     return selected.size > 0 && selected.size === this.purchaseOrders().length;
   });
+
+  // Filter state
+  hasActiveFilters = computed(() => {
+    return this.selectedSupplierId() !== null ||
+           this.selectedStatus() !== null ||
+           this.fromDate() !== null ||
+           this.toDate() !== null;
+  });
+
+  getActiveFilterCount(): number {
+    let count = 0;
+    if (this.selectedSupplierId() !== null) count++;
+    if (this.selectedStatus() !== null) count++;
+    if (this.fromDate() !== null) count++;
+    if (this.toDate() !== null) count++;
+    return count;
+  }
 
   // Status options
   statusOptions = [
@@ -86,8 +117,7 @@ export class PurchaseOrderListComponent implements OnInit {
     { value: PurchaseOrderStatus.Cancelled, label: 'Cancelled' },
   ];
 
-  displayedColumns: string[] = [
-    'select',
+  baseColumns = [
     'orderNumber',
     'supplierName',
     'orderDate',
@@ -97,6 +127,14 @@ export class PurchaseOrderListComponent implements OnInit {
     'actions',
   ];
 
+  displayedColumns = computed(() => {
+    if (this.isAdmin()) {
+      return ['select', ...this.baseColumns];
+    } else {
+      return this.baseColumns;
+    }
+  });
+
   PurchaseOrderStatus = PurchaseOrderStatus;
 
   getStatusLabel(status: PurchaseOrderStatus): string {
@@ -105,14 +143,54 @@ export class PurchaseOrderListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadSuppliers();
     this.loadPurchaseOrders();
+  }
+
+  loadSuppliers(): void {
+    this.loadingSuppliers.set(true);
+    this.purchasingService.getSuppliers().subscribe({
+      next: (response) => {
+        this.suppliers.set(response.items);
+        this.loadingSuppliers.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading suppliers:', error);
+        this.toastService.error('Failed to load suppliers');
+        this.loadingSuppliers.set(false);
+      },
+    });
   }
 
   loadPurchaseOrders(): void {
     this.loading.set(true);
-    const currentFilters = { ...this.filters(), pageNumber: this.pageNumber(), pageSize: this.pageSize() };
+    
+    // Build filters object with proper mapping to backend parameter names
+    const filters: any = {
+      pageNumber: this.pageNumber(),
+      pageSize: this.pageSize(),
+    };
 
-    this.purchasingService.getPurchaseOrders(currentFilters).subscribe({
+    // Add supplier filter
+    if (this.selectedSupplierId()) {
+      filters.supplierId = this.selectedSupplierId()!;
+    }
+
+    // Add status filter (convert enum to string for backend)
+    if (this.selectedStatus() !== null) {
+      const statusOption = this.statusOptions.find(s => s.value === this.selectedStatus());
+      filters.status = statusOption?.label || PurchaseOrderStatus[this.selectedStatus()!];
+    }
+
+    // Add date filters (convert Date to ISO string and map to backend parameter names)
+    if (this.fromDate()) {
+      filters.startDate = this.fromDate()!.toISOString();
+    }
+    if (this.toDate()) {
+      filters.endDate = this.toDate()!.toISOString();
+    }
+
+    this.purchasingService.getPurchaseOrders(filters).subscribe({
       next: (response: PurchaseOrderListResponse) => {
         this.purchaseOrders.set(response.items);
         this.totalCount.set(response.totalCount);
@@ -138,7 +216,10 @@ export class PurchaseOrderListComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.filters.set({ pageNumber: 1, pageSize: this.pageSize() });
+    this.selectedSupplierId.set(null);
+    this.selectedStatus.set(null);
+    this.fromDate.set(null);
+    this.toDate.set(null);
     this.pageNumber.set(1);
     this.loadPurchaseOrders();
   }
@@ -205,15 +286,15 @@ export class PurchaseOrderListComponent implements OnInit {
   }
 
   createNew(): void {
-    this.router.navigate(['/purchasing/purchase-orders/new']);
+    this.router.navigate(['/admin/purchasing/purchase-orders/new']);
   }
 
   viewDetails(id: string): void {
-    this.router.navigate(['/purchasing/purchase-orders', id]);
+    this.router.navigate(['/admin/purchasing/purchase-orders', id]);
   }
 
   edit(id: string): void {
-    this.router.navigate(['/purchasing/purchase-orders', id, 'edit']);
+    this.router.navigate(['/admin/purchasing/purchase-orders', id, 'edit']);
   }
 }
 

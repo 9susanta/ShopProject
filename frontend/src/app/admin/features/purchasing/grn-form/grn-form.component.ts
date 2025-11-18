@@ -32,7 +32,7 @@ export class GRNFormComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/purchasing/grn']);
+    this.router.navigate(['/admin/purchasing/grn']);
   }
 }
 

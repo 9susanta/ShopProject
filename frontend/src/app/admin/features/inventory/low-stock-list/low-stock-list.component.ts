@@ -1,14 +1,20 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { InventoryService } from '../services/inventory.service';
 import { PurchasingService } from '@core/services/purchasing.service';
+import { ProductService } from '../../admin/products/services/product.service';
 import { ToastService } from '@core/toast/toast.service';
 import { LowStockProduct } from '@core/models/inventory-batch.model';
 
@@ -18,12 +24,17 @@ import { LowStockProduct } from '@core/models/inventory-batch.model';
   imports: [
     CommonModule,
     RouterModule,
+    FormsModule,
     MatTableModule,
     MatButtonModule,
     MatIconModule,
     MatChipsModule,
     MatProgressSpinnerModule,
     MatCardModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatDialogModule,
+    MatTooltipModule,
   ],
   templateUrl: './low-stock-list.component.html',
   styleUrl: './low-stock-list.component.css',
@@ -31,11 +42,17 @@ import { LowStockProduct } from '@core/models/inventory-batch.model';
 export class LowStockListComponent implements OnInit {
   private inventoryService = inject(InventoryService);
   private purchasingService = inject(PurchasingService);
+  private productService = inject(ProductService);
   private toastService = inject(ToastService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   products = signal<LowStockProduct[]>([]);
   loading = signal(false);
+  
+  // Threshold management
+  editingThreshold = signal<{ productId: string; threshold: number } | null>(null);
+  newThreshold = signal(0);
 
   displayedColumns: string[] = ['productName', 'sku', 'currentStock', 'threshold', 'unit', 'deficit', 'actions'];
 
@@ -65,7 +82,7 @@ export class LowStockListComponent implements OnInit {
   createPO(product: LowStockProduct): void {
     // Navigate to PO form with suggested quantity
     const suggestedQty = this.getDeficit(product) * 2; // Suggest 2x the deficit
-    this.router.navigate(['/purchasing/purchase-orders/new'], {
+    this.router.navigate(['/admin/purchasing/purchase-orders/new'], {
       queryParams: {
         productId: product.productId,
         suggestedQty: suggestedQty,
@@ -75,11 +92,49 @@ export class LowStockListComponent implements OnInit {
 
   createPOForAll(): void {
     // Create PO with all low stock items
-    this.router.navigate(['/purchasing/purchase-orders/new'], {
+    this.router.navigate(['/admin/purchasing/purchase-orders/new'], {
       queryParams: {
         lowStock: true,
       },
     });
+  }
+
+  editThreshold(product: LowStockProduct): void {
+    this.editingThreshold.set({ productId: product.productId, threshold: product.threshold });
+    this.newThreshold.set(product.threshold);
+  }
+
+  saveThreshold(): void {
+    const editing = this.editingThreshold();
+    if (!editing || this.newThreshold() < 0) {
+      this.toastService.error('Please enter a valid threshold');
+      return;
+    }
+
+    // Update product threshold
+    this.productService.updateProduct({
+      id: editing.productId,
+      lowStockThreshold: this.newThreshold(),
+    } as any).subscribe({
+      next: () => {
+        this.toastService.success('Threshold updated successfully');
+        this.editingThreshold.set(null);
+        this.loadLowStock(); // Reload to reflect changes
+      },
+      error: (error) => {
+        this.toastService.error('Failed to update threshold');
+        console.error(error);
+      },
+    });
+  }
+
+  cancelEditThreshold(): void {
+    this.editingThreshold.set(null);
+    this.newThreshold.set(0);
+  }
+
+  goBack(): void {
+    this.router.navigate(['/admin/inventory']);
   }
 }
 

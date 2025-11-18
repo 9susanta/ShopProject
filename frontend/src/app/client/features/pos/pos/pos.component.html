@@ -63,98 +63,16 @@
       <!-- Products Grid - Kiosk Style -->
       <div class="products-grid kiosk-style">
         @for (product of filteredProducts(); track product.id) {
-          <div class="product-tile-kiosk" 
-               [class.out-of-stock]="isOutOfStock(product)"
-               [class.low-stock]="isLowStock(product)"
-               (click)="onTileClick(product, $event)">
-            <div class="product-image-kiosk">
-              @if (product.imageUrl) {
-                <img [src]="product.imageUrl" [alt]="product.name" />
-              } @else {
-                <div class="no-image-kiosk">
-                  <span class="material-icons">image</span>
-                </div>
-              }
-              <!-- Stock status badges - top left -->
-              @if (isOutOfStock(product)) {
-                <div class="stock-badge out-of-stock-badge">
-                  <span class="material-icons">block</span>
-                  <span>Out of Stock</span>
-                </div>
-              }
-              @if (isLowStock(product)) {
-                <div class="stock-badge low-stock-badge">
-                  <span class="material-icons">warning</span>
-                  <span>Low Stock</span>
-                </div>
-              }
-              <!-- Discount and MRP - top right (not shown for out of stock items) -->
-              @if (product.mrp && product.mrp > product.salePrice && !isOutOfStock(product)) {
-                <div class="discount-mrp-badge">
-                  <div class="mrp-badge">₹{{ product.mrp | number: '1.0-0' }}</div>
-                  <div class="discount-badge-top">
-                    {{ ((product.mrp - product.salePrice) / product.mrp * 100).toFixed(0) }}% OFF
-                  </div>
-                </div>
-              }
-              <!-- Stock quantity - bottom right -->
-              @if (product.availableQuantity !== undefined && product.availableQuantity !== null) {
-                <div class="stock-quantity-badge" 
-                     [class.stock-low]="isLowStock(product)"
-                     [class.stock-out]="isOutOfStock(product)">
-                  <span class="material-icons stock-qty-icon">inventory_2</span>
-                  <span class="stock-qty-number">{{ product.availableQuantity | number: '1.0-0' }}</span>
-                  @if (product.unitName) {
-                    <span class="stock-qty-unit">{{ product.unitName }}</span>
-                  }
-                </div>
-              }
-            </div>
-            <div class="product-info-kiosk">
-              <h3 class="product-name-kiosk">{{ product.name }}</h3>
-              <p class="product-price-kiosk">₹{{ product.salePrice | number: '1.0-0' }}</p>
-              @if (isLowStock(product)) {
-                <div class="low-stock-indicator">
-                  <span class="material-icons">warning</span>
-                  <span>Low Stock</span>
-                </div>
-              }
-            </div>
-            <div class="tile-controls">
-              <!-- Always visible quantity counter -->
-              <div class="quantity-counter-container">
-                <button 
-                  class="quantity-btn tile-decrement-btn" 
-                  [attr.aria-label]="'Decrease quantity of ' + product.name"
-                  (click)="decrementProductQuantity(product); $event.stopPropagation()"
-                  [disabled]="getCartQuantity(product.id) === 0 || isOutOfStock(product)"
-                >
-                  <span class="material-icons">remove</span>
-                </button>
-                <div class="quantity-display tile-quantity-display">
-                  <span class="quantity-number">{{ getCartQuantity(product.id) }}</span>
-                </div>
-                <button 
-                  class="quantity-btn tile-increment-btn" 
-                  [attr.aria-label]="'Increase quantity of ' + product.name"
-                  (click)="incrementProductQuantity(product); $event.stopPropagation()"
-                  [disabled]="isOutOfStock(product) || (product.availableQuantity !== undefined && product.availableQuantity !== null && getCartQuantity(product.id) >= (product.availableQuantity ?? 0))"
-                >
-                  <span class="material-icons">add</span>
-                </button>
-              </div>
-              <!-- Always visible Add to Cart button -->
-              <button 
-                class="add-to-cart-btn tile-add-btn" 
-                [attr.aria-label]="'Add ' + product.name + ' to cart'" 
-                (click)="onAddToCartClick(product, $event)"
-                [disabled]="isOutOfStock(product)"
-              >
-                <span class="material-icons">add_shopping_cart</span>
-                <span class="add-cart-text">Add to Cart</span>
-              </button>
-            </div>
-          </div>
+          <grocery-product-tile-kiosk
+            [product]="product"
+            [cartQuantity]="getCartQuantity(product.id)"
+            [isOutOfStock]="isOutOfStock(product)"
+            [isLowStock]="isLowStock(product)"
+            (addToCart)="onAddToCart({product: $event, quantity: 1})"
+            (increment)="incrementProductQuantity($event)"
+            (decrement)="decrementProductQuantity($event)"
+            (tileClick)="onTileClick($event.product, $event.event)"
+          ></grocery-product-tile-kiosk>
         }
       </div>
 
@@ -167,122 +85,20 @@
     </main>
 
     <!-- Cart Sidebar -->
-    <aside class="cart-sidebar">
-      <div class="cart-header">
-        <div class="cart-title-wrapper">
-          <h2 class="cart-title">
-            <span class="material-icons cart-title-icon">shopping_cart</span>
-            Shopping Cart
-          </h2>
-          <span class="cart-badge">{{ cartItemCount() }}</span>
-        </div>
-        <div class="customer-phone-section">
-          <label class="customer-phone-label">
-            <span class="material-icons label-icon">phone</span>
-            Customer Phone (Optional)
-          </label>
-          <input
-            type="tel"
-            [value]="customerPhone()"
-            (input)="customerPhone.set($any($event.target).value)"
-            placeholder="Enter phone number"
-            class="customer-phone-input"
-            [attr.aria-label]="'Customer phone number'"
-          />
-        </div>
-      </div>
-
-      <div class="cart-items-container">
-        @if (cart().length === 0) {
-          <div class="cart-empty-state">
-            <span class="material-icons cart-empty-icon">shopping_cart</span>
-            <p class="cart-empty-text">Your cart is empty</p>
-            <p class="cart-empty-subtext">Add products to get started</p>
-          </div>
-        } @else {
-          <div class="cart-items-list">
-            @for (item of cart(); track item.product.id) {
-              <div class="cart-item-card" [attr.aria-label]="'Cart item: ' + item.product.name">
-                <div class="cart-item-header">
-                  <div class="cart-item-info">
-                    <h3 class="cart-item-name">{{ item.product.name }}</h3>
-                    <p class="cart-item-price">₹{{ item.product.salePrice | number: '1.2-2' }} each</p>
-                  </div>
-                  <button
-                    type="button"
-                    class="cart-item-remove-btn"
-                    (click)="removeFromCart(item)"
-                    [attr.aria-label]="'Remove ' + item.product.name + ' from cart'"
-                    matTooltip="Remove item"
-                  >
-                    <span class="material-icons">delete_outline</span>
-                  </button>
-                </div>
-                <div class="cart-item-footer">
-                  <div class="cart-item-quantity">
-                    <grocery-quantity-picker
-                      [min]="1"
-                      [max]="item.product.availableQuantity ?? UNLIMITED_QUANTITY"
-                      [initialValue]="item.quantity"
-                      (valueChange)="onQuantityChange(item, $event)"
-                    ></grocery-quantity-picker>
-                  </div>
-                  <div class="cart-item-total">
-                    <span class="cart-item-total-label">Subtotal</span>
-                    <span class="cart-item-total-amount">₹{{ item.subtotal | number: '1.2-2' }}</span>
-                  </div>
-                </div>
-              </div>
-            }
-          </div>
-        }
-      </div>
-
-      <!-- Cart Summary -->
-      <div class="cart-summary">
-        <div class="cart-summary-content">
-          <div class="cart-total-row">
-            <span class="cart-total-label">
-              <span class="material-icons total-icon">receipt</span>
-              Total Amount
-            </span>
-            <span class="cart-total-amount">₹{{ cartTotal() | number: '1.2-2' }}</span>
-          </div>
-          <button
-            type="button"
-            class="checkout-button"
-            (click)="onCheckout()"
-            [disabled]="cart().length === 0 || showCheckoutModal()"
-            [attr.aria-label]="'Checkout'"
-          >
-            <span class="material-icons button-icon">payment</span>
-            <span>Checkout</span>
-          </button>
-        </div>
-
-        <!-- Sale Confirmation -->
-        @if (lastSaleResponse()) {
-          <div class="sale-confirmation">
-            <div class="sale-confirmation-header">
-              <span class="material-icons success-icon">check_circle</span>
-              <p class="sale-confirmation-title">Sale completed successfully!</p>
-            </div>
-            <p class="sale-confirmation-id">Sale ID: {{ lastSaleResponse()!.id }}</p>
-            @if (lastSaleResponse()!.pdfUrl) {
-              <button
-                type="button"
-                class="download-invoice-btn"
-                (click)="downloadInvoice()"
-                [attr.aria-label]="'Download invoice'"
-              >
-                <span class="material-icons">download</span>
-                Download Invoice
-              </button>
-            }
-          </div>
-        }
-      </div>
-    </aside>
+    <grocery-cart-sidebar
+      [cart]="cart()"
+      [customerPhone]="customerPhone()"
+      [lastSaleResponse]="lastSaleResponse()"
+      [cartTotal]="cartTotal()"
+      [cartItemCount]="cartItemCount()"
+      [unlimitedQuantity]="UNLIMITED_QUANTITY"
+      [showCheckoutModal]="showCheckoutModal()"
+      (removeItem)="removeFromCart($event)"
+      (quantityChange)="onQuantityChange($event.item, $event.quantity)"
+      (checkout)="onCheckout()"
+      (phoneChange)="customerPhone.set($event)"
+      (downloadInvoice)="downloadInvoice()"
+    ></grocery-cart-sidebar>
   </div>
 
   <!-- Checkout Modal -->

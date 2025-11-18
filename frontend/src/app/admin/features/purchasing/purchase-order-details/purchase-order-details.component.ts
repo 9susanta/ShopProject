@@ -72,7 +72,7 @@ import { AuthService } from '@core/services/auth.service';
             @if (purchaseOrder()!.status !== PurchaseOrderStatus.Cancelled && isAdmin()) {
               <button mat-raised-button color="warn" (click)="cancel()">Cancel</button>
             }
-            <button mat-button routerLink="/purchasing/grn/new" [queryParams]="{ poId: purchaseOrder()!.id }">
+            <button mat-button routerLink="/admin/purchasing/grn/new" [queryParams]="{ poId: purchaseOrder()!.id }">
               Create GRN
             </button>
           </mat-card-actions>
@@ -207,7 +207,7 @@ export class PurchaseOrderDetailsComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/purchasing/purchase-orders']);
+    this.router.navigate(['/admin/purchasing/purchase-orders']);
   }
 }
 

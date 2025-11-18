@@ -8,7 +8,7 @@ namespace GroceryStoreManagement.API.Controllers;
 
 [ApiController]
 [Route("api/purchasing")]
-[Authorize(Roles = "Admin,Staff")]
+[Authorize(Roles = "Admin,Staff,SuperAdmin")]
 public class PurchasingController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -87,7 +87,7 @@ public class PurchasingController : ControllerBase
     /// Approve a pending purchase order
     /// </summary>
     [HttpPost("purchase-orders/{id}/approve")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<ActionResult<Application.DTOs.PurchaseOrderDto>> ApprovePurchaseOrder(Guid id)
     {
         var command = new ApprovePurchaseOrderCommand { Id = id };
@@ -99,7 +99,7 @@ public class PurchasingController : ControllerBase
     /// Cancel a purchase order
     /// </summary>
     [HttpPost("purchase-orders/{id}/cancel")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<ActionResult<Application.DTOs.PurchaseOrderDto>> CancelPurchaseOrder(Guid id, [FromBody] CancelPurchaseOrderCommand? command = null)
     {
         var cancelCommand = command ?? new CancelPurchaseOrderCommand { Id = id };

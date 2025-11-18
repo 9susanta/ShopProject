@@ -1,0 +1,202 @@
+<div class="batch-details-container p-4 max-w-4xl mx-auto">
+  <div class="mb-4">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center p-8">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else if (product()) {
+    <!-- Product Summary -->
+    <mat-card class="mb-4">
+      <mat-card-header>
+        <mat-card-title>{{ product()!.productName }}</mat-card-title>
+        <mat-card-subtitle>SKU: {{ product()!.productSKU }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <strong>Total Quantity:</strong> {{ product()!.totalQuantity }}
+          </div>
+          <div>
+            <strong>Available:</strong> {{ product()!.availableQuantity }}
+          </div>
+          <div>
+            <strong>Reserved:</strong> {{ product()!.reservedQuantity }}
+          </div>
+          @if (product()!.isLowStock) {
+            <div>
+              <mat-chip color="warn">Low Stock</mat-chip>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Batches -->
+    <mat-card class="mb-4">
+      <mat-card-header>
+        <mat-card-title>Batches</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (product()!.batches && product()!.batches.length > 0) {
+          <div class="space-y-4">
+            @for (batch of product()!.batches; track batch.id) {
+              <div class="border rounded p-4 hover:bg-gray-50">
+                <div class="flex justify-between items-start mb-2">
+                  <div>
+                    <div class="font-semibold">Batch: {{ batch.batchNumber }}</div>
+                    <div class="text-sm text-gray-500">
+                      Quantity: {{ batch.quantity }} | Available: {{ batch.availableQuantity }}
+                    </div>
+                  </div>
+                  @if (batch.isExpiringSoon) {
+                    <mat-chip color="warn">
+                      <mat-icon>schedule</mat-icon>
+                      Expires in {{ batch.daysUntilExpiry }} days
+                    </mat-chip>
+                  }
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm mb-4">
+                  <div><strong>Unit Cost:</strong> {{ batch.unitCost | currency: 'INR' }}</div>
+                  <div>
+                    <strong>Expiry Date:</strong>
+                    @if (batch.expiryDate) {
+                      <span [class.text-red-600]="batch.isExpiringSoon">
+                        {{ batch.expiryDate | date: 'short' }}
+                      </span>
+                    } @else {
+                      <span class="text-gray-400">N/A</span>
+                    }
+                  </div>
+                  @if (batch.location) {
+                    <div><strong>Location:</strong> {{ batch.location }}</div>
+                  }
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    mat-raised-button
+                    color="warn"
+                    (click)="markDamaged(batch.id)"
+                    [disabled]="batch.availableQuantity <= 0"
+                  >
+                    <mat-icon>cancel</mat-icon>
+                    Mark Damaged
+                  </button>
+                  <button
+                    mat-raised-button
+                    color="accent"
+                    (click)="returnToSupplier(batch.id)"
+                    [disabled]="batch.availableQuantity <= 0"
+                  >
+                    <mat-icon>reply</mat-icon>
+                    Return to Supplier
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="text-gray-500 text-center py-4">No batches found</p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Stock Update History (Auto-updates from GRN) -->
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Stock Update History</mat-card-title>
+        <mat-card-subtitle>Auto-updates from GRN confirmations and manual adjustments</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (loadingAdjustments()) {
+          <div class="flex justify-center p-4">
+            <mat-spinner diameter="30"></mat-spinner>
+          </div>
+        } @else if (adjustments().length === 0) {
+          <p class="text-gray-500 text-center py-4">No stock adjustments found</p>
+        } @else {
+          <div class="space-y-2">
+            @for (adjustment of adjustments(); track adjustment.id) {
+              <div class="border-l-4 pl-4 py-2" [class.border-blue-500]="adjustment.quantityChange > 0" [class.border-red-500]="adjustment.quantityChange < 0">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <div class="font-semibold">
+                      @if (adjustment.quantityChange > 0) {
+                        <span class="text-green-600">+{{ adjustment.quantityChange }}</span>
+                      } @else {
+                        <span class="text-red-600">{{ adjustment.quantityChange }}</span>
+                      }
+                      units - {{ adjustment.adjustmentType }}
+                    </div>
+                    <div class="text-sm text-gray-600">{{ adjustment.reason }}</div>
+                    @if (adjustment.linkedGRNId) {
+                      <div class="text-xs text-blue-600 mt-1">
+                        <mat-icon class="text-xs">inventory</mat-icon>
+                        Auto-updated from GRN: {{ adjustment.linkedGRNId }}
+                      </div>
+                    }
+                    @if (adjustment.batchNumber) {
+                      <div class="text-xs text-gray-500 mt-1">Batch: {{ adjustment.batchNumber }}</div>
+                    }
+                  </div>
+                  <div class="text-xs text-gray-500">
+                    {{ adjustment.adjustedAt | date: 'short' }}
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Damage Dialog -->
+  @if (showDamageDialog()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <mat-card class="w-full max-w-md m-4">
+        <mat-card-header>
+          <mat-card-title>Mark Batch as Damaged</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="space-y-4">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Damaged Quantity</mat-label>
+              <input
+                matInput
+                type="number"
+                [ngModel]="damageQuantity()"
+                (ngModelChange)="damageQuantity.set($event)"
+                min="1"
+                [max]="selectedBatchAvailableQuantity()"
+              />
+              <mat-hint>
+                Available: {{ selectedBatchAvailableQuantity() }}
+              </mat-hint>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Reason for Damage</mat-label>
+              <textarea
+                matInput
+                [ngModel]="damageReason()"
+                (ngModelChange)="damageReason.set($event)"
+                rows="3"
+                placeholder="Enter reason for damage (e.g., broken, expired, damaged in transit)"
+              ></textarea>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+        <mat-card-actions class="flex justify-end gap-2">
+          <button mat-button (click)="cancelDamage()">Cancel</button>
+          <button mat-raised-button color="warn" (click)="confirmDamage()">Mark as Damaged</button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  }
+</div>
+

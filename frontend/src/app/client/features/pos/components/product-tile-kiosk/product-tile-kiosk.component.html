@@ -1,0 +1,95 @@
+<div class="product-tile-kiosk" 
+     [class.out-of-stock]="isOutOfStock()"
+     [class.low-stock]="isLowStock()"
+     (click)="onTileClick($event)">
+  <div class="product-image-kiosk">
+    @if (product().imageUrl) {
+      <img [src]="product().imageUrl" [alt]="product().name" />
+    } @else {
+      <div class="no-image-kiosk">
+        <span class="material-icons">image</span>
+      </div>
+    }
+    <!-- Stock status badges - top left -->
+    @if (isOutOfStock()) {
+      <div class="stock-badge out-of-stock-badge">
+        <span class="material-icons">block</span>
+        <span>Out of Stock</span>
+      </div>
+    }
+    @if (isLowStock()) {
+      <div class="stock-badge low-stock-badge">
+        <span class="material-icons">warning</span>
+        <span>Low Stock</span>
+      </div>
+    }
+    <!-- Discount and MRP - top right (not shown for out of stock items) -->
+    @if (product().mrp && product().mrp > product().salePrice && !isOutOfStock()) {
+      <div class="discount-mrp-badge">
+        <div class="mrp-badge">₹{{ product().mrp | number: '1.0-0' }}</div>
+        <div class="discount-badge-top">
+          {{ discountPercentage() }}% OFF
+        </div>
+      </div>
+    }
+    <!-- Stock quantity - bottom right -->
+    @if (product().availableQuantity !== undefined && product().availableQuantity !== null) {
+      <div class="stock-quantity-badge" 
+           [class.stock-low]="isLowStock()"
+           [class.stock-out]="isOutOfStock()">
+        <span class="material-icons stock-qty-icon">inventory_2</span>
+        <span class="stock-qty-number">{{ product().availableQuantity | number: '1.0-0' }}</span>
+        @if (product().unitName) {
+          <span class="stock-qty-unit">{{ product().unitName }}</span>
+        }
+      </div>
+    }
+  </div>
+  <div class="product-info-kiosk">
+    <h3 class="product-name-kiosk">{{ product().name }}</h3>
+    <p class="product-price-kiosk">₹{{ product().salePrice | number: '1.0-0' }}</p>
+    @if (isLowStock()) {
+      <div class="low-stock-indicator">
+        <span class="material-icons">warning</span>
+        <span>Low Stock</span>
+      </div>
+    }
+  </div>
+  <div class="tile-controls">
+    <!-- Always visible quantity counter -->
+    <div class="quantity-counter-container">
+      <button 
+        class="quantity-btn tile-decrement-btn" 
+        [attr.aria-label]="'Decrease quantity of ' + product().name"
+        (click)="onDecrementClick($event)"
+        [disabled]="cartQuantity() === 0 || isOutOfStock()"
+      >
+        <span class="material-icons">remove</span>
+      </button>
+      <div class="quantity-display tile-quantity-display">
+        <span class="quantity-number">{{ cartQuantity() }}</span>
+      </div>
+      <button 
+        class="quantity-btn tile-increment-btn" 
+        [attr.aria-label]="'Increase quantity of ' + product().name"
+        (click)="onIncrementClick($event)"
+        [disabled]="isOutOfStock() || !canIncrement()"
+      >
+        <span class="material-icons">add</span>
+      </button>
+    </div>
+    <!-- Always visible Add to Cart button -->
+    <button 
+      class="add-to-cart-btn tile-add-btn" 
+      [attr.aria-label]="'Add ' + product().name + ' to cart'" 
+      (click)="onAddToCartClick($event)"
+      [disabled]="isOutOfStock()"
+    >
+      <span class="material-icons">add_shopping_cart</span>
+      <span class="add-cart-text">Add to Cart</span>
+    </button>
+  </div>
+</div>
+
+
+

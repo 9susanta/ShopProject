@@ -13,7 +13,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { ApiService } from '@core/services/api.service';
+import { ApiService } from '@core/api/api.service';
 import { ToastService } from '@core/toast/toast.service';
 import { InventoryAuditLog, AuditLogFilters, AuditAction } from '@core/models/audit.model';
 

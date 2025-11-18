@@ -1,0 +1,12 @@
+.inventory-adjust-container {
+  min-height: calc(100vh - 64px);
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.bg-blue-50 {
+  background-color: #eff6ff;
+}
+

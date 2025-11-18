@@ -1,0 +1,162 @@
+<div class="inventory-list-container p-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Inventory List</h1>
+    <button mat-raised-button color="primary" routerLink="/admin/inventory/adjust">
+      <mat-icon>add</mat-icon>
+      New Adjustment
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="mb-4">
+    <mat-card-content>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <mat-form-field appearance="outline">
+          <mat-label>Low Stock Only</mat-label>
+          <mat-select [(ngModel)]="filters().lowStock" (selectionChange)="applyFilters()">
+            <mat-option [value]="false">All</mat-option>
+            <mat-option [value]="true">Low Stock</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Expiring Soon</mat-label>
+          <mat-select [(ngModel)]="filters().expirySoon" (selectionChange)="applyFilters()">
+            <mat-option [value]="false">All</mat-option>
+            <mat-option [value]="true">Expiring Soon</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="flex items-end gap-2">
+          <button mat-button (click)="clearFilters()">Clear Filters</button>
+          <button mat-raised-button color="primary" (click)="applyFilters()">Apply</button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Inventory Table -->
+  <mat-card>
+    <mat-card-content>
+      @if (loading()) {
+        <div class="flex justify-center p-8">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+      } @else if (inventories().length === 0) {
+        <div class="text-center py-8 text-gray-500">
+          <mat-icon class="text-6xl mb-4">inventory_2</mat-icon>
+          <p>No inventory items found</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table mat-table [dataSource]="inventories()" class="w-full">
+            <!-- Product Name Column -->
+            <ng-container matColumnDef="productName">
+              <th mat-header-cell *matHeaderCellDef>Product Name</th>
+              <td mat-cell *matCellDef="let inventory">
+                <div class="font-semibold">{{ inventory.productName || 'N/A' }}</div>
+                @if (inventory.productId) {
+                  <div class="text-sm text-gray-500">ID: {{ inventory.productId }}</div>
+                }
+              </td>
+            </ng-container>
+
+            <!-- Quantity On Hand Column -->
+            <ng-container matColumnDef="quantityOnHand">
+              <th mat-header-cell *matHeaderCellDef>Quantity On Hand</th>
+              <td mat-cell *matCellDef="let inventory">{{ inventory.quantityOnHand }}</td>
+            </ng-container>
+
+            <!-- Available Quantity Column -->
+            <ng-container matColumnDef="availableQuantity">
+              <th mat-header-cell *matHeaderCellDef>Available</th>
+              <td mat-cell *matCellDef="let inventory">
+                <span [class.text-green-600]="inventory.availableQuantity > 0">
+                  {{ inventory.availableQuantity }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Reserved Quantity Column -->
+            <ng-container matColumnDef="reservedQuantity">
+              <th mat-header-cell *matHeaderCellDef>Reserved</th>
+              <td mat-cell *matCellDef="let inventory">
+                <span [class.text-orange-600]="inventory.reservedQuantity > 0">
+                  {{ inventory.reservedQuantity }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Batch Number Column -->
+            <ng-container matColumnDef="batchNumber">
+              <th mat-header-cell *matHeaderCellDef>Batch Number</th>
+              <td mat-cell *matCellDef="let inventory">
+                {{ inventory.batchNumber || 'N/A' }}
+              </td>
+            </ng-container>
+
+            <!-- Expiry Date Column -->
+            <ng-container matColumnDef="expiryDate">
+              <th mat-header-cell *matHeaderCellDef>Expiry Date</th>
+              <td mat-cell *matCellDef="let inventory">
+                @if (inventory.expiryDate) {
+                  <span [class.text-red-600]="isExpiringSoon(inventory.expiryDate)">
+                    {{ inventory.expiryDate | date: 'short' }}
+                  </span>
+                } @else {
+                  <span class="text-gray-400">N/A</span>
+                }
+              </td>
+            </ng-container>
+
+            <!-- Location Column -->
+            <ng-container matColumnDef="location">
+              <th mat-header-cell *matHeaderCellDef>Location</th>
+              <td mat-cell *matCellDef="let inventory">
+                {{ inventory.location || 'N/A' }}
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let inventory">
+                <div class="flex gap-2">
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    (click)="viewProduct(inventory.productId)"
+                    matTooltip="View Product"
+                  >
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    color="accent"
+                    (click)="adjustInventory(inventory)"
+                    matTooltip="Adjust Inventory"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <mat-paginator
+          [length]="totalCount()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="[10, 20, 50, 100]"
+          (page)="onPageChange($event)"
+          class="mt-4"
+        ></mat-paginator>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
+

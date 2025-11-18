@@ -9,7 +9,7 @@ namespace GroceryStoreManagement.API.Controllers;
 
 [ApiController]
 [Route("api/purchasing/grn")]
-[Authorize(Roles = "Admin,Staff")]
+[Authorize(Roles = "Admin,Staff,SuperAdmin")]
 public class GRNController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -30,7 +30,7 @@ public class GRNController : ControllerBase
     /// Upload invoice file for GRN
     /// </summary>
     [HttpPost("upload-invoice")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<ActionResult<string>> UploadInvoice(IFormFile file)
     {
         if (file == null || file.Length == 0)
@@ -121,7 +121,7 @@ public class GRNController : ControllerBase
     /// Cancel/void a GRN
     /// </summary>
     [HttpPost("{id}/cancel")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<ActionResult<Application.DTOs.GRNDto>> CancelGRN(Guid id)
     {
         var command = new CancelGRNCommand { Id = id };

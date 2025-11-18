@@ -29,41 +29,26 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./client/features/pos/pos.routes').then(m => m.posRoutes),
   },
+  // Redirect old paths to new admin paths for backward compatibility
   {
     path: 'inventory',
-    canActivate: [AuthGuard],
-    loadChildren: () =>
-      import('./admin/features/inventory/inventory.routes').then(m => m.inventoryRoutes),
+    redirectTo: '/admin/inventory',
+    pathMatch: 'full',
   },
   {
     path: 'purchasing',
-    canActivate: [AuthGuard],
-    loadChildren: () =>
-      import('./admin/features/purchasing/purchasing.routes').then(m => m.purchasingRoutes),
+    redirectTo: '/admin/purchasing',
+    pathMatch: 'prefix',
   },
   {
     path: 'reports',
-    canActivate: [AuthGuard],
-    loadChildren: () =>
-      import('./admin/features/reports/reports.routes').then(m => m.reportsRoutes),
+    redirectTo: '/admin/reports',
+    pathMatch: 'full',
   },
   {
     path: 'settings',
-    canActivate: [AuthGuard],
-    loadChildren: () =>
-      import('./admin/features/settings/settings.routes').then(m => m.settingsRoutes),
-  },
-  {
-    path: 'inventory/adjustments',
-    canActivate: [AuthGuard],
-    loadChildren: () =>
-      import('./admin/features/adjustments/adjustments.routes').then(m => m.adjustmentsRoutes),
-  },
-  {
-    path: 'admin/audit',
-    canActivate: [AuthGuard],
-    loadChildren: () =>
-      import('./admin/features/audit/audit.routes').then(m => m.auditRoutes),
+    redirectTo: '/admin/settings',
+    pathMatch: 'full',
   },
   {
     path: '**',

@@ -13,9 +13,10 @@ import { CacheService } from '../../../../core/services/cache.service';
 import { Product, Category, CartItem, SaleRequest } from '../../../../core/models/product.model';
 import { SaleResponse } from '../../../../core/models/product.model';
 import { BarcodeInputComponent } from '../../../shared/components/barcode-input/barcode-input.component';
-import { QuantityPickerComponent } from '../../../shared/components/quantity-picker/quantity-picker.component';
 import { CategoryMultiselectComponent } from '../../../shared/components/category-multiselect/category-multiselect.component';
 import { CheckoutModalComponent } from '../../../shared/components/checkout-modal/checkout-modal.component';
+import { ProductTileKioskComponent } from '../components/product-tile-kiosk/product-tile-kiosk.component';
+import { CartSidebarComponent } from '../components/cart-sidebar/cart-sidebar.component';
 
 @Component({
   selector: 'grocery-pos',
@@ -26,15 +27,15 @@ import { CheckoutModalComponent } from '../../../shared/components/checkout-moda
     MatIconModule,
     MatTooltipModule,
     BarcodeInputComponent,
-    QuantityPickerComponent,
     CategoryMultiselectComponent,
-    CheckoutModalComponent
+    CheckoutModalComponent,
+    ProductTileKioskComponent,
+    CartSidebarComponent
   ],
   templateUrl: './pos.component.html',
   styleUrls: [
     './pos.component.css',
-    './pos-products.component.css',
-    './pos-cart.component.css'
+    './pos-products.component.css'
   ],
 })
 export class PosComponent implements OnInit, OnDestroy {
@@ -427,28 +428,10 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   // Handle tile click - add 1 quantity to cart
+  // The component already filters out button clicks, so this is safe
   onTileClick(product: Product, event: Event): void {
-    // Don't add if clicking on buttons or controls
-    const target = event.target as HTMLElement;
-    if (target.closest('button') || target.closest('.tile-controls')) {
-      return;
-    }
-    
-    // Don't add if out of stock
-    if (this.isOutOfStock(product)) {
-      return;
-    }
-
-    // Add 1 quantity to cart
+    // Component already handled the filtering, just add to cart
     this.onAddToCart({ product, quantity: 1 });
-  }
-
-  // Handle Add to Cart button click
-  onAddToCartClick(product: Product, event: Event): void {
-    event.stopPropagation();
-    if (!this.isOutOfStock(product)) {
-      this.onAddToCart({ product, quantity: 1 });
-    }
   }
 
   // Check if product is out of stock

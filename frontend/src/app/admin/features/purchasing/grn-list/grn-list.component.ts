@@ -38,7 +38,7 @@ import { GoodsReceiveNote, GRNListResponse, GRNFilters, GRNStatus } from '@core/
     <div class="grn-list-container p-4">
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Goods Receive Notes</h1>
-        <button mat-raised-button color="primary" routerLink="/purchasing/grn/new">
+        <button mat-raised-button color="primary" routerLink="/admin/purchasing/grn/new">
           <mat-icon>add</mat-icon>
           New GRN
         </button>
@@ -211,11 +211,11 @@ export class GRNListComponent implements OnInit {
   }
 
   viewDetails(id: string): void {
-    this.router.navigate(['/purchasing/grn', id]);
+    this.router.navigate(['/admin/purchasing/grn', id]);
   }
 
   confirmGRN(id: string): void {
-    this.router.navigate(['/purchasing/grn', id, 'confirm']);
+    this.router.navigate(['/admin/purchasing/grn', id, 'confirm']);
   }
 
   getStatusColor(status: GRNStatus): string {

@@ -1,0 +1,154 @@
+<div class="customers-list-container p-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Customers</h1>
+    <button mat-raised-button color="primary" (click)="createNewCustomer()">
+      <mat-icon>add</mat-icon>
+      New Customer
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="mb-4">
+    <mat-card-content>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Search</mat-label>
+          <input
+            matInput
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+            (keyup.enter)="onSearch()"
+            placeholder="Search by name, phone, or email"
+          />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Status</mat-label>
+          <mat-select [ngModel]="isActiveFilter()" (ngModelChange)="isActiveFilter.set($event); onFilterChange()">
+            <mat-option [value]="null">All</mat-option>
+            <mat-option [value]="true">Active</mat-option>
+            <mat-option [value]="false">Inactive</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="flex items-end">
+          <button mat-raised-button color="primary" (click)="onSearch()">Search</button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Customers Table -->
+  <mat-card>
+    <mat-card-content>
+      @if (loading()) {
+        <div class="flex justify-center p-8">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+      } @else if (customers().length === 0) {
+        <div class="text-center py-8 text-gray-500">
+          <mat-icon class="text-6xl mb-4">people</mat-icon>
+          <p>No customers found</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table mat-table [dataSource]="customers()" class="w-full">
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let customer">
+                <div class="font-semibold">{{ customer.name }}</div>
+              </td>
+            </ng-container>
+
+            <!-- Phone Column -->
+            <ng-container matColumnDef="phone">
+              <th mat-header-cell *matHeaderCellDef>Phone</th>
+              <td mat-cell *matCellDef="let customer">{{ customer.phone }}</td>
+            </ng-container>
+
+            <!-- Email Column -->
+            <ng-container matColumnDef="email">
+              <th mat-header-cell *matHeaderCellDef>Email</th>
+              <td mat-cell *matCellDef="let customer">
+                {{ customer.email || 'N/A' }}
+              </td>
+            </ng-container>
+
+            <!-- Address Column -->
+            <ng-container matColumnDef="address">
+              <th mat-header-cell *matHeaderCellDef>Address</th>
+              <td mat-cell *matCellDef="let customer">
+                <div class="text-sm">
+                  @if (customer.address) {
+                    <div>{{ customer.address }}</div>
+                  }
+                  @if (customer.city || customer.state) {
+                    <div class="text-gray-500">
+                      {{ customer.city }}@if (customer.city && customer.state) {, }{{ customer.state }}
+                    </div>
+                  }
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Total Orders Column -->
+            <ng-container matColumnDef="totalOrders">
+              <th mat-header-cell *matHeaderCellDef>Orders</th>
+              <td mat-cell *matCellDef="let customer">
+                {{ customer.totalOrders || 0 }}
+              </td>
+            </ng-container>
+
+            <!-- Total Spent Column -->
+            <ng-container matColumnDef="totalSpent">
+              <th mat-header-cell *matHeaderCellDef>Total Spent</th>
+              <td mat-cell *matCellDef="let customer">
+                {{ customer.totalSpent ? (customer.totalSpent | currency: 'INR') : 'N/A' }}
+              </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let customer">
+                <mat-chip [color]="customer.isActive ? 'primary' : 'warn'">
+                  {{ customer.isActive ? 'Active' : 'Inactive' }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let customer">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  (click)="viewCustomer(customer.id)"
+                  matTooltip="View Details"
+                >
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <mat-paginator
+          [length]="totalCount()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="[10, 20, 50, 100]"
+          (page)="onPageChange($event)"
+          class="mt-4"
+        ></mat-paginator>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
+

@@ -1,0 +1,159 @@
+<div class="inventory-adjust-container p-4 max-w-3xl mx-auto">
+  <div class="mb-4">
+    <button mat-button (click)="onCancel()">
+      <mat-icon>arrow_back</mat-icon>
+      Back
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Inventory Adjustment</mat-card-title>
+      <mat-card-subtitle>Adjust stock quantity for a product</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      @if (loading()) {
+        <div class="flex justify-center p-8">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+      } @else {
+        <form [formGroup]="adjustmentForm" (ngSubmit)="onSubmit()">
+          <!-- Product Selection -->
+          <div class="mb-4">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Product ID</mat-label>
+              <input matInput formControlName="productId" placeholder="Enter product ID" />
+              @if (product()) {
+                <mat-hint>{{ product()!.name }} - Current Stock: {{ currentStock() }}</mat-hint>
+              }
+              @if (adjustmentForm.get('productId')?.hasError('required') && adjustmentForm.get('productId')?.touched) {
+                <mat-error>{{ getErrorMessage('productId') }}</mat-error>
+              }
+            </mat-form-field>
+            <button
+              mat-raised-button
+              type="button"
+              color="accent"
+              (click)="loadProduct(adjustmentForm.get('productId')?.value)"
+              [disabled]="!adjustmentForm.get('productId')?.value"
+              class="ml-2"
+            >
+              Load Product
+            </button>
+          </div>
+
+          @if (product()) {
+            <!-- Current Stock Display -->
+            <mat-card class="mb-4 bg-blue-50">
+              <mat-card-content>
+                <div class="flex justify-between items-center">
+                  <div>
+                    <p class="text-sm text-gray-600">Current Stock</p>
+                    <p class="text-2xl font-bold">{{ currentStock() }}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-600">New Stock</p>
+                    <p class="text-2xl font-bold" [class.text-green-600]="getNewStock() >= currentStock()" [class.text-red-600]="getNewStock() < currentStock()">
+                      {{ getNewStock() }}
+                    </p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Quantity Change -->
+            <mat-form-field appearance="outline" class="w-full mb-4">
+              <mat-label>Quantity Change</mat-label>
+              <input
+                matInput
+                type="number"
+                formControlName="quantityChange"
+                (input)="onQuantityChange()"
+                placeholder="Enter positive to increase, negative to decrease"
+              />
+              <mat-hint>{{ getQuantityChangeLabel() }}</mat-hint>
+              @if (adjustmentForm.get('quantityChange')?.hasError('required') && adjustmentForm.get('quantityChange')?.touched) {
+                <mat-error>{{ getErrorMessage('quantityChange') }}</mat-error>
+              }
+              @if (adjustmentForm.get('quantityChange')?.hasError('pattern') && adjustmentForm.get('quantityChange')?.touched) {
+                <mat-error>{{ getErrorMessage('quantityChange') }}</mat-error>
+              }
+              @if (adjustmentForm.get('quantityChange')?.hasError('negativeStock')) {
+                <mat-error>{{ getErrorMessage('quantityChange') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Adjustment Type -->
+            <mat-form-field appearance="outline" class="w-full mb-4">
+              <mat-label>Adjustment Type</mat-label>
+              <mat-select formControlName="adjustmentType">
+                @for (type of adjustmentTypes; track type.value) {
+                  <mat-option [value]="type.value">{{ type.label }}</mat-option>
+                }
+              </mat-select>
+              @if (adjustmentForm.get('adjustmentType')?.hasError('required') && adjustmentForm.get('adjustmentType')?.touched) {
+                <mat-error>{{ getErrorMessage('adjustmentType') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Reason -->
+            <mat-form-field appearance="outline" class="w-full mb-4">
+              <mat-label>Reason</mat-label>
+              <textarea
+                matInput
+                formControlName="reason"
+                rows="3"
+                placeholder="Enter reason for adjustment"
+              ></textarea>
+              @if (adjustmentForm.get('reason')?.hasError('required') && adjustmentForm.get('reason')?.touched) {
+                <mat-error>{{ getErrorMessage('reason') }}</mat-error>
+              }
+              @if (adjustmentForm.get('reason')?.hasError('minlength') && adjustmentForm.get('reason')?.touched) {
+                <mat-error>{{ getErrorMessage('reason') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Reference Number -->
+            <mat-form-field appearance="outline" class="w-full mb-4">
+              <mat-label>Reference Number (Optional)</mat-label>
+              <input matInput formControlName="referenceNumber" placeholder="Enter reference number" />
+            </mat-form-field>
+
+            <!-- Notes -->
+            <mat-form-field appearance="outline" class="w-full mb-4">
+              <mat-label>Notes (Optional)</mat-label>
+              <textarea
+                matInput
+                formControlName="notes"
+                rows="3"
+                placeholder="Additional notes"
+              ></textarea>
+            </mat-form-field>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end gap-2 mt-6">
+              <button mat-button type="button" (click)="onCancel()">Cancel</button>
+              <button
+                mat-raised-button
+                color="primary"
+                type="submit"
+                [disabled]="adjustmentForm.invalid || submitting()"
+              >
+                @if (submitting()) {
+                  <mat-spinner diameter="20" class="inline-block mr-2"></mat-spinner>
+                }
+                Create Adjustment
+              </button>
+            </div>
+          } @else {
+            <div class="text-center py-8 text-gray-500">
+              <mat-icon class="text-6xl mb-4">inventory_2</mat-icon>
+              <p>Please enter a product ID and click "Load Product" to continue</p>
+            </div>
+          }
+        </form>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
+

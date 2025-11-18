@@ -7,7 +7,7 @@ namespace GroceryStoreManagement.API.Controllers;
 
 [ApiController]
 [Route("api/inventory")]
-[Authorize(Roles = "Admin,Staff")]
+[Authorize(Roles = "Admin,Staff,SuperAdmin")]
 public class InventoryController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -20,20 +20,23 @@ public class InventoryController : ControllerBase
     }
 
     /// <summary>
-    /// Get paginated list of products with stock information
+    /// Get paginated list of products with stock information and batches
     /// </summary>
     [HttpGet("products")]
     public async Task<ActionResult> GetProducts(
         [FromQuery] string? search = null,
         [FromQuery] Guid? categoryId = null,
+        [FromQuery] bool? lowStock = null,
+        [FromQuery] bool? expirySoon = null,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
-        // Use existing GetProductsQuery from Products module
-        var query = new Application.Queries.Products.GetProductsQuery
+        var query = new GetInventoryProductsQuery
         {
             Search = search,
             CategoryId = categoryId,
+            LowStock = lowStock,
+            ExpirySoon = expirySoon,
             PageNumber = pageNumber,
             PageSize = pageSize
         };
@@ -60,7 +63,7 @@ public class InventoryController : ControllerBase
     /// Manual stock adjustment
     /// </summary>
     [HttpPost("adjustment")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<ActionResult> StockAdjustment([FromBody] Application.Commands.Inventory.AdjustInventoryCommand command)
     {
         var result = await _mediator.Send(command);

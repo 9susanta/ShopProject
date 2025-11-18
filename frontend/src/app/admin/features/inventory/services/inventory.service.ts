@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiService } from '@core/services/api.service';
+import { ApiService } from '@core/api/api.service';
 import { Inventory, InventoryListResponse, InventoryFilters, InventoryAdjustRequest } from '@core/models/inventory.model';
 import {
   ProductInventory,
@@ -40,11 +40,23 @@ export class InventoryService {
     categoryId?: string;
     lowStock?: boolean;
     expirySoon?: boolean;
+    search?: string;
     pageNumber?: number;
     pageSize?: number;
   }): Observable<ProductInventoryListResponse> {
+    // Clean filters - remove undefined/null values
+    const cleanFilters: any = {};
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        const value = (filters as any)[key];
+        if (value !== null && value !== undefined && value !== '') {
+          cleanFilters[key] = value;
+        }
+      });
+    }
+    
     return this.api.get<ProductInventoryListResponse>('inventory/products', {
-      params: filters,
+      params: cleanFilters,
       cache: true,
       cacheTTL: 30000,
     });
