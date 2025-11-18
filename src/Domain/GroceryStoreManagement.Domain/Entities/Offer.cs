@@ -75,5 +75,44 @@ public class Offer : BaseEntity
             _ => 0
         };
     }
+
+    public void Update(string name, OfferType type, decimal discountValue, DateTime startDate, DateTime endDate,
+        Guid? productId = null, Guid? categoryId = null, string? couponCode = null,
+        string? description = null, int? minQuantity = null, int? maxQuantity = null)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Offer name cannot be null or empty", nameof(name));
+
+        if (discountValue < 0)
+            throw new ArgumentException("Discount value cannot be negative", nameof(discountValue));
+
+        if (endDate < startDate)
+            throw new ArgumentException("End date cannot be before start date");
+
+        Name = name;
+        Type = type;
+        DiscountValue = discountValue;
+        StartDate = startDate;
+        EndDate = endDate;
+        ProductId = productId;
+        CategoryId = categoryId;
+        CouponCode = couponCode;
+        Description = description;
+        MinQuantity = minQuantity;
+        MaxQuantity = maxQuantity;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Activate()
+    {
+        IsActive = true;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
 

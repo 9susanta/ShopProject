@@ -117,9 +117,6 @@ export class CustomersListComponent implements OnInit {
   }
 
   createNewCustomer(): void {
-    // Navigate to customer form (if exists) or show a toast
-    this.toastService.info('Customer creation form coming soon. For now, customers are created during sales.');
-    // TODO: Navigate to customer form when implemented
-    // this.router.navigate(['/admin/customers/new']);
+    this.router.navigate(['/admin/customers/new']);
   }
 }

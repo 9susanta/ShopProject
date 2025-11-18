@@ -53,7 +53,7 @@ import { GoodsReceiveNote, GRNStatus } from '@core/models/purchasing.model';
                 <strong>PO Number:</strong> {{ grn()!.purchaseOrderNumber }}
               </div>
               <div>
-                <strong>Received Date:</strong> {{ grn()!.receivedDate | date: 'short' }}
+                <strong>Received Date:</strong> {{ grn()!.receiveDate | date: 'short' }}
               </div>
               <div>
                 <strong>Total Amount:</strong> {{ grn()!.totalAmount | currency: 'INR' }}

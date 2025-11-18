@@ -21,6 +21,8 @@ public class SaleDto
     public decimal CardAmount { get; set; } = 0;
     public decimal PayLaterAmount { get; set; } = 0;
     public string? Notes { get; set; }
+    public int? LoyaltyPointsEarned { get; set; }
+    public int? LoyaltyPointsRedeemed { get; set; }
     public List<SaleItemDto> Items { get; set; } = new();
 }
 
@@ -32,5 +34,8 @@ public class SaleItemDto
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal TotalPrice { get; set; }
+    public decimal? DiscountAmount { get; set; }
+    public Guid? OfferId { get; set; }
+    public string? OfferName { get; set; }
 }
 

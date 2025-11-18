@@ -1,0 +1,344 @@
+<div class="modal-overlay" (click)="cancel.emit()">
+  <div class="modal-content enhanced-checkout" (click)="$event.stopPropagation()">
+    @if (showSuccess() && saleResponse()) {
+      <!-- Success State -->
+      <div class="success-state">
+        <div class="success-icon">
+          <mat-icon class="success-check">check_circle</mat-icon>
+        </div>
+        <h2>Sale Completed Successfully!</h2>
+        <div class="success-details">
+          <div class="success-item">
+            <span>Invoice Number:</span>
+            <strong>{{ saleResponse()!.invoiceNumber }}</strong>
+          </div>
+          <div class="success-item">
+            <span>Total Amount:</span>
+            <strong>{{ formatCurrency(saleResponse()!.totalAmount) }}</strong>
+          </div>
+          @if (saleResponse()!.loyaltyPointsEarned && saleResponse()!.loyaltyPointsEarned > 0) {
+            <div class="success-item loyalty-points-earned">
+              <mat-icon>stars</mat-icon>
+              <span>Loyalty Points Earned:</span>
+              <strong class="points-value">{{ saleResponse()!.loyaltyPointsEarned }} points</strong>
+            </div>
+          }
+          @if (saleResponse()!.loyaltyPointsRedeemed && saleResponse()!.loyaltyPointsRedeemed > 0) {
+            <div class="success-item">
+              <span>Loyalty Points Redeemed:</span>
+              <strong>{{ saleResponse()!.loyaltyPointsRedeemed }} points</strong>
+            </div>
+          }
+        </div>
+        <div class="success-actions">
+          <button class="btn btn-primary" (click)="closeSuccess()">
+            Close
+          </button>
+        </div>
+      </div>
+    } @else {
+      <!-- Checkout Form -->
+      <div class="modal-header">
+        <h2>Checkout</h2>
+        <button class="close-btn" (click)="cancel.emit()" aria-label="Close">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+      <!-- Customer Identification -->
+      <div class="form-section">
+        <label class="form-label">Customer</label>
+        <div class="customer-selector">
+          <label class="radio-option">
+            <input type="radio" name="customerType" [checked]="isGuest()" (change)="setGuestMode(true)" />
+            <span>Guest</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="customerType" [checked]="!isGuest()" (change)="setGuestMode(false)" />
+            <span>Customer</span>
+          </label>
+        </div>
+        @if (!isGuest()) {
+          <div class="customer-search">
+            <input
+              type="tel"
+              class="form-control"
+              [value]="customerPhone()"
+              (input)="customerPhone.set($any($event.target).value)"
+              placeholder="Enter phone number"
+            />
+            @if (customerSearchLoading()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            }
+            @if (customer()) {
+              <div class="customer-info">
+                <mat-chip color="primary">{{ customer()!.name }}</mat-chip>
+                @if (customer() && (customer()!.loyaltyPoints ?? 0) > 0) {
+                  <mat-chip color="accent">{{ customer()!.loyaltyPoints }} Points</mat-chip>
+                }
+                @if (customer()!.isPayLaterEnabled) {
+                  <mat-chip [color]="customer()!.payLaterBalance! > 0 ? 'warn' : 'primary'">
+                    Pay Later: {{ customer()!.payLaterBalance | currency: 'INR' }} / {{ customer()!.payLaterLimit | currency: 'INR' }}
+                  </mat-chip>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Order Summary -->
+      <div class="order-summary">
+        <h3>Order Summary</h3>
+        <div class="summary-items">
+          @for (item of cart; track getProductId(item)) {
+            <div class="summary-item">
+              <span>{{ getProductName(item) }} × {{ item.quantity }}</span>
+              <span>{{ formatCurrency(item.subtotal) }}</span>
+            </div>
+          }
+        </div>
+        <div class="summary-line">
+          <span>Subtotal:</span>
+          <span>{{ formatCurrency(subtotal()) }}</span>
+        </div>
+        @if (discountAmount() > 0) {
+          <div class="summary-line discount">
+            <span>Discount:</span>
+            <span>-{{ formatCurrency(discountAmount()) }}</span>
+          </div>
+        }
+        @if (loyaltyPointsToRedeem() > 0) {
+          <div class="summary-line discount">
+            <span>Loyalty Points ({{ loyaltyPointsToRedeem() }}):</span>
+            <span>-{{ formatCurrency(loyaltyPointsValue()) }}</span>
+          </div>
+        }
+        <div class="summary-total">
+          <span>Total:</span>
+          <span>{{ formatCurrency(total()) }}</span>
+        </div>
+      </div>
+
+      <!-- Discount Section -->
+      <div class="form-section">
+        <label class="form-label">Discount</label>
+        <div class="discount-controls">
+          <select [value]="discountType()" (change)="discountType.set($any($event.target).value)">
+            <option value="percentage">Percentage</option>
+            <option value="amount">Amount</option>
+          </select>
+          <input
+            type="number"
+            class="form-control"
+            [value]="discountValue()"
+            (input)="discountValue.set(+$any($event.target).value)"
+            [placeholder]="discountType() === 'percentage' ? 'Enter %' : 'Enter amount'"
+            min="0"
+            [max]="discountType() === 'percentage' ? 100 : subtotal()"
+          />
+          @if (discountType() === 'percentage') {
+            <span class="discount-preview">{{ discountAmount() | currency: 'INR' }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Coupon Code -->
+      <div class="form-section">
+        <label class="form-label">Coupon Code (Optional)</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="couponCode()"
+          (input)="couponCode.set($any($event.target).value)"
+          placeholder="Enter coupon code"
+        />
+      </div>
+
+      <!-- Loyalty Points -->
+      @if (customer() && loyaltyPointsAvailable() > 0) {
+        <div class="form-section">
+          <label class="form-label">Redeem Loyalty Points</label>
+          <div class="loyalty-controls">
+            <input
+              type="number"
+              class="form-control"
+              [value]="loyaltyPointsToRedeem()"
+              (input)="loyaltyPointsToRedeem.set(+$any($event.target).value)"
+              [max]="loyaltyPointsAvailable()"
+              min="0"
+              placeholder="Points to redeem"
+            />
+            <span class="loyalty-info">
+              Available: {{ loyaltyPointsAvailable() }} points ({{ loyaltyPointsAvailable() | currency: 'INR' }})
+            </span>
+          </div>
+        </div>
+      }
+
+      <!-- Payment Method -->
+      <div class="form-section">
+        <label class="form-label">Payment Method</label>
+        <div class="payment-methods">
+          <label class="payment-method-option" [class.selected]="paymentMethod() === PaymentMethod.Cash && !enableSplitPayment()">
+            <input
+              type="radio"
+              name="paymentMethod"
+              [value]="PaymentMethod.Cash"
+              [checked]="paymentMethod() === PaymentMethod.Cash && !enableSplitPayment()"
+              (change)="paymentMethod.set(PaymentMethod.Cash); enableSplitPayment.set(false)"
+            />
+            <span class="payment-method-label">
+              <mat-icon>money</mat-icon>
+              <span>Cash</span>
+            </span>
+          </label>
+          <label class="payment-method-option" [class.selected]="paymentMethod() === PaymentMethod.UPI && !enableSplitPayment()">
+            <input
+              type="radio"
+              name="paymentMethod"
+              [value]="PaymentMethod.UPI"
+              [checked]="paymentMethod() === PaymentMethod.UPI && !enableSplitPayment()"
+              (change)="paymentMethod.set(PaymentMethod.UPI); enableSplitPayment.set(false)"
+            />
+            <span class="payment-method-label">
+              <mat-icon>account_balance_wallet</mat-icon>
+              <span>UPI</span>
+            </span>
+          </label>
+          <label class="payment-method-option" [class.selected]="paymentMethod() === PaymentMethod.Card && !enableSplitPayment()">
+            <input
+              type="radio"
+              name="paymentMethod"
+              [value]="PaymentMethod.Card"
+              [checked]="paymentMethod() === PaymentMethod.Card && !enableSplitPayment()"
+              (change)="paymentMethod.set(PaymentMethod.Card); enableSplitPayment.set(false)"
+            />
+            <span class="payment-method-label">
+              <mat-icon>credit_card</mat-icon>
+              <span>Card</span>
+            </span>
+          </label>
+          @if (customer() && customer()!.isPayLaterEnabled) {
+            <label class="payment-method-option" [class.selected]="paymentMethod() === PaymentMethod.PayLater && !enableSplitPayment()">
+              <input
+                type="radio"
+                name="paymentMethod"
+                [value]="PaymentMethod.PayLater"
+                [checked]="paymentMethod() === PaymentMethod.PayLater && !enableSplitPayment()"
+                (change)="paymentMethod.set(PaymentMethod.PayLater); enableSplitPayment.set(false)"
+              />
+              <span class="payment-method-label">
+                <mat-icon>schedule</mat-icon>
+                <span>Pay Later</span>
+              </span>
+            </label>
+          }
+          <label class="payment-method-option" [class.selected]="enableSplitPayment()">
+            <input
+              type="checkbox"
+              [checked]="enableSplitPayment()"
+              (change)="enableSplitPayment.set($any($event.target).checked)"
+            />
+            <span class="payment-method-label">
+              <mat-icon>account_balance</mat-icon>
+              <span>Split Payment</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Split Payment -->
+      @if (enableSplitPayment()) {
+        <div class="form-section split-payment">
+          <label class="form-label">Split Payment Amounts</label>
+          <div class="split-inputs">
+            <div class="split-input">
+              <label>Cash</label>
+              <input
+                type="number"
+                class="form-control"
+                [value]="splitCashAmount()"
+                (input)="splitCashAmount.set(+$any($event.target).value)"
+                min="0"
+                [max]="total()"
+              />
+            </div>
+            <div class="split-input">
+              <label>UPI</label>
+              <input
+                type="number"
+                class="form-control"
+                [value]="splitUPIAmount()"
+                (input)="splitUPIAmount.set(+$any($event.target).value)"
+                min="0"
+                [max]="total()"
+              />
+            </div>
+            <div class="split-input">
+              <label>Card</label>
+              <input
+                type="number"
+                class="form-control"
+                [value]="splitCardAmount()"
+                (input)="splitCardAmount.set(+$any($event.target).value)"
+                min="0"
+                [max]="total()"
+              />
+            </div>
+            @if (customer() && customer()!.isPayLaterEnabled) {
+              <div class="split-input">
+                <label>Pay Later</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  [value]="splitPayLaterAmount()"
+                  (input)="splitPayLaterAmount.set(+$any($event.target).value)"
+                  min="0"
+                  [max]="total()"
+                />
+              </div>
+            }
+          </div>
+          <div class="split-summary">
+            <span>Paid: {{ formatCurrency(splitCashAmount() + splitUPIAmount() + splitCardAmount() + splitPayLaterAmount()) }}</span>
+            <span [class.error]="remainingAmount() !== 0">
+              Remaining: {{ formatCurrency(remainingAmount()) }}
+            </span>
+          </div>
+        </div>
+      }
+
+      <!-- Notes -->
+      <div class="form-section">
+        <label class="form-label">Notes (Optional)</label>
+        <textarea
+          class="form-control"
+          formControlName="notes"
+          rows="2"
+          placeholder="Add any notes..."
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cancel.emit()" [disabled]="isProcessing()">
+        Cancel
+      </button>
+      <button
+        class="btn btn-primary"
+        (click)="onCheckout()"
+        [disabled]="isProcessing() || cart.length === 0 || (enableSplitPayment() && remainingAmount() !== 0)">
+        @if (isProcessing()) {
+          <mat-spinner diameter="20"></mat-spinner>
+          Processing...
+        } @else {
+          Complete Sale
+        }
+      </button>
+    </div>
+    }
+  </div>
+</div>
+

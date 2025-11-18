@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Product> Products { get; set; } = null!;
     public DbSet<Supplier> Suppliers { get; set; } = null!;
     public DbSet<Customer> Customers { get; set; } = null!;
+    public DbSet<CustomerSavedItem> CustomerSavedItems { get; set; } = null!;
     public DbSet<Inventory> Inventories { get; set; } = null!;
     public DbSet<PurchaseOrder> PurchaseOrders { get; set; } = null!;
     public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; } = null!;

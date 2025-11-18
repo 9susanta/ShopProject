@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, computed, inject, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,6 +17,7 @@ import { CategoryMultiselectComponent } from '../../../shared/components/categor
 import { CheckoutModalComponent } from '../../../shared/components/checkout-modal/checkout-modal.component';
 import { ProductTileKioskComponent } from '../components/product-tile-kiosk/product-tile-kiosk.component';
 import { CartSidebarComponent } from '../components/cart-sidebar/cart-sidebar.component';
+import { POSKeyboardShortcuts } from './pos-keyboard-shortcuts';
 
 @Component({
   selector: 'grocery-pos',
@@ -46,6 +47,7 @@ export class PosComponent implements OnInit, OnDestroy {
   private posService = inject(PosService);
   private voiceService = inject(VoiceToTextService);
   private cache = inject(CacheService);
+  private keyboardShortcuts = inject(POSKeyboardShortcuts);
 
   // Signal-based state management
   products = signal<Product[]>([]);
@@ -129,6 +131,81 @@ export class PosComponent implements OnInit, OnDestroy {
     this.loadCategories();
     this.setupSearch();
     this.setupVoiceCommands();
+    this.setupKeyboardShortcuts();
+  }
+
+  private setupKeyboardShortcuts(): void {
+    // F1 - Focus product search
+    this.keyboardShortcuts.register('F1', () => {
+      const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
+    });
+
+    // F2 - Focus customer search (in checkout modal)
+    this.keyboardShortcuts.register('F2', () => {
+      if (this.showCheckoutModal()) {
+        const customerInput = document.querySelector('input[type="tel"]') as HTMLInputElement;
+        if (customerInput) {
+          customerInput.focus();
+        }
+      }
+    });
+
+    // F3 - Apply discount (focus discount input in checkout modal)
+    this.keyboardShortcuts.register('F3', () => {
+      if (this.showCheckoutModal()) {
+        const discountInput = document.querySelector('input[placeholder*="discount"], input[placeholder*="Discount"]') as HTMLInputElement;
+        if (discountInput) {
+          discountInput.focus();
+        }
+      }
+    });
+
+    // F4 - Toggle payment method (cycle through payment methods)
+    this.keyboardShortcuts.register('F4', () => {
+      // This would need to be handled in checkout modal
+      // For now, just focus payment method section
+      if (this.showCheckoutModal()) {
+        const paymentSection = document.querySelector('.payment-methods');
+        if (paymentSection) {
+          (paymentSection as HTMLElement).focus();
+        }
+      }
+    });
+
+    // F5 - Complete sale
+    this.keyboardShortcuts.register('F5', () => {
+      if (this.showCheckoutModal() && this.cart().length > 0) {
+        // Trigger checkout - this would need to be exposed from checkout modal
+        const checkoutButton = document.querySelector('button:contains("Complete Sale")') as HTMLButtonElement;
+        if (checkoutButton && !checkoutButton.disabled) {
+          checkoutButton.click();
+        }
+      }
+    });
+
+    // Esc - Close modal or clear search
+    this.keyboardShortcuts.register('Escape', () => {
+      if (this.showCheckoutModal()) {
+        this.showCheckoutModal.set(false);
+      } else {
+        this.searchTerm.set('');
+      }
+    });
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    // Don't handle shortcuts when typing in inputs
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      return;
+    }
+
+    this.keyboardShortcuts.handleKeyDown(event);
   }
 
   ngOnDestroy(): void {

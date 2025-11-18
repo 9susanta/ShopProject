@@ -259,3 +259,78 @@
   }
 }
 
+/* Success State */
+.success-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.success-icon {
+  margin-bottom: 24px;
+}
+
+.success-check {
+  font-size: 80px;
+  width: 80px;
+  height: 80px;
+  color: #4caf50;
+}
+
+.success-state h2 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 32px;
+}
+
+.success-details {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.success-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.success-item span:first-of-type {
+  color: var(--gray-600);
+}
+
+.success-item strong {
+  color: var(--gray-900);
+  font-weight: 600;
+}
+
+.loyalty-points-earned {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+  border: 2px solid #ff9800;
+}
+
+.loyalty-points-earned mat-icon {
+  color: #ff9800;
+  margin-right: 8px;
+}
+
+.loyalty-points-earned .points-value {
+  color: #ff9800;
+  font-size: 18px;
+}
+
+.success-actions {
+  width: 100%;
+  max-width: 400px;
+}
+

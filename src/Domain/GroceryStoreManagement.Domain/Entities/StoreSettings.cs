@@ -64,5 +64,15 @@ public class StoreSettings : BaseEntity
         PointsPerHundredRupees = pointsPerHundredRupees;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void UpdateHomeDeliverySettings(bool isEnabled, decimal charges = 0)
+    {
+        if (charges < 0)
+            throw new ArgumentException("Home delivery charges cannot be negative", nameof(charges));
+
+        IsHomeDeliveryEnabled = isEnabled;
+        HomeDeliveryCharges = charges;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
 

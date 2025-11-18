@@ -8,10 +8,12 @@ namespace GroceryStoreManagement.Application.Queries.Sales;
 public class GetSalesQueryHandler : IRequestHandler<GetSalesQuery, SaleListResponseDto>
 {
     private readonly IRepository<Sale> _saleRepository;
+    private readonly IRepository<Offer> _offerRepository;
 
-    public GetSalesQueryHandler(IRepository<Sale> saleRepository)
+    public GetSalesQueryHandler(IRepository<Sale> saleRepository, IRepository<Offer> offerRepository)
     {
         _saleRepository = saleRepository;
+        _offerRepository = offerRepository;
     }
 
     public async Task<SaleListResponseDto> Handle(GetSalesQuery request, CancellationToken cancellationToken)
@@ -63,6 +65,18 @@ public class GetSalesQueryHandler : IRequestHandler<GetSalesQuery, SaleListRespo
             .Take(request.PageSize)
             .ToList();
 
+        // Load offers for all sale items
+        var offerIds = pagedSales
+            .SelectMany(s => s.Items.Where(i => i.OfferId.HasValue).Select(i => i.OfferId!.Value))
+            .Distinct()
+            .ToList();
+
+        var offers = offerIds.Any()
+            ? (await _offerRepository.FindAsync(o => offerIds.Contains(o.Id), cancellationToken)).ToList()
+            : new List<Offer>();
+
+        var offerLookup = offers.ToDictionary(o => o.Id);
+
         var saleDtos = pagedSales.Select(s => new SaleDto
         {
             Id = s.Id,
@@ -82,14 +96,21 @@ public class GetSalesQueryHandler : IRequestHandler<GetSalesQuery, SaleListRespo
             CardAmount = s.CardAmount,
             PayLaterAmount = s.PayLaterAmount,
             Notes = null, // Sale entity doesn't have Notes property
-            Items = s.Items.Select(i => new SaleItemDto
+            Items = s.Items.Select(i =>
             {
-                Id = i.Id,
-                ProductId = i.ProductId,
-                ProductName = i.Product?.Name ?? "Unknown",
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                TotalPrice = i.TotalPrice
+                var offer = i.OfferId.HasValue ? offerLookup.GetValueOrDefault(i.OfferId.Value) : null;
+                return new SaleItemDto
+                {
+                    Id = i.Id,
+                    ProductId = i.ProductId,
+                    ProductName = i.Product?.Name ?? "Unknown",
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice,
+                    TotalPrice = i.TotalPrice,
+                    DiscountAmount = i.DiscountAmount > 0 ? i.DiscountAmount : null,
+                    OfferId = i.OfferId,
+                    OfferName = offer?.Name
+                };
             }).ToList()
         }).ToList();
 

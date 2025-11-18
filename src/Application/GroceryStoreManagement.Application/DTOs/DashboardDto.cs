@@ -18,6 +18,10 @@ public class FastMovingProductDto
     public string ProductName { get; set; } = string.Empty;
     public string SKU { get; set; } = string.Empty;
     public int QuantitySold { get; set; }
+    public int TotalQuantitySold { get; set; } // Alias for QuantitySold for backward compatibility
     public decimal Revenue { get; set; }
+    public decimal TotalRevenue { get; set; } // Alias for Revenue for backward compatibility
+    public int NumberOfSales { get; set; }
+    public decimal AverageSalePrice { get; set; }
 }
 

@@ -65,6 +65,22 @@ export const adminRoutes: Routes = [
           import('../audit/audit.routes').then(m => m.auditRoutes),
       },
       {
+        path: 'accounting',
+        loadChildren: () =>
+          import('../accounting/accounting.routes').then(m => m.accountingRoutes),
+      },
+      {
+        path: 'offers',
+        loadChildren: () =>
+          import('./offers/offers.routes').then(m => m.offerRoutes),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('../profile/profile.component').then(m => m.ProfileComponent),
+        canActivate: [AdminGuard],
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',

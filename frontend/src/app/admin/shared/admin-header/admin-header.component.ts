@@ -37,8 +37,11 @@ export class AdminHeaderComponent implements OnDestroy {
     { label: 'Imports', route: '/admin/imports', icon: 'upload' },
     { label: 'Products', route: '/admin/products', icon: 'inventory_2' },
     { label: 'Inventory', route: '/admin/inventory', icon: 'warehouse' },
+    { label: 'Purchasing', route: '/admin/purchasing', icon: 'shopping_cart' },
     { label: 'Sales', route: '/admin/sales', icon: 'point_of_sale' },
     { label: 'Customers', route: '/admin/customers', icon: 'people' },
+    { label: 'Offers', route: '/admin/offers', icon: 'local_offer' },
+    { label: 'Accounting', route: '/admin/accounting', icon: 'account_balance' },
     { label: 'Reports', route: '/admin/reports', icon: 'assessment' },
     { label: 'Settings', route: '/admin/settings', icon: 'settings' },
   ]);
@@ -126,8 +129,7 @@ export class AdminHeaderComponent implements OnDestroy {
 
   navigateToProfile(): void {
     this.closeProfileMenu();
-    // TODO: Navigate to profile page when created
-    // this.router.navigate(['/admin/profile']);
+    this.router.navigate(['/admin/profile']);
   }
 }
 

@@ -6,6 +6,7 @@ using GroceryStoreManagement.Domain.Events;
 using GroceryStoreManagement.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using InventoryEntity = GroceryStoreManagement.Domain.Entities.Inventory;
+using StoreSettingsEntity = GroceryStoreManagement.Domain.Entities.StoreSettings;
 
 namespace GroceryStoreManagement.Application.Commands.Sales;
 
@@ -16,7 +17,9 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
     private readonly IRepository<Product> _productRepository;
     private readonly IRepository<InventoryEntity> _inventoryRepository;
     private readonly IRepository<Offer> _offerRepository;
-    private readonly IRepository<StoreSettings> _storeSettingsRepository;
+    private readonly IRepository<StoreSettingsEntity> _storeSettingsRepository;
+    private readonly IRepository<PayLaterLedger> _payLaterLedgerRepository;
+    private readonly IRepository<CustomerSavedItem> _customerSavedItemRepository;
     private readonly IMediator _mediator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cacheService;
@@ -28,7 +31,9 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
         IRepository<Product> productRepository,
         IRepository<InventoryEntity> inventoryRepository,
         IRepository<Offer> offerRepository,
-        IRepository<StoreSettings> storeSettingsRepository,
+        IRepository<StoreSettingsEntity> storeSettingsRepository,
+        IRepository<PayLaterLedger> payLaterLedgerRepository,
+        IRepository<CustomerSavedItem> customerSavedItemRepository,
         IMediator mediator,
         IUnitOfWork unitOfWork,
         ICacheService cacheService,
@@ -40,6 +45,8 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
         _inventoryRepository = inventoryRepository;
         _offerRepository = offerRepository;
         _storeSettingsRepository = storeSettingsRepository;
+        _payLaterLedgerRepository = payLaterLedgerRepository;
+        _customerSavedItemRepository = customerSavedItemRepository;
         _mediator = mediator;
         _unitOfWork = unitOfWork;
         _cacheService = cacheService;
@@ -134,15 +141,33 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
                 var cgstRate = totalGSTRate / 2; // CGST is half of total GST
                 var sgstRate = totalGSTRate / 2; // SGST is half of total GST
 
-                // Check for applicable offers
+                // Check for applicable offers (product/category specific or coupon code)
                 decimal discountAmount = 0;
                 Guid? offerId = null;
-                var allOffers = await _offerRepository.GetAllAsync(cancellationToken);
-                var offers = allOffers.Where(o => 
-                    (o.ProductId == product.Id || o.CategoryId == product.CategoryId) && 
-                    o.IsValid()).ToList();
+                var allOffersList = await _offerRepository.GetAllAsync(cancellationToken);
+                
+                // First check for coupon code offers
+                Offer? applicableOffer = null;
+                if (!string.IsNullOrWhiteSpace(request.CouponCode))
+                {
+                    applicableOffer = allOffersList.FirstOrDefault(o => 
+                        o.CouponCode != null && 
+                        o.CouponCode.Equals(request.CouponCode, StringComparison.OrdinalIgnoreCase) &&
+                        (o.ProductId == product.Id || o.CategoryId == product.CategoryId || (o.ProductId == null && o.CategoryId == null)) &&
+                        o.IsValid());
+                }
+                
+                // If no coupon offer, check for auto-apply offers
+                if (applicableOffer == null)
+                {
+                    var autoApplyOffers = allOffersList.Where(o => 
+                        (o.ProductId == product.Id || o.CategoryId == product.CategoryId) && 
+                        o.IsValid() &&
+                        string.IsNullOrWhiteSpace(o.CouponCode)).ToList(); // Auto-apply offers don't have coupon codes
 
-                var applicableOffer = offers.FirstOrDefault();
+                    applicableOffer = autoApplyOffers.FirstOrDefault();
+                }
+                
                 if (applicableOffer != null)
                 {
                     var itemTotal = itemRequest.Quantity * unitPrice;
@@ -230,10 +255,12 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
             await _mediator.Publish(saleCompletedEvent, cancellationToken);
 
             // Raise loyalty points event if customer exists
+            int? pointsEarnedForSale = null;
             if (customer != null && sale.TotalAmount > 0)
             {
                 var pointsPerHundred = storeSettings?.PointsPerHundredRupees ?? 1;
                 var pointsEarned = (int)(sale.TotalAmount / 100) * pointsPerHundred;
+                pointsEarnedForSale = pointsEarned;
                 
                 if (pointsEarned > 0)
                 {
@@ -250,10 +277,21 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
                 }
             }
 
-            // Raise pay later event if used
+            // Handle pay later if used
             if (request.PayLaterAmount > 0 && customer != null)
             {
                 customer.AddPayLaterBalance(request.PayLaterAmount);
+                
+                // Create pay later ledger entry
+                var ledgerEntry = new PayLaterLedger(
+                    customer.Id,
+                    "Sale",
+                    request.PayLaterAmount,
+                    customer.PayLaterBalance,
+                    sale.Id,
+                    $"Sale: {sale.InvoiceNumber}");
+                await _payLaterLedgerRepository.AddAsync(ledgerEntry, cancellationToken);
+                
                 var payLaterEvent = new PayLaterUsedEvent(
                     customer.Id,
                     customer.Phone,
@@ -263,6 +301,27 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
                     customer.PayLaterBalance);
 
                 await _mediator.Publish(payLaterEvent, cancellationToken);
+            }
+
+            // Track customer saved items (frequently purchased)
+            if (customer != null)
+            {
+                foreach (var item in sale.Items)
+                {
+                    var existingSavedItem = (await _customerSavedItemRepository.GetAllAsync(cancellationToken))
+                        .FirstOrDefault(si => si.CustomerId == customer.Id && si.ProductId == item.ProductId);
+                    
+                    if (existingSavedItem != null)
+                    {
+                        existingSavedItem.IncrementPurchaseCount();
+                    }
+                    else
+                    {
+                        var savedItem = new CustomerSavedItem(customer.Id, item.ProductId);
+                        savedItem.IncrementPurchaseCount();
+                        await _customerSavedItemRepository.AddAsync(savedItem, cancellationToken);
+                    }
+                }
             }
 
             // Invalidate customer cache if customer exists
@@ -279,6 +338,13 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
             }
 
             _logger.LogInformation("POS sale created successfully: {SaleId}, Invoice: {InvoiceNumber}", sale.Id, sale.InvoiceNumber);
+
+            // Load offers for sale items
+            var offerIds = sale.Items.Where(i => i.OfferId.HasValue).Select(i => i.OfferId!.Value).Distinct().ToList();
+            var appliedOffers = offerIds.Any()
+                ? (await _offerRepository.FindAsync(o => offerIds.Contains(o.Id), cancellationToken)).ToList()
+                : new List<Offer>();
+            var offerLookup = appliedOffers.ToDictionary(o => o.Id);
 
             return new SaleDto
             {
@@ -299,13 +365,23 @@ public class CreatePOSSaleCommandHandler : IRequestHandler<CreatePOSSaleCommand,
                 CardAmount = sale.CardAmount,
                 PayLaterAmount = sale.PayLaterAmount,
                 Notes = null,
-                Items = sale.Items.Select(i => new SaleItemDto
+                LoyaltyPointsEarned = pointsEarnedForSale,
+                LoyaltyPointsRedeemed = request.LoyaltyPointsToRedeem > 0 ? (int)request.LoyaltyPointsToRedeem : null,
+                Items = sale.Items.Select(i =>
                 {
-                    Id = i.Id,
-                    ProductId = i.ProductId,
-                    Quantity = i.Quantity,
-                    UnitPrice = i.UnitPrice,
-                    TotalPrice = i.TotalPrice
+                    var offer = i.OfferId.HasValue ? offerLookup.GetValueOrDefault(i.OfferId.Value) : null;
+                    return new SaleItemDto
+                    {
+                        Id = i.Id,
+                        ProductId = i.ProductId,
+                        ProductName = i.Product?.Name ?? "Unknown",
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPrice,
+                        TotalPrice = i.TotalPrice,
+                        DiscountAmount = i.DiscountAmount > 0 ? i.DiscountAmount : null,
+                        OfferId = i.OfferId,
+                        OfferName = offer?.Name
+                    };
                 }).ToList()
             };
         }

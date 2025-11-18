@@ -7,6 +7,12 @@ public class DailySalesReportDto
     public decimal TotalRevenue { get; set; }
     public decimal TotalTax { get; set; }
     public decimal TotalDiscount { get; set; }
+    public decimal TotalCash { get; set; }
+    public decimal TotalUPI { get; set; }
+    public decimal TotalCard { get; set; }
+    public decimal TotalPayLater { get; set; }
+    public int TotalCustomers { get; set; }
+    public List<SaleDto> Sales { get; set; } = new();
 }
 
 public class InventorySummaryDto

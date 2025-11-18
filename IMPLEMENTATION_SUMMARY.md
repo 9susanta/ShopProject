@@ -1,156 +1,156 @@
-# Inventory & Purchasing Domain Implementation Summary
+# Feature Implementation Summary
 
 ## Overview
-This document summarizes the complete implementation of the Inventory & Purchasing domain for the Grocery Store Management System.
+This document provides a comprehensive summary of the new features to be implemented. Given the scope, implementation will be done in phases.
 
-## Domain Layer (Completed)
+## Current Status
 
-### Entities Created:
-1. **InventoryBatch** - Tracks batches with expiry dates, costs, and FIFO/LIFO support
-2. **GoodsReceiveNote (GRN)** - Represents receipt of goods from supplier
-3. **GRNItem** - Items in a GRN
-4. **InventoryAudit** - Audit log for inventory changes
-5. **SupplierReturn** - Return of goods to supplier
-6. **SupplierReturnItem** - Items in supplier return
+### ✅ Backend Domain Entities (Already Exist)
+- `Customer` - Has loyalty points, pay later balance/limit
+- `Sale` - Supports split payments, discounts, loyalty redemption
+- `Offer` - Supports various discount types
+- `LoyaltyTransaction` - Tracks loyalty point transactions
+- `PayLaterLedger` - Tracks pay later transactions
+- `LedgerEntry` - For accounting entries
 
-### Enums Created:
-1. **GRNStatus** - Draft, Confirmed, Cancelled, Voided
-2. **InventoryAdjustmentType** - Purchase, Sale, Manual, Damage, Expiry, SupplierReturn, CustomerReturn, StockTake, Transfer
+### ✅ Created
+- `CustomerSavedItem` entity (for frequently purchased items)
+- `CustomerSavedItemConfiguration` (EF Core configuration)
 
-### Events Created:
-1. **GRNConfirmedEvent** - Raised when GRN is confirmed
-2. **SupplierReturnEvent** - Raised when goods are returned to supplier
+### ⚠️ Needs Implementation
 
-### Updated Entities:
-1. **PurchaseOrder** - Added `Approve()` method, updated status enum to include Approved
+## Phase 1: Customer Profile System (IN PROGRESS)
 
-## Application Layer (In Progress)
+### Backend Tasks:
+1. ✅ Create `CustomerSavedItem` entity
+2. ⏳ Update `CustomerDto` to include:
+   - LoyaltyPoints
+   - PayLaterBalance
+   - PayLaterLimit
+   - IsPayLaterEnabled
+   - PreferredPaymentMethod
+3. ⏳ Create Queries:
+   - `GetCustomerPurchaseHistoryQuery` - Get purchase history with pagination
+   - `GetCustomerPayLaterLedgerQuery` - Get pay later ledger entries
+   - `GetCustomerSavedItemsQuery` - Get saved/frequently purchased items
+4. ⏳ Create Commands:
+   - `AddCustomerSavedItemCommand` - Add product to saved items
+   - `UpdateCustomerPayLaterSettingsCommand` - Enable/disable pay later, set limit
+5. ⏳ Add endpoints to `CustomersController`:
+   - `GET /api/customers/{id}/purchase-history`
+   - `GET /api/customers/{id}/pay-later-ledger`
+   - `GET /api/customers/{id}/saved-items`
+   - `POST /api/customers/{id}/saved-items`
+   - `PUT /api/customers/{id}/pay-later-settings`
 
-### Commands Created:
-1. **ApprovePurchaseOrderCommand** - Approve a pending PO
-2. **CancelPurchaseOrderCommand** - Cancel a PO
-3. **UpdatePurchaseOrderCommand** - Update PO details
-4. **CreateGRNCommand** - Create a new GRN (from PO or ad-hoc)
-5. **ConfirmGRNCommand** - Confirm GRN and update stock (idempotent)
+### Frontend Tasks:
+1. ⏳ Update `Customer` model to include new fields
+2. ⏳ Enhance `CustomerService` with new methods
+3. ⏳ Enhance `CustomerDetailsComponent` to show:
+   - Purchase history table
+   - Pay later ledger
+   - Saved items list
+   - Loyalty points display
 
-### Queries Created:
-1. **GetPurchaseOrdersQuery** - Paginated list with filters
-2. **GetGRNsQuery** - Paginated list with filters
-3. **GetLowStockQuery** - List products below threshold
-4. **GetExpirySoonQuery** - List batches expiring soon
+## Phase 2: Assisted POS Enhancements
 
-### Event Handlers Created:
-1. **UpdateStockOnGRNConfirmedHandler** - Creates batches, updates inventory, creates audit logs
+### Backend Tasks:
+1. ⏳ Enhance `CreateSaleCommand` to support:
+   - Customer identification by phone or "Guest"
+   - Discount override validation
+   - Manual price override (with permission check)
+   - Split payment validation
+   - Offer auto-application
+2. ⏳ Create `OfferService` to auto-apply offers
+3. ⏳ Add permission check for price override
 
-### DTOs Created:
-1. **GRNDto** - GRN data transfer object
-2. **GRNItemDto** - GRN item DTO
-3. **LowStockProductDto** - Low stock product info
-4. **ExpirySoonBatchDto** - Expiring batch info
+### Frontend Tasks:
+1. ⏳ Enhance POS component:
+   - Customer search by phone
+   - "Guest" option
+   - Discount override input
+   - Manual price override (with permission)
+   - Split payment UI
+   - Keyboard shortcuts
+2. ⏳ Enhance CheckoutModalComponent:
+   - Split payment inputs
+   - Customer info display
+   - Offer/coupon input
+   - Discount override
 
-## Infrastructure Layer (In Progress)
+## Phase 3: Loyalty Program
 
-### Services Created:
-1. **FileStorageService** - Local file storage for invoices
-2. **UnitConversionService** - Unit conversion (kg↔g, L↔ml, etc.)
+### Backend Tasks:
+1. ⏳ Create `LoyaltyService`:
+   - Calculate points: ₹100 = 1 point
+   - Redeem points (1 point = ₹1)
+   - Get available points
+2. ⏳ Enhance sale creation to:
+   - Calculate and award points
+   - Handle redemption
+   - Create transactions
 
-### Services Needed:
-1. **NotificationService** - SignalR notifications + SMS/WhatsApp stub
-2. **CacheService** - Already exists, needs enhancement
-3. **ExpiryScannerService** - Background job for expiry scanning
-4. **OutboxPublisher** - Background job for outbox events
+### Frontend Tasks:
+1. ⏳ Display loyalty points at checkout
+2. ⏳ Add redemption input
+3. ⏳ Show points earned after sale
 
-## API Layer (To Be Created)
+## Phase 4: Pay Later System
 
-### Controllers Needed:
-1. **PurchasingController** - PO endpoints
-2. **GRNController** - GRN endpoints
-3. **InventoryController** - Inventory endpoints
-4. **MasterController** - Supplier endpoints
-5. **FilesController** - File serving
+### Backend Tasks:
+1. ⏳ Create `PayLaterService`:
+   - Validate eligibility
+   - Check limits
+   - Create ledger entries
+2. ⏳ Create APIs for payments and balance
 
-### Endpoints Required:
-- POST /api/purchasing/purchase-orders
-- PUT /api/purchasing/purchase-orders/{id}
-- GET /api/purchasing/purchase-orders
-- GET /api/purchasing/purchase-orders/{id}
-- POST /api/purchasing/purchase-orders/{id}/approve
-- POST /api/purchasing/purchase-orders/{id}/cancel
-- POST /api/purchasing/grn/upload-invoice
-- POST /api/purchasing/grn
-- GET /api/purchasing/grn/{id}
-- GET /api/purchasing/grn
-- POST /api/purchasing/grn/{id}/confirm
-- POST /api/purchasing/grn/{id}/cancel
-- POST /api/purchasing/grn/{id}/return-to-supplier
-- GET /api/inventory/products
-- GET /api/inventory/product/{id}
-- POST /api/inventory/adjustment
-- GET /api/inventory/low-stock
-- GET /api/inventory/expiry-soon
-- GET /api/inventory/valuation
-- GET /api/master/suppliers
-- POST /api/master/suppliers
-- GET /api/master/suppliers/{id}
+### Frontend Tasks:
+1. ⏳ Add pay later option in checkout
+2. ⏳ Show balance and limit
+3. ⏳ Payment receipt UI
 
-## EF Core Configurations (To Be Created)
+## Phase 5: Offers & Discounts
 
-Need configurations for:
-1. InventoryBatch
-2. GoodsReceiveNote
-3. GRNItem
-4. InventoryAudit
-5. SupplierReturn
-6. SupplierReturnItem
+### Backend Tasks:
+1. ⏳ Create `OfferService`:
+   - Auto-apply valid offers
+   - Validate coupon codes
+   - Calculate discounts
+2. ⏳ Create APIs for offers
 
-## Background Services (To Be Created)
+### Frontend Tasks:
+1. ⏳ Auto-apply offers at POS
+2. ⏳ Coupon code input
+3. ⏳ Show applied offers
 
-1. **ExpiryScannerService** - Scans batches daily, raises ExpirySoonEvent
-2. **OutboxPublisher** - Publishes outbox events to event bus
+## Phase 6: Accounting Module
 
-## SignalR Hub (To Be Created)
+### Backend Tasks:
+1. ⏳ Create `AccountingService`:
+   - Purchase ledger
+   - Sales ledger
+   - Pay later ledger
+   - GST calculations
+   - Daily summary
+2. ⏳ Create APIs for all ledger types
 
-1. **InventoryHub** - Emits LowStock and GRNCompleted notifications
-
-## Tests (To Be Created)
-
-1. Unit tests for ConfirmGRNCommandHandler
-2. Unit tests for UpdateStockOnGRNConfirmedHandler
-3. Integration test skeleton for PO→GRN flow
+### Frontend Tasks:
+1. ⏳ Create AccountingDashboardComponent
+2. ⏳ Ledger views
+3. ⏳ Daily summary UI
+4. ⏳ GST report UI
 
 ## Next Steps
 
-1. Complete API Controllers
-2. Create EF Core configurations and migrations
-3. Implement NotificationService with SignalR
-4. Create background services
-5. Add unit and integration tests
-6. Update seed data
-7. Create comprehensive README
+1. Complete Phase 1 backend (Customer Profile System)
+2. Complete Phase 1 frontend
+3. Move to Phase 2 (POS Enhancements)
+4. Continue with remaining phases
 
-## Key Features Implemented
+## Notes
 
-✅ Purchase Order lifecycle (create, update, approve, cancel)
-✅ GRN creation and confirmation
-✅ Inventory batch tracking with expiry
-✅ Stock updates on GRN confirmation
-✅ Low stock detection
-✅ Expiry tracking
-✅ Audit logging
-✅ Idempotency for GRN processing
-✅ File storage service
-✅ Unit conversion service
-
-## Features Pending
-
-⏳ Supplier return adjustments
-⏳ Supplier credit/outstanding tracking
-⏳ Purchase invoice upload endpoint
-⏳ Stock valuation endpoints
-⏳ Outbox pattern implementation
-⏳ SignalR notifications
-⏳ Background jobs
-⏳ Caching enhancements
-⏳ API controllers
-⏳ Tests
-
+- All implementations should follow Clean Architecture
+- Use CQRS pattern (Queries/Commands)
+- Add proper validation and error handling
+- Maintain backward compatibility
+- Add unit tests for business logic

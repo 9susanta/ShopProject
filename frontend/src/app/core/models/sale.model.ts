@@ -21,6 +21,8 @@ export interface SaleItem {
   totalPrice: number;
   discountAmount?: number;
   gstAmount?: number;
+  offerId?: string;
+  offerName?: string;
 }
 
 export interface Sale {
@@ -43,6 +45,8 @@ export interface Sale {
   payLaterAmount?: number;
   paymentReference?: string;
   notes?: string;
+  loyaltyPointsEarned?: number;
+  loyaltyPointsRedeemed?: number;
 }
 
 export interface CreateSaleRequest {
@@ -56,6 +60,8 @@ export interface CreateSaleRequest {
   cardAmount?: number;
   payLaterAmount?: number;
   paymentReference?: string;
+  loyaltyPointsRedeemed?: number;
+  couponCode?: string;
   notes?: string;
 }
 
