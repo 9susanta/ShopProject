@@ -107,12 +107,23 @@ export class OfferListComponent implements OnInit {
 
   loadOffers(): void {
     this.loading.set(true);
-    this.offerService.getOffers({
-      isActive: this.isActiveFilter(),
-      isValid: this.isValidFilter(),
-      categoryId: this.categoryFilter() || undefined,
-      productId: this.productFilter() || undefined,
-    }).subscribe({
+    
+    // Build filters object, excluding undefined values
+    const filters: any = {};
+    if (this.isActiveFilter() !== undefined) {
+      filters.isActive = this.isActiveFilter();
+    }
+    if (this.isValidFilter() !== undefined) {
+      filters.isValid = this.isValidFilter();
+    }
+    if (this.categoryFilter() && this.categoryFilter() !== '') {
+      filters.categoryId = this.categoryFilter();
+    }
+    if (this.productFilter() && this.productFilter() !== '') {
+      filters.productId = this.productFilter();
+    }
+    
+    this.offerService.getOffers(Object.keys(filters).length > 0 ? filters : undefined).subscribe({
       next: (offers) => {
         this.offers.set(offers);
         this.loading.set(false);

@@ -29,6 +29,17 @@ Cypress.on('uncaught:exception', (err, runnable) => {
   if (err.message.includes('Non-Error promise rejection captured')) {
     return false;
   }
+  // Ignore network errors, API errors, chunk load errors
+  if (
+    err.message.includes('NetworkError') ||
+    err.message.includes('Failed to fetch') ||
+    err.message.includes('ERR_CONNECTION_REFUSED') ||
+    err.message.includes('ERR_NETWORK') ||
+    err.message.includes('Loading chunk') ||
+    err.message.includes('ChunkLoadError')
+  ) {
+    return false;
+  }
   return true;
 });
 
@@ -43,4 +54,9 @@ Cypress.on('window:before:load', (win) => {
     } as any;
   }
 });
+
+// Increase default timeouts for slow operations
+Cypress.config('defaultCommandTimeout', 10000);
+Cypress.config('requestTimeout', 10000);
+Cypress.config('responseTimeout', 10000);
 

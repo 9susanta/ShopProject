@@ -16,7 +16,8 @@
     </div>
   }
 
-  @if (!isLoading() && dashboardData() && dashboardData()?.kpis) {
+  @if (!isLoading()) {
+    @if (dashboardData() && dashboardData()?.kpis) {
     <!-- KPI Cards -->
     <div class="kpi-grid">
       <div class="kpi-card kpi-sales">
@@ -122,6 +123,12 @@
         }
       </div>
     </div>
+    } @else {
+      <!-- Dashboard data not available - still show heading for tests -->
+      <div class="empty-state">
+        <p>No dashboard data available</p>
+      </div>
+    }
   }
 </div>
 

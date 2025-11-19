@@ -206,7 +206,7 @@ export class SupplierFormComponent implements OnInit {
       this.supplierService.updateSupplier(request).subscribe({
         next: (supplier) => {
           this.toastService.success('Supplier updated successfully');
-          this.router.navigate(['/admin/suppliers', supplier.id]);
+          this.router.navigate(['/admin/suppliers']);
         },
         error: (error) => {
           console.error('Error updating supplier:', error);
@@ -227,7 +227,7 @@ export class SupplierFormComponent implements OnInit {
       this.supplierService.createSupplier(request).subscribe({
         next: (supplier) => {
           this.toastService.success('Supplier created successfully');
-          this.router.navigate(['/admin/suppliers', supplier.id]);
+          this.router.navigate(['/admin/suppliers']);
         },
         error: (error) => {
           console.error('Error creating supplier:', error);

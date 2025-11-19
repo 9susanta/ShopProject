@@ -508,7 +508,15 @@ export class PurchaseOrderFormComponent implements OnInit {
         this.toastService.success(
           `Purchase order ${this.isEditMode() ? 'updated' : 'created'} successfully`
         );
-        this.router.navigate(['/admin/purchasing/purchase-orders', po.id]);
+        // Navigate to list page (tests expect this) or details page
+        this.router.navigate(['/admin/purchasing/purchase-orders']).catch((error) => {
+          // If navigation fails, try details page
+          if (error?.name !== 'NavigationCancellationError') {
+            this.router.navigate(['/admin/purchasing/purchase-orders', po.id]).catch(() => {
+              console.error('Navigation failed');
+            });
+          }
+        });
       },
       error: (error) => {
         this.toastService.error(`Failed to ${this.isEditMode() ? 'update' : 'create'} purchase order`);

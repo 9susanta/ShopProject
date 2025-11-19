@@ -8,6 +8,7 @@ export interface Product {
   gstRate: number;
   categoryId: string;
   categoryName?: string;
+  taxSlabId?: string; // Optional - tax slab ID
   supplierId?: string;
   supplierName?: string;
   unitId: string;

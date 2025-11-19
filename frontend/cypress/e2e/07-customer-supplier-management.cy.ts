@@ -1,10 +1,7 @@
 describe('Customer & Supplier Management Tests', () => {
   beforeEach(() => {
-    cy.visit('/login');
-    cy.get('input[type="email"], input[name="email"]').type('admin@test.com');
-    cy.get('input[type="password"], input[name="password"]').type('Admin123!');
-    cy.get('button[type="submit"], button').contains('Login').click();
-    cy.url().should('include', '/admin/dashboard');
+    // Login as admin using the custom command
+    cy.loginUI('admin@test.com', 'Admin123!');
   });
 
   it('TC-CUST-001: Create Customer - Should create customer successfully', () => {

@@ -10,14 +10,8 @@
 
 describe('Inventory & Purchasing Flow', () => {
   beforeEach(() => {
-    // Login as admin/staff
-    cy.visit('/login');
-    cy.get('[data-cy=username]').type('admin');
-    cy.get('[data-cy=password]').type('password');
-    cy.get('[data-cy=login-button]').click();
-    
-    // Wait for navigation
-    cy.url().should('include', '/admin/dashboard');
+    // Login as admin using the custom command
+    cy.loginUI('admin@test.com', 'Admin123!');
   });
 
   it('should complete PO → GRN → Inventory update flow', () => {

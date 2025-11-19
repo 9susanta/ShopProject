@@ -6,11 +6,31 @@ import { ProductService } from '../services/product.service';
 import { Product, ProductCreateRequest } from '@core/models/product.model';
 import { ToastService } from '@core/toast/toast.service';
 import { BarcodeScannerService } from '@core/services/barcode-scanner.service';
+import { MasterDataService } from '@core/services/master-data.service';
+import { CategoryDto } from '@core/models/category.model';
+import { TaxSlabDto } from '@core/models/taxslab.model';
+import { UnitDto } from '@core/models/unit.model';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'grocery-product-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './product-form.component.html',
   styleUrls: ['./product-form.component.css'],
 })
@@ -21,6 +41,7 @@ export class ProductFormComponent implements OnInit {
   private productService = inject(ProductService);
   private toastService = inject(ToastService);
   private barcodeScanner = inject(BarcodeScannerService);
+  private masterDataService = inject(MasterDataService);
 
   productForm: FormGroup;
   isEditMode = signal(false);
@@ -28,6 +49,10 @@ export class ProductFormComponent implements OnInit {
   isSubmitting = signal(false);
   selectedImage = signal<File | null>(null);
   imagePreview = signal<string | null>(null);
+  categories = signal<CategoryDto[]>([]);
+  taxSlabs = signal<TaxSlabDto[]>([]);
+  units = signal<UnitDto[]>([]);
+  isLoading = signal(false);
 
   constructor() {
     this.productForm = this.fb.group({
@@ -36,7 +61,7 @@ export class ProductFormComponent implements OnInit {
       barcode: [''],
       mrp: [0, [Validators.required, Validators.min(0)]],
       salePrice: [0, [Validators.required, Validators.min(0)]],
-      gstRate: [0, [Validators.min(0), Validators.max(100)]],
+      taxSlabId: [''], // Added taxSlabId field
       categoryId: ['', [Validators.required]],
       supplierId: [''],
       unitId: ['', [Validators.required]],
@@ -47,6 +72,8 @@ export class ProductFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadMasterData();
+    
     const id = this.route.snapshot.paramMap.get('id');
     if (id && id !== 'new') {
       this.isEditMode.set(true);
@@ -61,6 +88,57 @@ export class ProductFormComponent implements OnInit {
         this.lookupProductByBarcode(barcode);
       }
     });
+
+    // Watch for category changes to auto-fill taxSlabId
+    this.productForm.get('categoryId')?.valueChanges.subscribe(categoryId => {
+      if (categoryId) {
+        this.onCategoryChange(categoryId);
+      }
+    });
+  }
+
+  private loadMasterData(): void {
+    this.isLoading.set(true);
+    
+    this.masterDataService.getCategories().subscribe({
+      next: categories => {
+        this.categories.set(categories);
+      },
+      error: error => {
+        console.error('Error loading categories:', error);
+        this.toastService.error('Failed to load categories');
+      },
+    });
+
+    this.masterDataService.getTaxSlabs().subscribe({
+      next: taxSlabs => {
+        this.taxSlabs.set(taxSlabs);
+      },
+      error: error => {
+        console.error('Error loading tax slabs:', error);
+        this.toastService.error('Failed to load tax slabs');
+      },
+    });
+
+    this.masterDataService.getUnits().subscribe({
+      next: units => {
+        this.units.set(units);
+        this.isLoading.set(false);
+      },
+      error: error => {
+        console.error('Error loading units:', error);
+        this.toastService.error('Failed to load units');
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  private onCategoryChange(categoryId: string): void {
+    const category = this.categories().find(c => c.id === categoryId);
+    if (category?.taxSlab) {
+      // Auto-fill taxSlabId from category
+      this.productForm.patchValue({ taxSlabId: category.taxSlab.id }, { emitEvent: false });
+    }
   }
 
   loadProduct(id: string): void {
@@ -72,7 +150,7 @@ export class ProductFormComponent implements OnInit {
           barcode: product.barcode || '',
           mrp: product.mrp,
           salePrice: product.salePrice,
-          gstRate: product.gstRate,
+          taxSlabId: product.taxSlabId || '',
           categoryId: product.categoryId,
           supplierId: product.supplierId || '',
           unitId: product.unitId,
@@ -82,6 +160,10 @@ export class ProductFormComponent implements OnInit {
         });
         if (product.imageUrl) {
           this.imagePreview.set(product.imageUrl);
+        }
+        // Auto-fill taxSlabId from category if not set
+        if (product.categoryId && !product.taxSlabId) {
+          this.onCategoryChange(product.categoryId);
         }
       },
       error: (error) => {
@@ -129,7 +211,16 @@ export class ProductFormComponent implements OnInit {
 
     const formValue = this.productForm.value;
     const productData: ProductCreateRequest = {
-      ...formValue,
+      name: formValue.name.trim(),
+      sku: formValue.sku.trim(),
+      barcode: formValue.barcode?.trim() || undefined,
+      categoryId: formValue.categoryId,
+      taxSlabId: formValue.taxSlabId || undefined,
+      unitId: formValue.unitId,
+      mrp: parseFloat(formValue.mrp),
+      salePrice: parseFloat(formValue.salePrice),
+      description: formValue.description?.trim() || undefined,
+      lowStockThreshold: parseInt(formValue.lowStockThreshold, 10),
       image: this.selectedImage() || undefined,
     };
 

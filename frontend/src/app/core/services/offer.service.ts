@@ -15,8 +15,19 @@ export class OfferService {
     productId?: string;
     categoryId?: string;
   }): Observable<Offer[]> {
+    // Clean filters - remove undefined/null/empty values before passing to API
+    const cleanFilters: any = {};
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        const value = (filters as any)[key];
+        if (value !== undefined && value !== null && value !== '') {
+          cleanFilters[key] = value;
+        }
+      });
+    }
+    
     return this.api.get<Offer[]>('offers', {
-      params: filters,
+      params: Object.keys(cleanFilters).length > 0 ? cleanFilters : undefined,
       cache: true,
       cacheTTL: 30000,
     });

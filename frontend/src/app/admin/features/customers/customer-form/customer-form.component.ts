@@ -218,7 +218,7 @@ export class CustomerFormComponent implements OnInit {
       this.customerService.updateCustomer(request).subscribe({
         next: (customer) => {
           this.toastService.success('Customer updated successfully');
-          this.router.navigate(['/admin/customers', customer.id]);
+          this.router.navigate(['/admin/customers']);
         },
         error: (error) => {
           console.error('Error updating customer:', error);
@@ -240,7 +240,7 @@ export class CustomerFormComponent implements OnInit {
       this.customerService.createCustomer(request).subscribe({
         next: (customer) => {
           this.toastService.success('Customer created successfully');
-          this.router.navigate(['/admin/customers', customer.id]);
+          this.router.navigate(['/admin/customers']);
         },
         error: (error) => {
           console.error('Error creating customer:', error);

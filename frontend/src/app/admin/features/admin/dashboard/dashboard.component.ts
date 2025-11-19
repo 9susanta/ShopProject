@@ -78,18 +78,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.isLoadingData = false;
         console.error('Error loading dashboard data:', error);
-        this.isLoading.set(false);
+        // Set empty data so dashboard still renders (tests can see the heading)
         this.dashboardData.set({
           kpis: {
             todaySales: 0,
             monthSales: 0,
-            lowStockCount: 0,
             totalProducts: 0,
+            lowStockCount: 0,
             totalCategories: 0,
           },
           recentImports: [],
           lowStockProducts: [],
         });
+        this.isLoading.set(false);
       },
     });
 

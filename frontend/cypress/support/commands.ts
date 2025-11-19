@@ -39,11 +39,29 @@ declare global {
 }
 
 Cypress.Commands.add('loginUI', (email: string, password: string) => {
-  cy.visit('/login');
-  cy.get('input[type="email"], input[name="email"]').type(email);
-  cy.get('input[type="password"], input[name="password"]').type(password);
-  cy.get('button[type="submit"], button').contains('Login').click();
-  cy.url().should('include', '/admin/dashboard');
+  cy.visit('/login', { timeout: 30000 });
+  
+  // Wait for login form to be ready
+  cy.get('#email', { timeout: 10000 }).should('be.visible').clear().type(email);
+  cy.get('#password', { timeout: 10000 }).should('be.visible').clear().type(password);
+  
+  // Click login button - wait for it to be enabled
+  cy.get('button.login-button, button[type="submit"]', { timeout: 5000 })
+    .should('be.visible')
+    .should('not.be.disabled')
+    .contains('Login')
+    .click();
+  
+  // Wait for navigation to dashboard
+  cy.url({ timeout: 20000 }).should('include', '/admin/dashboard');
+  
+  // Wait for dashboard to load - be flexible with heading
+  cy.get('body', { timeout: 10000 }).should(($body) => {
+    expect($body.find('h1, .admin-page-header, mat-card-title').length).to.be.greaterThan(0);
+  });
+  
+  // Small wait for page to fully render
+  cy.wait(1000);
 });
 
 Cypress.Commands.add('loginAPI', (email: string, password: string) => {

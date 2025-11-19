@@ -1,11 +1,7 @@
 describe('Import Flow E2E', () => {
   beforeEach(() => {
-    // Login as admin
-    cy.visit('/login');
-    cy.get('#email').type('admin@example.com');
-    cy.get('#password').type('password');
-    cy.get('button[type="submit"]').click();
-    cy.url().should('include', '/admin/dashboard');
+    // Login as admin using the custom command
+    cy.loginUI('admin@test.com', 'Admin123!');
   });
 
   it('should navigate to import page', () => {

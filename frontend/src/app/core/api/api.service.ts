@@ -34,6 +34,46 @@ export class ApiService {
   }
 
   /**
+   * Clean params object by removing undefined, null, and empty string values
+   * Also converts to HttpParams to ensure proper serialization
+   */
+  private cleanParams(params?: HttpParams | Record<string, any>): HttpParams | undefined {
+    if (!params) return undefined;
+    
+    let paramsObj: Record<string, any> = {};
+    
+    if (params instanceof HttpParams) {
+      // For HttpParams, extract values
+      params.keys().forEach(key => {
+        const value = params.get(key);
+        if (value !== undefined && value !== null && value !== '' && value !== 'undefined') {
+          paramsObj[key] = value;
+        }
+      });
+    } else {
+      // For plain objects, filter out undefined/null/empty/string "undefined" values
+      Object.keys(params).forEach(key => {
+        const value = params[key];
+        if (value !== undefined && value !== null && value !== '' && value !== 'undefined') {
+          paramsObj[key] = value;
+        }
+      });
+    }
+    
+    // Return undefined if no valid params, otherwise create HttpParams
+    if (Object.keys(paramsObj).length === 0) {
+      return undefined;
+    }
+    
+    // Convert to HttpParams for proper URL encoding
+    let httpParams = new HttpParams();
+    Object.keys(paramsObj).forEach(key => {
+      httpParams = httpParams.set(key, paramsObj[key]);
+    });
+    return httpParams;
+  }
+
+  /**
    * GET request with optional caching
    */
   get<T>(endpoint: string, options?: ApiOptions): Observable<T> {
@@ -53,7 +93,7 @@ export class ApiService {
 
     let request$ = this.http.get<T>(url, {
       headers: options?.headers,
-      params: options?.params,
+      params: this.cleanParams(options?.params),
     });
 
     // Add retry logic
@@ -100,7 +140,7 @@ export class ApiService {
     const url = this.buildUrl(endpoint);
     const httpOptions = {
       headers: options?.headers,
-      params: options?.params,
+      params: this.cleanParams(options?.params),
     };
 
     return this.http.post<T>(url, body, httpOptions).pipe(
@@ -115,7 +155,7 @@ export class ApiService {
     const url = this.buildUrl(endpoint);
     const httpOptions = {
       headers: options?.headers,
-      params: options?.params,
+      params: this.cleanParams(options?.params),
     };
 
     return this.http.put<T>(url, body, httpOptions).pipe(
@@ -130,7 +170,7 @@ export class ApiService {
     const url = this.buildUrl(endpoint);
     const httpOptions = {
       headers: options?.headers,
-      params: options?.params,
+      params: this.cleanParams(options?.params),
     };
 
     return this.http.delete<T>(url, httpOptions).pipe(
@@ -166,7 +206,7 @@ export class ApiService {
     const url = this.buildUrl(endpoint);
     return this.http.post<T>(url, formData, {
       headers: options?.headers,
-      params: options?.params,
+      params: this.cleanParams(options?.params),
     }).pipe(
       catchError(this.handleError)
     );
