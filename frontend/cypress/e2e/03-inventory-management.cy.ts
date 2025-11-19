@@ -19,7 +19,24 @@ describe('Inventory Management Tests', () => {
   });
 
   it('TC-INV-002: View Low Stock Products - Should list products below threshold', () => {
-    cy.visit('/admin/inventory/low-stock');
+    // Navigate via dropdown menu or direct visit
+    cy.visit('/admin/inventory');
+    cy.wait(1000);
+    
+    // Try to navigate via dropdown if available, otherwise try direct route
+    cy.get('body').then(($body) => {
+      if ($body.find('.dropdown-trigger').length > 0) {
+        // Navigate through Inventory dropdown
+        cy.contains('.dropdown-trigger, .nav-link', 'Inventory', { matchCase: false, timeout: 5000 })
+          .should('be.visible')
+          .click();
+        cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
+        cy.get('.dropdown-item').contains('Low Stock', { matchCase: false }).click();
+      } else {
+        // Fallback to direct navigation
+        cy.visit('/admin/inventory/low-stock');
+      }
+    });
     
     // Verify low stock list
     cy.contains('Low Stock', { timeout: 10000 }).should('be.visible');

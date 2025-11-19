@@ -89,6 +89,13 @@ export class ReportsService {
     return this.http.get<any>(`${this.apiUrl}/slow-moving`, { params });
   }
 
+  getPurchaseSummaryReport(startDate?: string, endDate?: string): Observable<any> {
+    const params: any = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+    return this.api.get<any>('reports/purchase-summary', { params });
+  }
+
   getItemWiseSalesReport(
     fromDate: string,
     toDate: string,

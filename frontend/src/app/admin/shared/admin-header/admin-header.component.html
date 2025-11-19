@@ -8,17 +8,321 @@
       </a>
     </div>
 
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" (click)="toggleMobileMenu()" aria-label="Toggle menu" type="button">
+      <span class="material-icons">menu</span>
+    </button>
+
     <!-- Navigation Menu -->
-    <nav class="header-nav">
-      @for (item of menuItems(); track item.route) {
-        <a 
-          [routerLink]="item.route" 
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{exact: item.route === '/admin/dashboard'}"
-          class="nav-link">
-          <span class="material-icons nav-icon">{{ item.icon }}</span>
-          <span class="nav-label">{{ item.label }}</span>
-        </a>
+    <nav class="header-nav" [class.mobile-open]="isMobileMenuOpen()">
+      <!-- Dashboard (Single Item) -->
+      <a 
+        routerLink="/admin/dashboard" 
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{exact: true}"
+        class="nav-link"
+        (click)="closeMobileMenu()">
+        <span class="material-icons nav-icon">dashboard</span>
+        <span class="nav-label">Dashboard</span>
+      </a>
+
+      <!-- Master Data (Dropdown) -->
+      @if (canAccessMenu('master')) {
+        <div class="nav-dropdown" 
+             [class.open]="openDropdown() === 'master'"
+             (mouseenter)="onDropdownMouseEnter('master')"
+             (mouseleave)="onDropdownMouseLeave('master', $event)">
+          <button class="nav-link dropdown-trigger" 
+                  (click)="toggleDropdown('master'); $event.stopPropagation()"
+                  [attr.aria-expanded]="openDropdown() === 'master'"
+                  type="button">
+            <span class="material-icons nav-icon">category</span>
+            <span class="nav-label">Master Data</span>
+            <span class="material-icons dropdown-arrow">keyboard_arrow_down</span>
+          </button>
+          <div class="dropdown-menu"
+               (mouseenter)="onDropdownMenuMouseEnter('master')"
+               (mouseleave)="onDropdownMenuMouseLeave('master')"
+               (click)="$event.stopPropagation()">
+            <a routerLink="/admin/master/categories" class="dropdown-item" (click)="closeMobileMenu(); $event.stopPropagation()">
+              <span class="material-icons">label</span>
+              <span>Categories</span>
+            </a>
+            <a routerLink="/admin/master/units" class="dropdown-item" (click)="closeMobileMenu(); $event.stopPropagation()">
+              <span class="material-icons">straighten</span>
+              <span>Units</span>
+            </a>
+            <a routerLink="/admin/master/tax-slabs" class="dropdown-item" (click)="closeMobileMenu(); $event.stopPropagation()">
+              <span class="material-icons">percent</span>
+              <span>Tax Slabs</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a routerLink="/admin/products" class="dropdown-item" (click)="closeMobileMenu(); $event.stopPropagation()">
+              <span class="material-icons">inventory_2</span>
+              <span>Products</span>
+            </a>
+            <a routerLink="/admin/suppliers" class="dropdown-item" (click)="closeMobileMenu(); $event.stopPropagation()">
+              <span class="material-icons">business</span>
+              <span>Suppliers</span>
+            </a>
+            <a routerLink="/admin/customers" class="dropdown-item" (click)="closeMobileMenu(); $event.stopPropagation()">
+              <span class="material-icons">people</span>
+              <span>Customers</span>
+            </a>
+          </div>
+        </div>
+      }
+
+      <!-- Inventory (Dropdown) -->
+      <div class="nav-dropdown" 
+           [class.open]="openDropdown() === 'inventory'"
+           (mouseenter)="onDropdownMouseEnter('inventory')"
+           (mouseleave)="onDropdownMouseLeave('inventory', $event)">
+        <button class="nav-link dropdown-trigger" 
+                (click)="toggleDropdown('inventory'); $event.stopPropagation()"
+                [attr.aria-expanded]="openDropdown() === 'inventory'"
+                type="button">
+          <span class="material-icons nav-icon">warehouse</span>
+          <span class="nav-label">Inventory</span>
+          <span class="material-icons dropdown-arrow">keyboard_arrow_down</span>
+        </button>
+        <div class="dropdown-menu"
+             (mouseenter)="onDropdownMenuMouseEnter('inventory')"
+             (mouseleave)="onDropdownMenuMouseLeave('inventory')"
+             (click)="$event.stopPropagation()">
+          <a routerLink="/admin/inventory" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">dashboard</span>
+            <span>Stock Summary</span>
+          </a>
+          <a routerLink="/admin/inventory/products" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">inventory</span>
+            <span>Batches</span>
+          </a>
+          <a routerLink="/admin/inventory/expiry" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">event_busy</span>
+            <span>Expiry List</span>
+          </a>
+          <a routerLink="/admin/inventory/adjust" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">tune</span>
+            <span>Adjust Stock</span>
+          </a>
+          <a routerLink="/admin/reports/slow-moving" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">trending_down</span>
+            <span>Slow-Moving Items</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Purchasing (Dropdown) -->
+      <div class="nav-dropdown" 
+           [class.open]="openDropdown() === 'purchasing'"
+           (mouseenter)="onDropdownMouseEnter('purchasing')"
+           (mouseleave)="onDropdownMouseLeave('purchasing', $event)">
+        <button class="nav-link dropdown-trigger" 
+                (click)="toggleDropdown('purchasing'); $event.stopPropagation()"
+                [attr.aria-expanded]="openDropdown() === 'purchasing'"
+                type="button">
+          <span class="material-icons nav-icon">shopping_cart</span>
+          <span class="nav-label">Purchasing</span>
+          <span class="material-icons dropdown-arrow">keyboard_arrow_down</span>
+        </button>
+        <div class="dropdown-menu"
+             (mouseenter)="onDropdownMenuMouseEnter('purchasing')"
+             (mouseleave)="onDropdownMenuMouseLeave('purchasing')"
+             (click)="$event.stopPropagation()">
+          <a routerLink="/admin/purchasing/purchase-orders" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">receipt_long</span>
+            <span>Purchase Orders</span>
+          </a>
+          <a routerLink="/admin/purchasing/grn" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">inventory</span>
+            <span>GRN</span>
+          </a>
+          <a routerLink="/admin/purchasing/supplier-returns" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">assignment_return</span>
+            <span>Supplier Returns</span>
+          </a>
+          <a routerLink="/admin/suppliers/payments" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">payment</span>
+            <span>Supplier Payments</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Sales / POS (Dropdown) -->
+      <div class="nav-dropdown" 
+           [class.open]="openDropdown() === 'sales'"
+           (mouseenter)="onDropdownMouseEnter('sales')"
+           (mouseleave)="onDropdownMouseLeave('sales', $event)">
+        <button class="nav-link dropdown-trigger" 
+                (click)="toggleDropdown('sales'); $event.stopPropagation()"
+                [attr.aria-expanded]="openDropdown() === 'sales'"
+                type="button">
+          <span class="material-icons nav-icon">point_of_sale</span>
+          <span class="nav-label">Sales / POS</span>
+          <span class="material-icons dropdown-arrow">keyboard_arrow_down</span>
+        </button>
+        <div class="dropdown-menu"
+             (mouseenter)="onDropdownMenuMouseEnter('sales')"
+             (mouseleave)="onDropdownMenuMouseLeave('sales')"
+             (click)="$event.stopPropagation()">
+          <a routerLink="/pos" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">shopping_cart</span>
+            <span>POS (Self Service)</span>
+          </a>
+          <a routerLink="/pos" [queryParams]="{mode: 'assist'}" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">person</span>
+            <span>POS (Salesboy Assist)</span>
+          </a>
+          <a routerLink="/admin/sales" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">list</span>
+            <span>Sales List</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Offers & Discounts (Dropdown) -->
+      <div class="nav-dropdown" 
+           [class.open]="openDropdown() === 'offers'"
+           (mouseenter)="onDropdownMouseEnter('offers')"
+           (mouseleave)="onDropdownMouseLeave('offers', $event)">
+        <button class="nav-link dropdown-trigger" 
+                (click)="toggleDropdown('offers'); $event.stopPropagation()"
+                [attr.aria-expanded]="openDropdown() === 'offers'"
+                type="button">
+          <span class="material-icons nav-icon">local_offer</span>
+          <span class="nav-label">Offers</span>
+          <span class="material-icons dropdown-arrow">keyboard_arrow_down</span>
+        </button>
+        <div class="dropdown-menu"
+             (mouseenter)="onDropdownMenuMouseEnter('offers')"
+             (mouseleave)="onDropdownMenuMouseLeave('offers')"
+             (click)="$event.stopPropagation()">
+          <a routerLink="/admin/offers" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">list</span>
+            <span>Offer List</span>
+          </a>
+          <a routerLink="/admin/offers/new" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">add</span>
+            <span>Create Offer</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Reports (Dropdown) -->
+      <div class="nav-dropdown" 
+           [class.open]="openDropdown() === 'reports'"
+           (mouseenter)="onDropdownMouseEnter('reports')"
+           (mouseleave)="onDropdownMouseLeave('reports', $event)">
+        <button class="nav-link dropdown-trigger" 
+                (click)="toggleDropdown('reports'); $event.stopPropagation()"
+                [attr.aria-expanded]="openDropdown() === 'reports'"
+                type="button">
+          <span class="material-icons nav-icon">assessment</span>
+          <span class="nav-label">Reports</span>
+          <span class="material-icons dropdown-arrow">keyboard_arrow_down</span>
+        </button>
+        <div class="dropdown-menu"
+             (mouseenter)="onDropdownMenuMouseEnter('reports')"
+             (mouseleave)="onDropdownMenuMouseLeave('reports')"
+             (click)="$event.stopPropagation()">
+          <a routerLink="/admin/reports/daily-sales" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">today</span>
+            <span>Daily Sales</span>
+          </a>
+          <a routerLink="/admin/reports/item-wise-sales" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">bar_chart</span>
+            <span>Item-wise Sales</span>
+          </a>
+          <a routerLink="/admin/reports/purchase-summary" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">shopping_bag</span>
+            <span>Purchase Summary</span>
+          </a>
+          <a routerLink="/admin/reports/low-stock" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">warning</span>
+            <span>Low Stock Report</span>
+          </a>
+          <a routerLink="/admin/reports/expiry" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">event_busy</span>
+            <span>Expiry Report</span>
+          </a>
+          <a routerLink="/admin/reports/gst-summary" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">receipt</span>
+            <span>GST Monthly</span>
+          </a>
+          <a routerLink="/admin/reports/slow-moving" class="dropdown-item" (click)="closeMobileMenu()">
+            <span class="material-icons">trending_down</span>
+            <span>Slow-Moving Products</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Tools (Dropdown) -->
+      @if (canAccessMenu('tools')) {
+        <div class="nav-dropdown" 
+             [class.open]="openDropdown() === 'tools'"
+             (mouseenter)="onDropdownMouseEnter('tools')"
+             (mouseleave)="onDropdownMouseLeave('tools', $event)">
+          <button class="nav-link dropdown-trigger" 
+                  (click)="toggleDropdown('tools'); $event.stopPropagation()"
+                  [attr.aria-expanded]="openDropdown() === 'tools'"
+                  type="button">
+            <span class="material-icons nav-icon">build</span>
+            <span class="nav-label">Tools</span>
+            <span class="material-icons dropdown-arrow">keyboard_arrow_down</span>
+          </button>
+          <div class="dropdown-menu"
+               (mouseenter)="onDropdownMenuMouseEnter('tools')"
+               (mouseleave)="onDropdownMenuMouseLeave('tools')"
+               (click)="$event.stopPropagation()">
+            <a routerLink="/admin/tools/barcode-printing" class="dropdown-item" (click)="closeMobileMenu()">
+              <span class="material-icons">qr_code</span>
+              <span>Barcode Printing</span>
+            </a>
+            <a routerLink="/admin/tools/weight-machine" class="dropdown-item" (click)="closeMobileMenu()">
+              <span class="material-icons">monitor_weight</span>
+              <span>Weight Machine Test</span>
+            </a>
+            <a routerLink="/admin/imports" class="dropdown-item" (click)="closeMobileMenu()">
+              <span class="material-icons">upload_file</span>
+              <span>Bulk Import (Excel)</span>
+            </a>
+          </div>
+        </div>
+      }
+
+      <!-- Settings (Dropdown) -->
+      @if (canAccessMenu('settings')) {
+        <div class="nav-dropdown" 
+             [class.open]="openDropdown() === 'settings'"
+             (mouseenter)="onDropdownMouseEnter('settings')"
+             (mouseleave)="onDropdownMouseLeave('settings', $event)">
+          <button class="nav-link dropdown-trigger" 
+                  (click)="toggleDropdown('settings'); $event.stopPropagation()"
+                  [attr.aria-expanded]="openDropdown() === 'settings'"
+                  type="button">
+            <span class="material-icons nav-icon">settings</span>
+            <span class="nav-label">Settings</span>
+            <span class="material-icons dropdown-arrow">keyboard_arrow_down</span>
+          </button>
+          <div class="dropdown-menu"
+               (mouseenter)="onDropdownMenuMouseEnter('settings')"
+               (mouseleave)="onDropdownMenuMouseLeave('settings')"
+               (click)="$event.stopPropagation()">
+            <a routerLink="/admin/settings/roles" class="dropdown-item" (click)="closeMobileMenu()">
+              <span class="material-icons">people</span>
+              <span>User Management</span>
+            </a>
+            <a routerLink="/admin/settings/roles" class="dropdown-item" (click)="closeMobileMenu()">
+              <span class="material-icons">admin_panel_settings</span>
+              <span>Roles & Permissions</span>
+            </a>
+            <a routerLink="/admin/settings" class="dropdown-item" (click)="closeMobileMenu()">
+              <span class="material-icons">store</span>
+              <span>Store Settings</span>
+            </a>
+          </div>
+        </div>
       }
     </nav>
 

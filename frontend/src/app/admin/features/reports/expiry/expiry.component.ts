@@ -100,12 +100,17 @@ export class ExpiryComponent implements OnInit {
     this.loading.set(true);
     this.reportsService.getExpiryReport(this.daysThreshold).subscribe({
       next: (response) => {
-        this.report.set(response);
+        // Ensure report has items array, default to empty array if undefined
+        if (response && !response.items) {
+          response.items = [];
+        }
+        this.report.set(response || { items: [] });
         this.loading.set(false);
       },
       error: (error) => {
         console.error('Error loading expiry report:', error);
         this.toastService.error('Failed to load report');
+        this.report.set({ items: [] });
         this.loading.set(false);
       },
     });

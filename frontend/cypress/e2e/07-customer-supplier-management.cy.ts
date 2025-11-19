@@ -5,8 +5,37 @@ describe('Customer & Supplier Management Tests', () => {
   });
 
   it('TC-CUST-001: Create Customer - Should create customer successfully', () => {
-    cy.visit('/admin/customers');
-    cy.contains('New Customer', 'New', 'button').click();
+    // Navigate via dropdown or direct
+    cy.visit('/admin/dashboard');
+    cy.wait(1000);
+    
+    // Try to navigate via Master Data dropdown
+    cy.get('body').then(($body) => {
+      if ($body.find('.dropdown-trigger').length > 0) {
+        cy.contains('.dropdown-trigger, .nav-link', 'Master Data', { matchCase: false, timeout: 5000 })
+          .should('be.visible')
+          .click();
+        cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
+        cy.get('.dropdown-item').contains('Customers', { matchCase: false }).click();
+      } else {
+        cy.visit('/admin/customers');
+      }
+    });
+    
+    cy.wait(1000);
+    
+    // Click New Customer button
+    cy.get('body').then(($body) => {
+      const newBtn = $body.find('button, a').filter((i, el) => {
+        const text = Cypress.$(el).text().toLowerCase();
+        return text.includes('new') || text.includes('create') || text.includes('add');
+      });
+      if (newBtn.length > 0) {
+        cy.wrap(newBtn.first()).click();
+      } else {
+        cy.contains('button, a', 'New', { matchCase: false, timeout: 5000 }).click();
+      }
+    });
     
     // Fill customer form
     cy.get('input[name="name"], input[formControlName="name"]').type('Test Customer E2E');
@@ -66,8 +95,37 @@ describe('Customer & Supplier Management Tests', () => {
   });
 
   it('TC-SUPPL-001: Create Supplier - Should create supplier successfully', () => {
-    cy.visit('/admin/suppliers');
-    cy.contains('New Supplier', 'New', 'button').click();
+    // Navigate via dropdown or direct
+    cy.visit('/admin/dashboard');
+    cy.wait(1000);
+    
+    // Try to navigate via Master Data dropdown
+    cy.get('body').then(($body) => {
+      if ($body.find('.dropdown-trigger').length > 0) {
+        cy.contains('.dropdown-trigger, .nav-link', 'Master Data', { matchCase: false, timeout: 5000 })
+          .should('be.visible')
+          .click();
+        cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
+        cy.get('.dropdown-item').contains('Suppliers', { matchCase: false }).click();
+      } else {
+        cy.visit('/admin/suppliers');
+      }
+    });
+    
+    cy.wait(1000);
+    
+    // Click New Supplier button
+    cy.get('body').then(($body) => {
+      const newBtn = $body.find('button, a').filter((i, el) => {
+        const text = Cypress.$(el).text().toLowerCase();
+        return text.includes('new') || text.includes('create') || text.includes('add');
+      });
+      if (newBtn.length > 0) {
+        cy.wrap(newBtn.first()).click();
+      } else {
+        cy.contains('button, a', 'New', { matchCase: false, timeout: 5000 }).click();
+      }
+    });
     
     // Fill supplier form
     cy.get('input[name="name"], input[formControlName="name"]').type('Test Supplier E2E');

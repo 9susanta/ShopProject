@@ -6,6 +6,11 @@ declare global {
   namespace Cypress {
     interface Chainable {
       /**
+       * Navigate through dropdown menu
+       */
+      navigateViaDropdown(menuName: string, itemText: string): Chainable<void>;
+
+      /**
        * Login with credentials via UI
        */
       loginUI(email: string, password: string): Chainable<void>;
@@ -37,6 +42,26 @@ declare global {
     }
   }
 }
+
+// Helper command to navigate through dropdown menu
+Cypress.Commands.add('navigateViaDropdown', (menuName: string, itemText: string) => {
+  // Click the dropdown trigger
+  cy.contains('.dropdown-trigger, .nav-link', menuName, { matchCase: false, timeout: 10000 })
+    .should('be.visible')
+    .click();
+  
+  // Wait for dropdown menu to be visible
+  cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
+  
+  // Click the menu item
+  cy.get('.dropdown-item')
+    .contains(itemText, { matchCase: false, timeout: 3000 })
+    .should('be.visible')
+    .click();
+  
+  // Wait for navigation
+  cy.wait(500);
+});
 
 Cypress.Commands.add('loginUI', (email: string, password: string) => {
   cy.visit('/login', { timeout: 30000 });

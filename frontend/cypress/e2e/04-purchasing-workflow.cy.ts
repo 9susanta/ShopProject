@@ -5,10 +5,21 @@ describe('Purchasing Workflow Tests', () => {
   });
 
   it('TC-PURCH-001: Create Purchase Order - Should create PO successfully', () => {
-    cy.visit('/admin/purchasing/purchase-orders', { timeout: 30000 });
+    // Navigate via dropdown menu
+    cy.visit('/admin/dashboard');
+    cy.wait(1000);
+    
+    // Open Purchasing dropdown
+    cy.contains('.dropdown-trigger, .nav-link', 'Purchasing', { matchCase: false, timeout: 10000 })
+      .should('be.visible')
+      .click();
+    
+    // Wait for dropdown menu and click Purchase Orders
+    cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
+    cy.get('.dropdown-item').contains('Purchase Orders', { matchCase: false }).click();
     
     // Wait for page to load
-    cy.get('h1, mat-card-title', { timeout: 10000 }).should('be.visible');
+    cy.get('h1, mat-card-title, .admin-page-header', { timeout: 10000 }).should('be.visible');
     
     // Click New button - try multiple selectors
     cy.get('body').then(($body) => {

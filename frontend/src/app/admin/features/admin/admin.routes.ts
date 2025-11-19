@@ -80,6 +80,16 @@ export const adminRoutes: Routes = [
           import('../suppliers/suppliers.routes').then(m => m.suppliersRoutes),
       },
       {
+        path: 'master',
+        loadChildren: () =>
+          import('../master/master.routes').then(m => m.masterRoutes),
+      },
+      {
+        path: 'tools',
+        loadChildren: () =>
+          import('../tools/tools.routes').then(m => m.toolsRoutes),
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('../profile/profile.component').then(m => m.ProfileComponent),

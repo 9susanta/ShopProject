@@ -94,17 +94,21 @@ describe('Authentication Tests', () => {
     cy.url({ timeout: 15000 }).should('include', '/admin/dashboard');
 
     // Click on profile container to open menu
-    cy.get('.profile-container, .header-profile', { timeout: 10000 }).should('be.visible').click();
+    cy.get('.profile-container', { timeout: 10000 }).should('be.visible').click();
     
-    // Wait for profile menu to be visible and click logout
+    // Wait for profile menu to be visible and logout button to be ready
     cy.get('.profile-menu', { timeout: 5000 }).should('be.visible');
-    cy.get('.profile-menu-item.logout, button.logout', { timeout: 5000 })
+    cy.get('button.profile-menu-item.logout', { timeout: 5000 })
       .should('be.visible')
-      .contains('Logout')
-      .click({ force: true });
+      .should('not.be.disabled');
     
-    // Should redirect to login
-    cy.url({ timeout: 10000 }).should('include', '/login');
+    // Click logout button - wait a bit for menu to fully render
+    cy.wait(200);
+    cy.get('button.profile-menu-item.logout')
+      .click({ force: true, multiple: false });
+    
+    // Should redirect to login - wait for navigation
+    cy.url({ timeout: 15000 }).should('include', '/login');
   });
 });
 

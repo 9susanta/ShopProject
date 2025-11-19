@@ -1,11 +1,11 @@
-import { Component, signal, inject, computed, OnDestroy } from '@angular/core';
+import { Component, signal, inject, computed, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { ToastService } from '../../../core/toast/toast.service';
 import { User } from '../../../core/models/user.model';
-import { Subscription } from 'rxjs';
+import { Subscription, filter } from 'rxjs';
 
 @Component({
   selector: 'grocery-admin-header',
@@ -30,25 +30,15 @@ export class AdminHeaderComponent implements OnDestroy {
   
   // Menu state
   isProfileMenuOpen = signal(false);
+  openDropdown = signal<string | null>(null);
+  isMobileMenuOpen = signal(false);
 
-  // Navigation menu items
-  menuItems = signal([
-    { label: 'Dashboard', route: '/admin/dashboard', icon: 'dashboard' },
-    { label: 'Imports', route: '/admin/imports', icon: 'upload' },
-    { label: 'Products', route: '/admin/products', icon: 'inventory_2' },
-    { label: 'Inventory', route: '/admin/inventory', icon: 'warehouse' },
-    { label: 'Purchasing', route: '/admin/purchasing', icon: 'shopping_cart' },
-    { label: 'Sales', route: '/admin/sales', icon: 'point_of_sale' },
-    { label: 'Customers', route: '/admin/customers', icon: 'people' },
-    { label: 'Suppliers', route: '/admin/suppliers', icon: 'business' },
-    { label: 'Offers', route: '/admin/offers', icon: 'local_offer' },
-    { label: 'Accounting', route: '/admin/accounting', icon: 'account_balance' },
-    { label: 'Reports', route: '/admin/reports', icon: 'assessment' },
-    { label: 'Settings', route: '/admin/settings', icon: 'settings' },
-  ]);
+  // Dropdown close timeout to prevent premature closing
+  private dropdownCloseTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Subscription and event listener cleanup
   private userSubscription?: Subscription;
+  private routerSubscription?: Subscription;
   private clickHandler?: (event: MouseEvent) => void;
 
   constructor() {
@@ -57,20 +47,44 @@ export class AdminHeaderComponent implements OnDestroy {
       this.currentUser.set(user);
     });
 
+    // Close menus on route change
+    this.routerSubscription = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.isMobileMenuOpen.set(false);
+      this.closeDropdown();
+    });
+
     // Close menu when clicking outside
     this.clickHandler = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest('.header-profile')) {
         this.closeProfileMenu();
       }
+      // Only close dropdown if click is outside both the trigger and the menu
+      const navDropdown = target.closest('.nav-dropdown');
+      if (!navDropdown) {
+        this.closeDropdown();
+      }
     };
     document.addEventListener('click', this.clickHandler);
   }
 
   ngOnDestroy(): void {
+    // Clear any pending timeout
+    if (this.dropdownCloseTimeout) {
+      clearTimeout(this.dropdownCloseTimeout);
+      this.dropdownCloseTimeout = null;
+    }
+
     // Unsubscribe from user observable
     if (this.userSubscription) {
       this.userSubscription.unsubscribe();
+    }
+
+    // Unsubscribe from router events
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
     }
 
     // Remove click event listener
@@ -131,6 +145,124 @@ export class AdminHeaderComponent implements OnDestroy {
   navigateToProfile(): void {
     this.closeProfileMenu();
     this.router.navigate(['/admin/profile']);
+  }
+
+  // Dropdown management
+  toggleDropdown(menu: string): void {
+    if (this.openDropdown() === menu) {
+      this.openDropdown.set(null);
+    } else {
+      this.openDropdown.set(menu);
+    }
+  }
+
+  closeDropdown(): void {
+    // Clear any pending timeout
+    if (this.dropdownCloseTimeout) {
+      clearTimeout(this.dropdownCloseTimeout);
+      this.dropdownCloseTimeout = null;
+    }
+    this.openDropdown.set(null);
+  }
+
+  // Handle dropdown container mouse enter - open dropdown
+  onDropdownMouseEnter(menu: string): void {
+    // Cancel any pending close timeout
+    if (this.dropdownCloseTimeout) {
+      clearTimeout(this.dropdownCloseTimeout);
+      this.dropdownCloseTimeout = null;
+    }
+    // Open the dropdown
+    this.openDropdown.set(menu);
+  }
+
+  // Handle dropdown container mouse leave - delay close to allow moving to menu
+  onDropdownMouseLeave(menu: string, event: MouseEvent): void {
+    const relatedTarget = event.relatedTarget as HTMLElement;
+    // Check if mouse is moving to the dropdown menu
+    if (relatedTarget && relatedTarget.closest('.dropdown-menu')) {
+      return; // Don't close if moving to menu
+    }
+    
+    // Clear any existing timeout
+    if (this.dropdownCloseTimeout) {
+      clearTimeout(this.dropdownCloseTimeout);
+    }
+    // Set a delay before closing (allows time to move mouse to dropdown menu)
+    this.dropdownCloseTimeout = setTimeout(() => {
+      // Only close if this menu is still the open one
+      if (this.openDropdown() === menu) {
+        this.openDropdown.set(null);
+      }
+      this.dropdownCloseTimeout = null;
+    }, 300); // 300ms delay - enough time to move mouse to menu
+  }
+
+  // Handle dropdown menu mouse enter - keep it open
+  onDropdownMenuMouseEnter(menu: string): void {
+    // Cancel any pending close timeout
+    if (this.dropdownCloseTimeout) {
+      clearTimeout(this.dropdownCloseTimeout);
+      this.dropdownCloseTimeout = null;
+    }
+    // Ensure dropdown stays open
+    this.openDropdown.set(menu);
+  }
+
+  // Handle dropdown menu mouse leave - close it
+  onDropdownMenuMouseLeave(menu: string): void {
+    // Clear any existing timeout
+    if (this.dropdownCloseTimeout) {
+      clearTimeout(this.dropdownCloseTimeout);
+    }
+    // Close immediately when leaving the menu
+    if (this.openDropdown() === menu) {
+      this.openDropdown.set(null);
+    }
+    this.dropdownCloseTimeout = null;
+  }
+
+  // Mobile menu management
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen.update(value => !value);
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen.set(false);
+    this.closeDropdown();
+  }
+
+  // Role-based menu access
+  canAccessMenu(menu: string): boolean {
+    const user = this.currentUser();
+    if (!user) return false;
+
+    const role = user.role;
+    const isAdmin = role === 'Admin' || role === 'SuperAdmin';
+
+    // Admin/SuperAdmin can access everything
+    if (isAdmin) {
+      return true;
+    }
+
+    // Staff permissions
+    if (role === 'Staff') {
+      const allowedMenus = ['inventory', 'purchasing', 'sales', 'reports'];
+      return allowedMenus.includes(menu);
+    }
+
+    return false;
+  }
+
+  // Close dropdown when clicking outside (additional handler)
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    // Only close if click is outside both the trigger button and the dropdown menu
+    const navDropdown = target.closest('.nav-dropdown');
+    if (!navDropdown) {
+      this.closeDropdown();
+    }
   }
 }
 

@@ -118,5 +118,19 @@ public class ReportsController : ControllerBase
         var result = await _mediator.Send(query);
         return Ok(result);
     }
+
+    [HttpGet("purchase-summary")]
+    public async Task<ActionResult<Application.DTOs.PurchaseSummaryReportDto>> GetPurchaseSummaryReport(
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null)
+    {
+        var query = new GetPurchaseSummaryReportQuery
+        {
+            StartDate = startDate,
+            EndDate = endDate
+        };
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
 }
 

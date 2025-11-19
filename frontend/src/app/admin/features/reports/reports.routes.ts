@@ -62,5 +62,11 @@ export const reportsRoutes: Routes = [
       import('./reorder-suggestions/reorder-suggestions.component').then(m => m.ReorderSuggestionsComponent),
     canActivate: [AuthGuard],
   },
+  {
+    path: 'purchase-summary',
+    loadComponent: () =>
+      import('./purchase-summary/purchase-summary.component').then(m => m.PurchaseSummaryComponent),
+    canActivate: [AuthGuard],
+  },
 ];
 

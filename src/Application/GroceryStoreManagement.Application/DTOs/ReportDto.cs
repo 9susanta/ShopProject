@@ -33,3 +33,27 @@ public class PurchaseSummaryDto
     public int PendingOrders { get; set; }
 }
 
+public class PurchaseSummaryReportDto
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public int TotalPurchaseOrders { get; set; }
+    public int TotalGRNs { get; set; }
+    public decimal TotalPurchaseAmount { get; set; }
+    public decimal TotalPaidAmount { get; set; }
+    public decimal TotalPendingAmount { get; set; }
+    public int TotalItemsPurchased { get; set; }
+    public List<PurchaseSummaryItemDto> Purchases { get; set; } = new();
+}
+
+public class PurchaseSummaryItemDto
+{
+    public DateTime Date { get; set; }
+    public string PurchaseOrderNumber { get; set; } = string.Empty;
+    public string SupplierName { get; set; } = string.Empty;
+    public decimal TotalAmount { get; set; }
+    public decimal PaidAmount { get; set; }
+    public decimal PendingAmount { get; set; }
+    public string Status { get; set; } = string.Empty;
+}
+
