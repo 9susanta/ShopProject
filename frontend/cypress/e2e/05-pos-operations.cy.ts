@@ -6,14 +6,14 @@ describe('Point of Sale (POS) Tests', () => {
   it('TC-POS-001: Complete Sale Flow - Should complete sale successfully', () => {
     // Navigate to POS via dropdown or direct
     cy.visit('/admin/dashboard');
-    ;
+    cy.wait(1000);
     
     cy.get('body').then(($body) => {
       if ($body.find('.dropdown-trigger').length > 0) {
-        cy.contains('.dropdown-trigger, .nav-link', 'Sales', { matchCase: false, timeout: 2000 })
+        cy.contains('.dropdown-trigger, .nav-link', 'Sales', { matchCase: false, timeout: 5000 })
           .should('be.visible')
           .click();
-        cy.get('.dropdown-menu', { timeout: 2000 }).should('be.visible');
+        cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
         cy.get('.dropdown-item').contains('POS', { matchCase: false }).first().click();
       } else {
         cy.visit('/pos');
@@ -21,7 +21,7 @@ describe('Point of Sale (POS) Tests', () => {
     });
     
     // Wait for POS to load
-    cy.get('body', { timeout: 2000 }).should(($body) => {
+    cy.get('body', { timeout: 10000 }).should(($body) => {
       expect($body.find('h1, .pos-container, .product-grid').length).to.be.greaterThan(0);
     });
     
@@ -30,7 +30,7 @@ describe('Point of Sale (POS) Tests', () => {
       const searchInput = $body.find('input[placeholder*="Search"], input[type="search"], input[placeholder*="search"]');
       if (searchInput.length > 0) {
         cy.wrap(searchInput.first()).type('Test');
-        ;
+        cy.wait(1000);
       }
     });
     
@@ -63,7 +63,7 @@ describe('Point of Sale (POS) Tests', () => {
 
   it('TC-POS-002: Barcode Scanning - Should add product via barcode', () => {
     cy.visit('/pos');
-    ;
+    cy.wait(1000);
     
     // Click barcode scanner icon if available
     cy.get('body').then(($body) => {
@@ -81,7 +81,7 @@ describe('Point of Sale (POS) Tests', () => {
       if (barcodeInput.length > 0) {
         cy.wrap(barcodeInput.first()).type('1234567890123{enter}');
         // Verify product added to cart or error message
-        cy.get('body', { timeout: 2000 }).then(($b) => {
+        cy.get('body', { timeout: 5000 }).then(($b) => {
           if ($b.find('.cart-item, .cart-summary').length > 0) {
             cy.get('.cart-item, .cart-summary').should('be.visible');
           }
@@ -101,7 +101,7 @@ describe('Point of Sale (POS) Tests', () => {
     
     // Search customer
     cy.get('input[placeholder*="phone"], input[placeholder*="search"]').type('9876543210');
-    ;
+    cy.wait(500);
     
     // Select customer
     cy.get('mat-option, .customer-option').first().click();

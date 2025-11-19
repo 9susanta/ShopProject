@@ -10,6 +10,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "e2e": "cypress run",
+    "e2e:fast": "cypress run --browser electron --headless --reporter spec",
     "e2e:open": "cypress open",
     "lint": "eslint .",
     "storybook": "storybook dev -p 6006",

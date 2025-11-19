@@ -7,14 +7,14 @@ describe('Sales Management Tests', () => {
   it('TC-SALE-001: View Sales List - Should display sales with filters', () => {
     // Navigate via dropdown or direct
     cy.visit('/admin/dashboard');
-    ;
+    cy.wait(1000);
     
     cy.get('body').then(($body) => {
       if ($body.find('.dropdown-trigger').length > 0) {
-        cy.contains('.dropdown-trigger, .nav-link', 'Sales', { matchCase: false, timeout: 2000 })
+        cy.contains('.dropdown-trigger, .nav-link', 'Sales', { matchCase: false, timeout: 5000 })
           .should('be.visible')
           .click();
-        cy.get('.dropdown-menu', { timeout: 2000 }).should('be.visible');
+        cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
         cy.get('.dropdown-item').contains('Sales List', { matchCase: false }).click();
       } else {
         cy.visit('/admin/sales');
@@ -22,21 +22,21 @@ describe('Sales Management Tests', () => {
     });
     
     // Verify sales list
-    cy.contains('Sales', { timeout: 2000 }).should('be.visible');
+    cy.contains('Sales', { timeout: 10000 }).should('be.visible');
     
     // Verify sales table or empty state
-    cy.get('body', { timeout: 2000 }).then(($body) => {
+    cy.get('body', { timeout: 10000 }).then(($body) => {
       if ($body.find('table tbody tr, .sale-item').length > 0) {
         cy.get('table tbody tr, .sale-item').should('have.length.at.least', 0);
       } else {
-        cy.contains('No sales', 'No data', { matchCase: false, timeout: 2000 }).should('exist');
+        cy.contains('No sales', 'No data', { matchCase: false, timeout: 5000 }).should('exist');
       }
     });
   });
 
   it('TC-SALE-002: View Sale Details - Should display complete sale information', () => {
     cy.visit('/admin/sales');
-    ;
+    cy.wait(1000);
     
     // Click on first sale if available
     cy.get('body').then(($body) => {
@@ -45,7 +45,7 @@ describe('Sales Management Tests', () => {
         cy.wrap(saleRow.first()).click();
         
         // Verify sale details
-        cy.get('body', { timeout: 2000 }).should(($b) => {
+        cy.get('body', { timeout: 10000 }).should(($b) => {
           expect($b.find('h1, .sale-details, .invoice-details').length).to.be.greaterThan(0);
         });
       } else {

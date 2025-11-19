@@ -1,8 +1,10 @@
-# Grocery Store ERP + POS System - Architecture & Modules
+# Grocery Store ERP + POS System - Project Requirements
 
 ## Overview
 
-This is a production-ready Grocery Store Management System built with **.NET 8** (Backend) and **Angular 20** (Frontend), following Clean Architecture, Domain-Driven Design (DDD), CQRS, and Event-Driven patterns.
+This is a **production-ready Grocery Store Management System** built with **.NET 8** (Backend) and **Angular 20** (Frontend), following Clean Architecture, Domain-Driven Design (DDD), CQRS, and Event-Driven patterns.
+
+---
 
 ## System Architecture
 
@@ -51,13 +53,13 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 
 ---
 
-## Core Modules & Their Responsibilities
+## Core Modules & Requirements
 
-### 1. **Master Data Management Module**
+### 1. Master Data Management Module
 
 **Purpose**: Foundation of the system - manages all reference data
 
-**Domain Entities**:
+**Entities**:
 - `Product` - Product catalog with MRP, Sale Price, Barcode, Tax Slab
 - `Category` - Product categorization
 - `Unit` - Measurement units (kg, liter, piece, etc.)
@@ -66,19 +68,13 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 - `Customer` - Customer profiles with loyalty points and pay-later balance
 - `StoreSettings` - Store configuration (GSTIN, address, loyalty settings)
 
-**Responsibilities**:
+**Requirements**:
 - CRUD operations for all master data
 - Product search and filtering
 - Bulk product import (Excel/JSON)
 - Category hierarchy management
 - Tax configuration
 - Store settings management
-
-**Importance**: 
-- **Critical** - All other modules depend on master data
-- Products must exist before sales/purchases
-- Categories and tax slabs drive pricing and compliance
-- Customer data enables loyalty programs and credit sales
 
 **API Endpoints**:
 - `/api/products` - Product management
@@ -92,11 +88,11 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 
 ---
 
-### 2. **Purchasing Module**
+### 2. Purchasing Module
 
 **Purpose**: Manage procurement from suppliers
 
-**Domain Entities**:
+**Entities**:
 - `PurchaseOrder` - Purchase orders to suppliers
 - `PurchaseOrderItem` - Items in purchase orders
 - `GoodsReceiveNote` (GRN) - Receipt of goods from suppliers
@@ -105,19 +101,13 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 - `SupplierReturnItem` - Items in supplier returns
 - `SupplierPayment` - Payments made to suppliers
 
-**Responsibilities**:
+**Requirements**:
 - Create and manage purchase orders
 - Receive goods (GRN creation)
 - Track supplier returns
 - Record supplier payments
 - Calculate outstanding payments
 - Auto-update inventory on GRN confirmation
-
-**Importance**:
-- **Critical** - Stock replenishment depends on this
-- GRN triggers inventory updates
-- Supplier payment tracking ensures financial accuracy
-- Returns handle defective/damaged goods
 
 **API Endpoints**:
 - `/api/purchasing/purchase-orders` - PO management
@@ -126,27 +116,19 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 - `/api/suppliers/{id}/payments` - Supplier payments
 - `/api/suppliers/outstanding` - Outstanding payments
 
-**Frontend Routes**:
-- `/admin/purchasing/purchase-orders` - PO list
-- `/admin/purchasing/purchase-orders/new` - Create PO
-- `/admin/purchasing/purchase-orders/:id` - PO details
-- `/admin/purchasing/grn` - GRN list
-- `/admin/purchasing/grn/new` - Create GRN
-- `/admin/purchasing/supplier-returns` - Supplier returns
-
 ---
 
-### 3. **Inventory Management Module**
+### 3. Inventory Management Module
 
 **Purpose**: Track stock levels, batches, and inventory movements
 
-**Domain Entities**:
+**Entities**:
 - `Inventory` - Current stock levels per product
 - `InventoryBatch` - Batch tracking with expiry dates (FIFO/LIFO)
 - `InventoryAdjustment` - Manual stock adjustments
 - `InventoryAudit` - Audit trail for inventory changes
 
-**Responsibilities**:
+**Requirements**:
 - Real-time stock tracking
 - Batch management with expiry tracking
 - Low stock alerts
@@ -156,13 +138,6 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 - Reorder point management
 - Reorder suggestions
 
-**Importance**:
-- **Critical** - Prevents overselling
-- Batch tracking ensures FIFO/LIFO compliance
-- Expiry tracking prevents waste
-- Low stock alerts prevent stockouts
-- Reorder points automate procurement
-
 **API Endpoints**:
 - `/api/inventory/products` - Inventory products list
 - `/api/inventory/product/{id}` - Product inventory details
@@ -171,26 +146,14 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 - `/api/inventory/expiry-soon` - Expiring batches
 - `/api/inventory/valuation` - Inventory valuation
 - `/api/inventory/reorder-suggestions` - Reorder suggestions
-- `/api/inventory/products/{id}/reorder-point` - Update reorder point
-- `/api/admin/inventory/adjust` - Admin adjustments
-
-**Frontend Routes**:
-- `/admin/inventory` - Inventory dashboard
-- `/admin/inventory/products` - Product batch list
-- `/admin/inventory/product/:productId` - Batch details
-- `/admin/inventory/low-stock` - Low stock list
-- `/admin/inventory/expiry` - Expiry list
-- `/admin/inventory/adjust` - Stock adjustment
-- `/admin/inventory/list` - Inventory list
-- `/admin/inventory/expiry-management` - Expiry management
 
 ---
 
-### 4. **Sales & POS Module**
+### 4. Sales & POS Module
 
 **Purpose**: Process customer sales and manage point-of-sale operations
 
-**Domain Entities**:
+**Entities**:
 - `Sale` - Sales transactions
 - `SaleItem` - Items in sales
 - `Invoice` - Generated invoices
@@ -199,7 +162,7 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 - `Refund` - Refunds for returns
 - `ServiceToken` - Queue management tokens
 
-**Responsibilities**:
+**Requirements**:
 - Process POS sales
 - Generate invoices
 - Handle customer returns
@@ -212,13 +175,6 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 - Offline POS support
 - Thermal receipt printing
 
-**Importance**:
-- **Critical** - Primary revenue generation
-- POS is the customer-facing interface
-- Returns/refunds maintain customer satisfaction
-- Payment tracking ensures cash flow accuracy
-- Offline support ensures business continuity
-
 **API Endpoints**:
 - `/api/sales` - Sales management
 - `/api/sales/pos` - POS sale creation
@@ -229,25 +185,19 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 - `/api/print/receipt` - Print receipt
 - `/api/print/barcode` - Print barcode
 
-**Frontend Routes**:
-- `/pos` - POS interface
-- `/admin/sales` - Sales list
-- `/admin/sales/:id` - Sale details
-- `/admin/sales/:id/return` - Create return
-
 ---
 
-### 5. **Customer Management Module**
+### 5. Customer Management Module
 
 **Purpose**: Manage customer relationships and profiles
 
-**Domain Entities**:
+**Entities**:
 - `Customer` - Customer profiles
 - `CustomerSavedItem` - Frequently purchased items
 - `LoyaltyTransaction` - Loyalty point transactions
 - `PayLaterLedger` - Pay-later (Udhar) ledger entries
 
-**Responsibilities**:
+**Requirements**:
 - Customer registration and profile management
 - Purchase history tracking
 - Loyalty points management
@@ -255,59 +205,36 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 - Saved items (favorites) management
 - Customer search by phone
 
-**Importance**:
-- **High** - Customer retention and loyalty
-- Loyalty program drives repeat business
-- Pay-later enables credit sales
-- Purchase history enables personalized service
-
 **API Endpoints**:
 - `/api/customers` - Customer CRUD
 - `/api/customers/by-phone/{phone}` - Find by phone
 - `/api/customers/{id}/purchase-history` - Purchase history
 - `/api/customers/{id}/ledger` - Pay-later ledger
 - `/api/customers/{id}/saved-items` - Saved items
-- `/api/customers/{id}/pay-later-settings` - Pay-later settings
-
-**Frontend Routes**:
-- `/admin/customers` - Customer list
-- `/admin/customers/new` - Create customer
-- `/admin/customers/:id` - Customer details
-- `/admin/customers/:id/edit` - Edit customer
 
 ---
 
-### 6. **Offers & Discounts Module**
+### 6. Offers & Discounts Module
 
 **Purpose**: Manage promotional offers and discounts
 
-**Domain Entities**:
+**Entities**:
 - `Offer` - Promotional offers (percentage, flat, BOGO)
 
-**Responsibilities**:
+**Requirements**:
 - Create and manage offers
 - Apply offers to sales automatically
 - Coupon code validation
 - Product/category-specific offers
 - Store-wide offers
 
-**Importance**:
-- **Medium** - Drives sales and customer engagement
-- Automatic offer application at POS
-- Flexible discount types support various promotions
-
 **API Endpoints**:
 - `/api/offers` - Offer management
 - `/api/offers/validate-coupon` - Coupon validation
 
-**Frontend Routes**:
-- `/admin/offers` - Offer list
-- `/admin/offers/new` - Create offer
-- `/admin/offers/edit/:id` - Edit offer
-
 ---
 
-### 7. **Reports & Analytics Module**
+### 7. Reports & Analytics Module
 
 **Purpose**: Business intelligence and compliance reporting
 
@@ -322,19 +249,14 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 - Low Stock Report
 - Expiry Report
 - Reorder Suggestions
+- Purchase Summary Report
 
-**Responsibilities**:
+**Requirements**:
 - Generate various business reports
-- Export reports to Excel
+- Export reports to Excel/PDF
 - GST compliance exports
 - Inventory analysis
 - Sales analysis
-
-**Importance**:
-- **High** - Business decision making
-- GST exports ensure tax compliance
-- Reports identify trends and issues
-- Inventory reports optimize stock levels
 
 **API Endpoints**:
 - `/api/reports/daily-sales` - Daily sales
@@ -344,89 +266,57 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 - `/api/reports/item-wise-sales` - Item-wise sales
 - `/api/reports/low-stock` - Low stock report
 - `/api/reports/expiry` - Expiry report
-- `/api/reports/reorder-suggestions` - Reorder suggestions
+- `/api/reports/purchase-summary` - Purchase summary
 - `/api/gst/gstr1` - GSTR-1 export
 - `/api/gst/gstr2` - GSTR-2 export
 
-**Frontend Routes**:
-- `/admin/reports` - Reports dashboard
-- `/admin/reports/daily-sales` - Daily sales
-- `/admin/reports/gst-summary` - GST summary
-- `/admin/reports/gst-export` - GST export
-- `/admin/reports/fast-moving` - Fast-moving
-- `/admin/reports/slow-moving` - Slow-moving
-- `/admin/reports/item-wise-sales` - Item-wise sales
-- `/admin/reports/low-stock` - Low stock
-- `/admin/reports/expiry` - Expiry report
-- `/admin/reports/reorder-suggestions` - Reorder suggestions
-
 ---
 
-### 8. **Accounting Module**
+### 8. Accounting Module
 
 **Purpose**: Financial tracking and daily closing
 
-**Domain Entities**:
+**Entities**:
 - `LedgerEntry` - Accounting ledger entries
 - `PayLaterLedger` - Customer credit ledger
 
-**Responsibilities**:
+**Requirements**:
 - Automatic ledger entry creation
 - Daily closing summaries
 - Payment tracking
 - Financial reporting
 
-**Importance**:
-- **High** - Financial accuracy and compliance
-- Automatic ledger ensures no missed entries
-- Daily closing provides financial snapshot
-
 **API Endpoints**:
 - `/api/accounting/daily-closing` - Daily closing summary
 
-**Frontend Routes**:
-- `/admin/accounting/daily-closing` - Daily closing
-
 ---
 
-### 9. **User & Permission Management Module**
+### 9. User & Permission Management Module
 
 **Purpose**: Access control and user management
 
-**Domain Entities**:
+**Entities**:
 - `User` - System users (Admin, Staff, SuperAdmin)
 - `Permission` - System permissions
 - `RolePermission` - Role-permission mappings
 
-**Responsibilities**:
+**Requirements**:
 - User management
 - Role-based access control (RBAC)
 - Permission assignment
 - Authentication and authorization
-
-**Importance**:
-- **Critical** - Security and access control
-- Prevents unauthorized access
-- Enables role-based workflows
-- Audit trail for user actions
+- Account lockout after failed attempts
 
 **API Endpoints**:
 - `/api/auth/login` - User login
 - `/api/auth/refresh` - Token refresh
 - `/api/users` - User management
 - `/api/permissions` - Permission management
-- `/api/permissions/role/{roleName}` - Role permissions
 - `/api/permissions/me` - Current user permissions
-- `/api/permissions/assign` - Assign permission
-
-**Frontend Routes**:
-- `/login` - Login page
-- `/admin/settings/roles` - Role management
-- `/admin/settings/permissions` - Permission management
 
 ---
 
-### 10. **Hardware Integration Module**
+### 10. Hardware Integration Module
 
 **Purpose**: Integrate with physical hardware devices
 
@@ -435,110 +325,113 @@ This is a production-ready Grocery Store Management System built with **.NET 8**
 - `IReceiptPrinterService` - Thermal receipt printer
 - `IBarcodePrintService` - Barcode printer
 
-**Responsibilities**:
+**Requirements**:
 - Read weight from scales
 - Print thermal receipts
 - Print barcodes
 - Handle device connectivity
 
-**Importance**:
-- **Medium** - Operational efficiency
-- Weight scales automate weight-based sales
-- Receipt printers provide customer receipts
-- Barcode printing enables product labeling
-
 **API Endpoints**:
 - `/api/weight-scale/read` - Read weight
-- `/api/weight-scale/tare` - Tare scale
-- `/api/weight-scale/status` - Connection status
 - `/api/print/receipt` - Print receipt
 - `/api/print/barcode` - Print barcode
 
 ---
 
-### 11. **Offline Support Module**
+### 11. Offline Support Module
 
 **Purpose**: Enable POS operations without internet
 
-**Services**:
-- `OfflineStorageService` - IndexedDB wrapper
-- `SyncQueueService` - Offline sync queue
-
-**Responsibilities**:
+**Requirements**:
 - Store sales data locally when offline
 - Queue sales for sync when online
 - Detect online/offline status
 - Sync queued sales automatically
 
-**Importance**:
-- **High** - Business continuity
-- Prevents sales loss during internet outages
-- Automatic sync when connection restored
-
 **API Endpoints**:
 - `/api/sync/offline-sales` - Sync offline sales
 
-**Frontend Components**:
-- `offline-indicator` - Shows online/offline status
-
 ---
 
-### 12. **Import/Export Module**
+### 12. Import/Export Module
 
 **Purpose**: Bulk data operations
 
-**Domain Entities**:
+**Entities**:
 - `ImportJob` - Import job tracking
 - `ImportError` - Import error records
 
-**Responsibilities**:
+**Requirements**:
 - Bulk product import (Excel/JSON)
 - Column mapping
 - Error reporting
 - Import job tracking
 - Real-time progress via SignalR
 
-**Importance**:
-- **Medium** - Operational efficiency
-- Enables quick product catalog setup
-- Reduces manual data entry
-
 **API Endpoints**:
 - `/api/admin/imports` - Import management
 - `/api/admin/imports/jobs` - Import jobs
 
-**Frontend Routes**:
-- `/admin/imports` - Import page
-- `/admin/imports/upload` - Upload file
-- `/admin/imports/jobs` - Import jobs
-- `/admin/imports/jobs/:id` - Job details
-
 ---
 
-### 13. **Audit & Logging Module**
+### 13. Audit & Logging Module
 
 **Purpose**: Track system changes and user actions
 
-**Domain Entities**:
+**Entities**:
 - `AuditEntry` - Audit log entries
 
-**Responsibilities**:
+**Requirements**:
 - Log all data changes
 - Track user actions
 - Provide audit trail
 - Support compliance requirements
 
-**Importance**:
-- **High** - Compliance and security
-- Enables change tracking
-- Supports regulatory requirements
-- Helps in troubleshooting
-
 **API Endpoints**:
 - `/api/admin/audits` - Audit logs
 
-**Frontend Routes**:
-- `/admin/audit` - Audit logs
+---
+
+## Technical Requirements
+
+### Backend Technologies
+- **.NET 8** - Framework
+- **Entity Framework Core** - ORM
+- **SQL Server** - Database
+- **MediatR** - CQRS implementation
+- **FluentValidation** - Input validation
+- **AutoMapper** - Object mapping
+- **JWT** - Authentication
+- **SignalR** - Real-time communication
+- **Argon2id/PBKDF2** - Password hashing
+
+### Frontend Technologies
+- **Angular 20** - Framework
+- **Angular Material** - UI components
+- **RxJS** - Reactive programming
+- **TypeScript** - Language
+- **Tailwind CSS** - Styling
+- **IndexedDB** - Offline storage
+- **ZXing** - Barcode generation
+
+### Design Patterns
+- **Clean Architecture** - Separation of concerns
+- **DDD** - Domain-driven design
+- **CQRS** - Command Query Responsibility Segregation
+- **Repository Pattern** - Data access abstraction
+- **Unit of Work** - Transaction management
+- **Event-Driven** - Domain events for decoupling
+- **Outbox Pattern** - Reliable event publishing
+
+### Security Requirements
+- JWT-based authentication
+- Role-based access control (RBAC)
+- Permission-based authorization
+- Token refresh mechanism
+- Secure password hashing
+- Rate limiting
+- Audit logging
+- Input validation
 
 ---
 
@@ -573,78 +466,87 @@ Offers
 
 ---
 
-## Technical Patterns Used
+## Project Structure
 
-### Backend Patterns:
-- **Clean Architecture** - Separation of concerns
-- **DDD** - Domain-driven design with rich domain models
-- **CQRS** - Command Query Responsibility Segregation
-- **MediatR** - Mediator pattern for commands/queries
-- **Repository Pattern** - Data access abstraction
-- **Unit of Work** - Transaction management
-- **Event-Driven** - Domain events for decoupling
-- **Outbox Pattern** - Reliable event publishing
+### Backend Structure
+```
+src/
+├── API/                          # API Layer
+│   └── GroceryStoreManagement.API/
+│       ├── Controllers/          # Organized by feature
+│       │   ├── Admin/
+│       │   ├── MasterData/
+│       │   ├── Purchasing/
+│       │   ├── Sales/
+│       │   └── ...
+│       ├── Middlewares/
+│       └── Program.cs
+├── Application/                  # Application Layer
+│   └── GroceryStoreManagement.Application/
+│       ├── Commands/            # Organized by feature
+│       ├── Queries/             # Organized by feature
+│       ├── DTOs/                # Organized by feature
+│       └── Services/
+├── Domain/                        # Domain Layer
+│   └── GroceryStoreManagement.Domain/
+│       ├── Entities/
+│       ├── Events/
+│       └── Enums/
+└── Infrastructure/               # Infrastructure Layer
+    └── GroceryStoreManagement.Infrastructure/
+        ├── Persistence/
+        ├── Services/
+        └── Repositories/
+```
 
-### Frontend Patterns:
-- **Standalone Components** - Angular 20 feature
-- **Signals** - Reactive state management
-- **Lazy Loading** - Route-based code splitting
-- **Service Layer** - Business logic abstraction
-- **Guard Pattern** - Route protection
-- **Interceptor Pattern** - HTTP request/response handling
+### Frontend Structure
+```
+frontend/src/app/
+├── admin/                        # Admin features
+│   ├── features/
+│   │   ├── products/
+│   │   ├── inventory/
+│   │   ├── purchasing/
+│   │   ├── sales/
+│   │   └── ...
+│   └── shared/
+├── client/                       # POS features
+│   └── features/pos/
+├── core/                         # Core services
+│   ├── services/
+│   ├── guards/
+│   └── models/
+└── shared/                       # Shared components
+```
 
 ---
 
-## Data Flow Examples
+## Database Requirements
 
-### Sale Flow:
-```
-POS Component
-    ↓ (CreatePOSSaleCommand)
-Application Handler
-    ↓ (Validates stock, applies offers)
-Domain Events
-    ↓ (SaleCreatedEvent, InventoryReducedEvent)
-Event Handlers
-    ↓ (Update inventory, create ledger, earn loyalty points)
-Database
-```
-
-### Purchase Flow:
-```
-GRN Form
-    ↓ (CreateGRNCommand)
-Application Handler
-    ↓ (Validates PO, creates GRN)
-Domain Events
-    ↓ (GRNCreatedEvent, InventoryAddedEvent)
-Event Handlers
-    ↓ (Update inventory, create batches, create ledger)
-Database
-```
+- **SQL Server** (LocalDB for development, SQL Server for production)
+- **Migrations** - EF Core migrations for schema management
+- **Seed Data** - Automatic seeding of test users and initial data
+- **Audit Trail** - All changes tracked in audit tables
 
 ---
 
-## Security Features
-
-- JWT-based authentication
-- Role-based access control (RBAC)
-- Permission-based authorization
-- Token refresh mechanism
-- Secure password hashing (Argon2id/PBKDF2)
-- Rate limiting
-- Audit logging
-- Input validation (FluentValidation)
-
----
-
-## Integration Points
+## Integration Requirements
 
 1. **Weight Scales** - Serial port communication
 2. **Thermal Printers** - ESC/POS commands via serial port
 3. **Barcode Printers** - ZXing library for barcode generation
 4. **SMS/WhatsApp** - Mock service (ready for integration)
 5. **SignalR** - Real-time updates for imports and dashboard
+
+---
+
+## Performance Requirements
+
+- **Response Time**: < 500ms for most API calls
+- **Offline Support**: POS must work without internet
+- **Caching**: API response caching for frequently accessed data
+- **Lazy Loading**: Frontend code splitting for faster initial load
+- **Background Services**: Async processing for heavy operations
 
 ---
 

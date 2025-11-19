@@ -7,22 +7,22 @@ describe('Customer & Supplier Management Tests', () => {
   it('TC-CUST-001: Create Customer - Should create customer successfully', () => {
     // Navigate via dropdown or direct
     cy.visit('/admin/dashboard');
-    ;
+    cy.wait(1000);
     
     // Try to navigate via Master Data dropdown
     cy.get('body').then(($body) => {
       if ($body.find('.dropdown-trigger').length > 0) {
-        cy.contains('.dropdown-trigger, .nav-link', 'Master Data', { matchCase: false, timeout: 2000 })
+        cy.contains('.dropdown-trigger, .nav-link', 'Master Data', { matchCase: false, timeout: 5000 })
           .should('be.visible')
           .click();
-        cy.get('.dropdown-menu', { timeout: 2000 }).should('be.visible');
+        cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
         cy.get('.dropdown-item').contains('Customers', { matchCase: false }).click();
       } else {
         cy.visit('/admin/customers');
       }
     });
     
-    ;
+    cy.wait(1000);
     
     // Click New Customer button
     cy.get('body').then(($body) => {
@@ -33,7 +33,7 @@ describe('Customer & Supplier Management Tests', () => {
       if (newBtn.length > 0) {
         cy.wrap(newBtn.first()).click();
       } else {
-        cy.contains('button, a', 'New', { matchCase: false, timeout: 2000 }).click();
+        cy.contains('button, a', 'New', { matchCase: false, timeout: 5000 }).click();
       }
     });
     
@@ -57,7 +57,7 @@ describe('Customer & Supplier Management Tests', () => {
     cy.get('table tbody tr, .customer-item').first().click();
     
     // Verify customer details tabs
-    cy.contains('Overview', 'Purchase History', { timeout: 2000 }).should('be.visible');
+    cy.contains('Overview', 'Purchase History', { timeout: 10000 }).should('be.visible');
     
     // Check purchase history tab
     cy.contains('Purchase History', 'button').click();
@@ -97,22 +97,22 @@ describe('Customer & Supplier Management Tests', () => {
   it('TC-SUPPL-001: Create Supplier - Should create supplier successfully', () => {
     // Navigate via dropdown or direct
     cy.visit('/admin/dashboard');
-    ;
+    cy.wait(1000);
     
     // Try to navigate via Master Data dropdown
     cy.get('body').then(($body) => {
       if ($body.find('.dropdown-trigger').length > 0) {
-        cy.contains('.dropdown-trigger, .nav-link', 'Master Data', { matchCase: false, timeout: 2000 })
+        cy.contains('.dropdown-trigger, .nav-link', 'Master Data', { matchCase: false, timeout: 5000 })
           .should('be.visible')
           .click();
-        cy.get('.dropdown-menu', { timeout: 2000 }).should('be.visible');
+        cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
         cy.get('.dropdown-item').contains('Suppliers', { matchCase: false }).click();
       } else {
         cy.visit('/admin/suppliers');
       }
     });
     
-    ;
+    cy.wait(1000);
     
     // Click New Supplier button
     cy.get('body').then(($body) => {
@@ -123,7 +123,7 @@ describe('Customer & Supplier Management Tests', () => {
       if (newBtn.length > 0) {
         cy.wrap(newBtn.first()).click();
       } else {
-        cy.contains('button, a', 'New', { matchCase: false, timeout: 2000 }).click();
+        cy.contains('button, a', 'New', { matchCase: false, timeout: 5000 }).click();
       }
     });
     

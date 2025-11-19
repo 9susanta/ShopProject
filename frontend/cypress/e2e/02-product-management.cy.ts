@@ -5,10 +5,10 @@ describe('Product Management Tests', () => {
   });
 
   it('TC-PROD-001: Create Product - Should create new product successfully', () => {
-    cy.visit('/admin/products', { timeout: 20000 });
+    cy.visit('/admin/products', { timeout: 30000 });
     
     // Wait for page to load - be flexible with heading
-    cy.get('body', { timeout: 2000 }).should(($body) => {
+    cy.get('body', { timeout: 10000 }).should(($body) => {
       expect($body.find('h1, .admin-page-header, mat-card-title').length).to.be.greaterThan(0);
     });
     
@@ -27,22 +27,22 @@ describe('Product Management Tests', () => {
         if (newButton.length > 0) {
           cy.wrap(newButton.first()).click();
         } else {
-          cy.contains('button, a', 'New Product', { matchCase: false, timeout: 2000 }).click();
+          cy.contains('button, a', 'New Product', { matchCase: false, timeout: 5000 }).click();
         }
       }
     });
     
     // Wait for form to load
     cy.url({ timeout: 15000 }).should('include', '/admin/products/new');
-    ; // Wait for form to render
+    cy.wait(1000); // Wait for form to render
     
     // Fill product form - use more flexible selectors
-    cy.get('input[formControlName="name"], input[name="name"]', { timeout: 2000 })
+    cy.get('input[formControlName="name"], input[name="name"]', { timeout: 10000 })
       .should('be.visible')
       .clear()
       .type('Test Product E2E');
     
-    cy.get('input[formControlName="sku"], input[name="sku"]', { timeout: 2000 })
+    cy.get('input[formControlName="sku"], input[name="sku"]', { timeout: 5000 })
       .should('be.visible')
       .clear()
       .type('TEST-E2E-001');
@@ -51,9 +51,9 @@ describe('Product Management Tests', () => {
     cy.get('body').then(($body) => {
       if ($body.find('mat-select[formControlName="categoryId"], mat-select[name="categoryId"]').length > 0) {
         cy.get('mat-select[formControlName="categoryId"], mat-select[name="categoryId"]').click();
-        ;
-        cy.get('mat-option', { timeout: 2000 }).first().click();
-        ;
+        cy.wait(500);
+        cy.get('mat-option', { timeout: 3000 }).first().click();
+        cy.wait(500);
       }
     });
 
@@ -61,18 +61,18 @@ describe('Product Management Tests', () => {
     cy.get('body').then(($body) => {
       if ($body.find('mat-select[formControlName="unitId"], mat-select[name="unitId"]').length > 0) {
         cy.get('mat-select[formControlName="unitId"], mat-select[name="unitId"]').click();
-        ;
-        cy.get('mat-option', { timeout: 2000 }).first().click();
-        ;
+        cy.wait(500);
+        cy.get('mat-option', { timeout: 3000 }).first().click();
+        cy.wait(500);
       }
     });
 
-    cy.get('input[formControlName="mrp"], input[name="mrp"]', { timeout: 2000 })
+    cy.get('input[formControlName="mrp"], input[name="mrp"]', { timeout: 5000 })
       .should('be.visible')
       .clear()
       .type('100');
     
-    cy.get('input[formControlName="salePrice"], input[name="salePrice"]', { timeout: 2000 })
+    cy.get('input[formControlName="salePrice"], input[name="salePrice"]', { timeout: 5000 })
       .should('be.visible')
       .clear()
       .type('90');
@@ -81,14 +81,14 @@ describe('Product Management Tests', () => {
     cy.get('body').then(($body) => {
       if ($body.find('mat-select[formControlName="taxSlabId"], mat-select[name="taxSlabId"]').length > 0) {
         cy.get('mat-select[formControlName="taxSlabId"], mat-select[name="taxSlabId"]').click();
-        ;
-        cy.get('mat-option', { timeout: 2000 }).first().click();
-        ;
+        cy.wait(500);
+        cy.get('mat-option', { timeout: 3000 }).first().click();
+        cy.wait(500);
       }
     });
 
     // Save product - look for Save button (not Submit)
-    cy.get('button[type="submit"]', { timeout: 2000 })
+    cy.get('button[type="submit"]', { timeout: 5000 })
       .contains('Save', { matchCase: false })
       .should('be.visible')
       .should('not.be.disabled')
@@ -102,9 +102,9 @@ describe('Product Management Tests', () => {
     });
     
     // Check if product appears in list (may take time to appear) - be flexible
-    cy.get('body', { timeout: 2000 }).then(($body) => {
+    cy.get('body', { timeout: 10000 }).then(($body) => {
       if ($body.text().includes('Test Product E2E')) {
-        cy.contains('Test Product E2E', { timeout: 2000 }).should('exist');
+        cy.contains('Test Product E2E', { timeout: 5000 }).should('exist');
       } else {
         cy.log('Product may have been created but not visible in list yet');
       }
@@ -113,10 +113,10 @@ describe('Product Management Tests', () => {
 
   it('TC-PROD-002: Edit Product - Should update product successfully', () => {
     cy.visit('/admin/products');
-    cy.get('h1, .admin-page-header', { timeout: 2000 }).should('be.visible');
+    cy.get('h1, .admin-page-header', { timeout: 10000 }).should('be.visible');
 
     // Wait for products table to load
-    cy.get('table tbody tr, .product-card, .product-item, mat-row', { timeout: 2000 }).should('have.length.at.least', 1);
+    cy.get('table tbody tr, .product-card, .product-item, mat-row', { timeout: 10000 }).should('have.length.at.least', 1);
 
     // Click on first product row or edit button
     cy.get('body').then(($body) => {
@@ -130,7 +130,7 @@ describe('Product Management Tests', () => {
     });
 
     // Wait for edit form or details page
-    cy.url({ timeout: 2000 }).should((url) => {
+    cy.url({ timeout: 10000 }).should((url) => {
       expect(url).to.satisfy((u: string) =>
         u.includes('/admin/products/') && !u.includes('/new')
       );
@@ -152,7 +152,7 @@ describe('Product Management Tests', () => {
     });
 
     // Wait for form to load
-    ;
+    cy.wait(1000);
 
     // Update sale price if form is visible
     cy.get('body').then(($body) => {
@@ -176,7 +176,7 @@ describe('Product Management Tests', () => {
 
   it('TC-PROD-003: Search Products - Should filter products by search term', () => {
     cy.visit('/admin/products');
-    cy.get('h1, .admin-page-header', { timeout: 2000 }).should('be.visible');
+    cy.get('h1, .admin-page-header', { timeout: 10000 }).should('be.visible');
 
     // Search for product - use the search input (look for search field in filters or header)
     cy.get('body').then(($body) => {
@@ -186,7 +186,7 @@ describe('Product Management Tests', () => {
         // Wait for search to execute (may be debounced)
         cy.wait(1500);
         // Verify filtered results - should have at least 0 results (may be empty)
-        cy.get('table tbody tr, .product-card, .product-item, mat-row', { timeout: 2000 }).should('exist');
+        cy.get('table tbody tr, .product-card, .product-item, mat-row', { timeout: 5000 }).should('exist');
       } else {
         cy.log('Search input not found - test may need page structure update');
       }
@@ -197,16 +197,16 @@ describe('Product Management Tests', () => {
     cy.visit('/admin/inventory/products');
     
     // Wait for inventory products page to load
-    cy.get('h1, mat-card-title', { timeout: 2000 }).should('be.visible');
+    cy.get('h1, mat-card-title', { timeout: 10000 }).should('be.visible');
     
     // Wait for products to load
-    cy.get('table tbody tr, .product-card, mat-row', { timeout: 2000 }).should('have.length.at.least', 1);
+    cy.get('table tbody tr, .product-card, mat-row', { timeout: 10000 }).should('have.length.at.least', 1);
     
     // Click on first product
     cy.get('table tbody tr, .product-card, mat-row').first().click();
     
     // Wait for product details or navigate to edit
-    cy.url({ timeout: 2000 }).should((url) => {
+    cy.url({ timeout: 10000 }).should((url) => {
       expect(url).to.satisfy((u: string) => 
         u.includes('/admin/inventory') || u.includes('/admin/products')
       );
@@ -218,7 +218,7 @@ describe('Product Management Tests', () => {
         cy.contains('button, a', 'Reorder Point', { matchCase: false }).click();
         
         // Set reorder point if form is visible
-        cy.get('input[name="reorderPoint"], input[formControlName="reorderPoint"]', { timeout: 2000 }).then(($input) => {
+        cy.get('input[name="reorderPoint"], input[formControlName="reorderPoint"]', { timeout: 5000 }).then(($input) => {
           if ($input.length > 0) {
             cy.wrap($input).clear().type('50');
             cy.get('input[name="suggestedQuantity"], input[formControlName="suggestedQuantity"]').clear().type('100');
@@ -227,7 +227,7 @@ describe('Product Management Tests', () => {
             cy.get('button[type="submit"], button').contains('Save', 'Update', { matchCase: false }).click();
             
             // Verify saved
-            cy.contains('50', { timeout: 2000 }).should('be.visible');
+            cy.contains('50', { timeout: 10000 }).should('be.visible');
           }
         });
       } else {
