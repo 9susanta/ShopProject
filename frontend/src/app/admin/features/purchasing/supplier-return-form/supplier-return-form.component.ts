@@ -13,7 +13,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { PurchasingService } from '@core/services/purchasing.service';
-import { ProductService } from '../../admin/products/services/product.service';
+import { ProductService } from '@core/services/product.service';
 import { ToastService } from '@core/toast/toast.service';
 import { Supplier, CreateSupplierReturnRequest, CreateSupplierReturnItemRequest } from '@core/models/purchasing.model';
 import { Product } from '@core/models/product.model';

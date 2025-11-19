@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiService } from '../api/api.service';
+import { ApiService } from './api.service';
 import { Sale, CreateSaleRequest } from '@core/models/sale.model';
 
 export interface SaleListResponse {

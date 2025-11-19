@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiService } from '../api/api.service';
+import { ApiService } from './api.service';
 import { Offer, CreateOfferRequest, UpdateOfferRequest } from '@core/models/offer.model';
 
 @Injectable({

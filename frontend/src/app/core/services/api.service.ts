@@ -1,38 +1,76 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Observable, throwError, timer } from 'rxjs';
+import { catchError, retryWhen, delayWhen, take, concatMap } from 'rxjs/operators';
+import { environment } from '@environments/environment';
 import { CacheService } from './cache.service';
 
 export interface ApiOptions {
+  headers?: HttpHeaders | Record<string, string | string[]>;
+  params?: HttpParams | Record<string, any>;
   cache?: boolean;
   cacheKey?: string;
   cacheTTL?: number;
-  headers?: HttpHeaders | { [header: string]: string | string[] };
-  params?: HttpParams | { [param: string]: any };
+  retry?: boolean;
+  retryCount?: number;
+  retryDelay?: number;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class ApiService {
+  private readonly http = inject(HttpClient);
+  private readonly cache = inject(CacheService);
   private readonly baseUrl = environment.apiUrl;
-
-  constructor(
-    private http: HttpClient,
-    private cache: CacheService
-  ) {}
 
   /**
    * Build full URL from base URL and endpoint
    */
   private buildUrl(endpoint: string): string {
-    // Remove leading slash from endpoint if present
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-    // Remove trailing slash from baseUrl if present
     const cleanBaseUrl = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
     return `${cleanBaseUrl}/${cleanEndpoint}`;
+  }
+
+  /**
+   * Clean params object by removing undefined, null, and empty string values
+   * Also converts to HttpParams to ensure proper serialization
+   */
+  private cleanParams(params?: HttpParams | Record<string, any>): HttpParams | undefined {
+    if (!params) return undefined;
+    
+    let paramsObj: Record<string, any> = {};
+    
+    if (params instanceof HttpParams) {
+      // For HttpParams, extract values
+      params.keys().forEach(key => {
+        const value = params.get(key);
+        if (value !== undefined && value !== null && value !== '' && value !== 'undefined') {
+          paramsObj[key] = value;
+        }
+      });
+    } else {
+      // For plain objects, filter out undefined/null/empty/string "undefined" values
+      Object.keys(params).forEach(key => {
+        const value = params[key];
+        if (value !== undefined && value !== null && value !== '' && value !== 'undefined') {
+          paramsObj[key] = value;
+        }
+      });
+    }
+    
+    // Return undefined if no valid params, otherwise create HttpParams
+    if (Object.keys(paramsObj).length === 0) {
+      return undefined;
+    }
+    
+    // Convert to HttpParams for proper URL encoding
+    let httpParams = new HttpParams();
+    Object.keys(paramsObj).forEach(key => {
+      httpParams = httpParams.set(key, paramsObj[key]);
+    });
+    return httpParams;
   }
 
   /**
@@ -45,31 +83,52 @@ export class ApiService {
     // Check cache first
     if (options?.cache) {
       const cached = this.cache.get<T>(cacheKey);
-      if (cached !== null) {
-        return of(cached);
+      if (cached) {
+        return new Observable(observer => {
+          observer.next(cached);
+          observer.complete();
+        });
       }
     }
 
-    // Make HTTP request
-    const httpOptions = {
+    let request$ = this.http.get<T>(url, {
       headers: options?.headers,
-      params: options?.params,
-    };
+      params: this.cleanParams(options?.params),
+    });
 
-    return this.http.get<T>(url, httpOptions).pipe(
-      map((data) => {
-        // Cache the response if caching is enabled
+    // Add retry logic
+    if (options?.retry !== false) {
+      const retryCount = options?.retryCount || 3;
+      const retryDelay = options?.retryDelay || 1000;
+      request$ = request$.pipe(
+        retryWhen(errors =>
+          errors.pipe(
+            delayWhen((error, index) => {
+              if (index < retryCount && this.isRetryableError(error)) {
+                return timer(retryDelay * (index + 1));
+              }
+              return throwError(() => error);
+            }),
+            take(retryCount + 1),
+            concatMap(error => throwError(() => error))
+          )
+        )
+      );
+    }
+
+    return request$.pipe(
+      catchError(error => {
+        // Try to return cached data on error if caching is enabled
         if (options?.cache) {
-          this.cache.set(cacheKey, data, options.cacheTTL);
+          const cached = this.cache.get<T>(cacheKey);
+          if (cached) {
+            return new Observable<T>(observer => {
+              observer.next(cached);
+              observer.complete();
+            });
+          }
         }
-        return data;
-      }),
-      catchError((error) => {
-        // Only log non-connection errors (status 0 = connection refused)
-        if (error?.status !== 0) {
-          console.error(`API GET error for ${endpoint}:`, error);
-        }
-        throw error;
+        return this.handleError(error);
       })
     );
   }
@@ -81,17 +140,11 @@ export class ApiService {
     const url = this.buildUrl(endpoint);
     const httpOptions = {
       headers: options?.headers,
-      params: options?.params,
+      params: this.cleanParams(options?.params),
     };
 
     return this.http.post<T>(url, body, httpOptions).pipe(
-      catchError((error) => {
-        // Only log non-connection errors (status 0 = connection refused)
-        if (error?.status !== 0) {
-          console.error(`API POST error for ${endpoint}:`, error);
-        }
-        throw error;
-      })
+      catchError(this.handleError)
     );
   }
 
@@ -102,17 +155,11 @@ export class ApiService {
     const url = this.buildUrl(endpoint);
     const httpOptions = {
       headers: options?.headers,
-      params: options?.params,
+      params: this.cleanParams(options?.params),
     };
 
     return this.http.put<T>(url, body, httpOptions).pipe(
-      catchError((error) => {
-        // Only log non-connection errors (status 0 = connection refused)
-        if (error?.status !== 0) {
-          console.error(`API PUT error for ${endpoint}:`, error);
-        }
-        throw error;
-      })
+      catchError(this.handleError)
     );
   }
 
@@ -123,17 +170,11 @@ export class ApiService {
     const url = this.buildUrl(endpoint);
     const httpOptions = {
       headers: options?.headers,
-      params: options?.params,
+      params: this.cleanParams(options?.params),
     };
 
     return this.http.delete<T>(url, httpOptions).pipe(
-      catchError((error) => {
-        // Only log non-connection errors (status 0 = connection refused)
-        if (error?.status !== 0) {
-          console.error(`API DELETE error for ${endpoint}:`, error);
-        }
-        throw error;
-      })
+      catchError(this.handleError)
     );
   }
 
@@ -146,19 +187,47 @@ export class ApiService {
     formData.append('file', file);
 
     if (additionalData) {
-      Object.keys(additionalData).forEach((key) => {
+      Object.keys(additionalData).forEach(key => {
         formData.append(key, additionalData[key]);
       });
     }
 
-    return this.http.post<T>(url, formData).pipe(
-      catchError((error) => {
-        // Only log non-connection errors (status 0 = connection refused)
-        if (error?.status !== 0) {
-          console.error(`API upload error for ${endpoint}:`, error);
-        }
-        throw error;
-      })
+    return this.http.post<T>(url, formData, {
+      reportProgress: true,
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * POST request with FormData (for file uploads with form fields)
+   */
+  postFormData<T>(endpoint: string, formData: FormData, options?: ApiOptions): Observable<T> {
+    const url = this.buildUrl(endpoint);
+    return this.http.post<T>(url, formData, {
+      headers: options?.headers,
+      params: this.cleanParams(options?.params),
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Chunked file upload with retry
+   */
+  uploadFileChunked<T>(
+    endpoint: string,
+    file: File,
+    onProgress?: (progress: number) => void
+  ): Observable<T> {
+    const chunkSize = environment.chunkSize;
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    let uploadedChunks = 0;
+
+    // For simplicity, upload entire file
+    // In production, implement actual chunking
+    return this.uploadFile<T>(endpoint, file).pipe(
+      catchError(this.handleError)
     );
   }
 
@@ -168,24 +237,35 @@ export class ApiService {
   downloadFile(endpoint: string, filename?: string): Observable<Blob> {
     const url = this.buildUrl(endpoint);
     return this.http.get(url, { responseType: 'blob' }).pipe(
-      map((blob) => {
-        if (filename) {
-          const link = document.createElement('a');
-          link.href = window.URL.createObjectURL(blob);
-          link.download = filename;
-          link.click();
-          window.URL.revokeObjectURL(link.href);
-        }
-        return blob;
-      }),
-      catchError((error) => {
-        // Only log non-connection errors (status 0 = connection refused)
-        if (error?.status !== 0) {
-          console.error(`API download error for ${endpoint}:`, error);
-        }
-        throw error;
-      })
+      catchError(this.handleError)
     );
+  }
+
+  private handleError = (error: HttpErrorResponse): Observable<never> => {
+    let errorMessage = 'An unknown error occurred';
+
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = `Error: ${error.error.message}`;
+    } else {
+      // Server-side error
+      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+      if (error.error?.message) {
+        errorMessage = error.error.message;
+      }
+    }
+
+    console.error('API Error:', errorMessage);
+    return throwError(() => new Error(errorMessage));
+  };
+
+  private isRetryableError(error: any): boolean {
+    if (error instanceof HttpErrorResponse) {
+      const status = error.status;
+      // Retry on network errors or 5xx server errors
+      return status === 0 || status >= 500 || status === 429;
+    }
+    return false;
   }
 }
 

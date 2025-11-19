@@ -11,7 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { InventoryService } from '../services/inventory.service';
-import { ProductService } from '../../admin/products/services/product.service';
+import { ProductService } from '@core/services/product.service';
 import { ToastService } from '@core/toast/toast.service';
 import { CreateAdjustmentRequest, InventoryAdjustmentType } from '@core/models/inventory-batch.model';
 import { Product } from '@core/models/product.model';
@@ -84,7 +84,7 @@ export class InventoryAdjustComponent implements OnInit {
     this.productService.getProductById(productId).subscribe({
       next: (product) => {
         this.product.set(product);
-        this.currentStock.set(product.availableQuantity || 0);
+        this.currentStock.set((product as any).availableQuantity || 0);
         this.adjustmentForm.patchValue({
           productId: product.id,
         });

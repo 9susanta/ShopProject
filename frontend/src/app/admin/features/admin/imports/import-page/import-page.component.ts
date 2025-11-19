@@ -2,7 +2,7 @@ import { Component, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ImportUploadComponent } from '../import-upload/import-upload.component';
-import { ColumnMappingComponent } from '../column-mapping/column-mapping.component';
+import { ColumnMappingComponent } from '../../../shared/components/column-mapping/column-mapping.component';
 import { PreviewGridComponent } from '../preview-grid/preview-grid.component';
 import { ImportOptionsComponent } from '../import-options/import-options.component';
 import { ImportService } from '../services/import.service';

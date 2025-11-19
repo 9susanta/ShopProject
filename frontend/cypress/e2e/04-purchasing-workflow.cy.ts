@@ -7,19 +7,19 @@ describe('Purchasing Workflow Tests', () => {
   it('TC-PURCH-001: Create Purchase Order - Should create PO successfully', () => {
     // Navigate via dropdown menu
     cy.visit('/admin/dashboard');
-    cy.wait(1000);
+    ;
     
     // Open Purchasing dropdown
-    cy.contains('.dropdown-trigger, .nav-link', 'Purchasing', { matchCase: false, timeout: 10000 })
+    cy.contains('.dropdown-trigger, .nav-link', 'Purchasing', { matchCase: false, timeout: 2000 })
       .should('be.visible')
       .click();
     
     // Wait for dropdown menu and click Purchase Orders
-    cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
+    cy.get('.dropdown-menu', { timeout: 2000 }).should('be.visible');
     cy.get('.dropdown-item').contains('Purchase Orders', { matchCase: false }).click();
     
     // Wait for page to load
-    cy.get('h1, mat-card-title, .admin-page-header', { timeout: 10000 }).should('be.visible');
+    cy.get('h1, mat-card-title, .admin-page-header', { timeout: 2000 }).should('be.visible');
     
     // Click New button - try multiple selectors
     cy.get('body').then(($body) => {
@@ -30,12 +30,12 @@ describe('Purchasing Workflow Tests', () => {
       if (newButton.length > 0) {
         cy.wrap(newButton.first()).click();
       } else {
-        cy.contains('button, a', 'New', { matchCase: false, timeout: 5000 }).click();
+        cy.contains('button, a', 'New', { matchCase: false, timeout: 2000 }).click();
       }
     });
     
     // Wait for form to load
-    cy.url({ timeout: 10000 }).should((url) => {
+    cy.url({ timeout: 2000 }).should((url) => {
       expect(url).to.satisfy((u: string) => 
         u.includes('/purchasing/purchase-orders') && (u.includes('/new') || u.includes('create'))
       );
@@ -45,17 +45,17 @@ describe('Purchasing Workflow Tests', () => {
     cy.get('body').then(($body) => {
       // Try autocomplete first (Material autocomplete)
       if ($body.find('input[formControlName="supplierName"], input[matAutocomplete]').length > 0) {
-        cy.get('input[formControlName="supplierName"], input[matAutocomplete]', { timeout: 5000 })
+        cy.get('input[formControlName="supplierName"], input[matAutocomplete]', { timeout: 2000 })
           .should('be.visible')
           .type('Fresh');
-        cy.wait(1000); // Wait for autocomplete to load
-        cy.get('mat-option', { timeout: 3000 }).first().click();
+        ; // Wait for autocomplete to load
+        cy.get('mat-option', { timeout: 2000 }).first().click();
       } 
       // Try mat-select
       else if ($body.find('mat-select[name="supplierId"], mat-select[formControlName="supplierId"]').length > 0) {
         cy.get('mat-select[name="supplierId"], mat-select[formControlName="supplierId"]').click();
-        cy.wait(500);
-        cy.get('mat-option', { timeout: 3000 }).first().click();
+        ;
+        cy.get('mat-option', { timeout: 2000 }).first().click();
       }
     });
 
@@ -70,38 +70,38 @@ describe('Purchasing Workflow Tests', () => {
       }
     });
     
-    cy.wait(1000); // Wait for item row to appear
+    ; // Wait for item row to appear
     
     // Select product - try autocomplete first
     cy.get('body').then(($body) => {
       if ($body.find('input[matAutocomplete], input[formControlName*="product"]').length > 0) {
-        cy.get('input[matAutocomplete], input[formControlName*="product"]', { timeout: 5000 })
+        cy.get('input[matAutocomplete], input[formControlName*="product"]', { timeout: 2000 })
           .first()
           .should('be.visible')
           .type('Apple');
-        cy.wait(1000);
-        cy.get('mat-option', { timeout: 3000 }).first().click();
+        ;
+        cy.get('mat-option', { timeout: 2000 }).first().click();
       } else if ($body.find('mat-select[name*="product"]').length > 0) {
         cy.get('mat-select[name*="product"]').first().click();
-        cy.wait(500);
-        cy.get('mat-option', { timeout: 3000 }).first().click();
+        ;
+        cy.get('mat-option', { timeout: 2000 }).first().click();
       }
     });
 
     // Enter quantity and price
-    cy.get('input[formControlName*="quantity"], input[name*="quantity"]', { timeout: 5000 })
+    cy.get('input[formControlName*="quantity"], input[name*="quantity"]', { timeout: 2000 })
       .first()
       .should('be.visible')
       .clear()
       .type('10');
-    cy.get('input[formControlName*="unitPrice"], input[name*="unitPrice"]', { timeout: 5000 })
+    cy.get('input[formControlName*="unitPrice"], input[name*="unitPrice"]', { timeout: 2000 })
       .first()
       .should('be.visible')
       .clear()
       .type('50');
 
     // Save PO
-    cy.get('button[type="submit"], button').contains('Save', 'Submit', { matchCase: false, timeout: 5000 })
+    cy.get('button[type="submit"], button').contains('Save', 'Submit', { matchCase: false, timeout: 2000 })
       .should('be.visible')
       .click();
     
@@ -113,9 +113,9 @@ describe('Purchasing Workflow Tests', () => {
     });
     
     // Check for success message (optional - may not always appear)
-    cy.get('body', { timeout: 5000 }).then(($body) => {
+    cy.get('body', { timeout: 2000 }).then(($body) => {
       if ($body.text().toLowerCase().includes('success') || $body.text().toLowerCase().includes('created')) {
-        cy.contains('success', 'created', { matchCase: false, timeout: 5000 }).should('exist');
+        cy.contains('success', 'created', { matchCase: false, timeout: 2000 }).should('exist');
       }
     });
   });

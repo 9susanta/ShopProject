@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ApiService } from '../../../../core/api/api.service';
+import { ApiService } from '@core/services/api.service';
 import { Product, Category, SaleRequest, SaleResponse } from '../../../../core/models/product.model';
 
 @Injectable({

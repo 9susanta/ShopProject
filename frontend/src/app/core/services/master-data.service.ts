@@ -2,10 +2,10 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable, of, BehaviorSubject } from 'rxjs';
 import { tap, shareReplay, catchError } from 'rxjs/operators';
 import { CategoryService } from './category.service';
-import { TaxSlabService } from './taxslab.service';
+import { TaxSlabService } from './tax-slab.service';
 import { UnitService } from './unit.service';
 import { CategoryDto } from '@core/models/category.model';
-import { TaxSlabDto } from '@core/models/taxslab.model';
+import { TaxSlabDto } from '@core/models/tax-slab.model';
 import { UnitDto } from '@core/models/unit.model';
 
 interface MasterDataCache {
@@ -20,7 +20,7 @@ interface MasterDataCache {
 })
 export class MasterDataService {
   private categoryService = inject(CategoryService);
-  private taxSlabService = inject(TaxSlabService);
+  private TaxSlabService = inject(TaxSlabService);
   private unitService = inject(UnitService);
 
   private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutes
@@ -68,7 +68,7 @@ export class MasterDataService {
     }
 
     this.isLoading.set(true);
-    return this.taxSlabService.getTaxSlabs().pipe(
+    return this.TaxSlabService.getTaxSlabs().pipe(
       tap(taxSlabs => {
         this.updateCache('taxSlabs', taxSlabs);
         this.taxSlabs.set(taxSlabs);

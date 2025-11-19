@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiService } from '@core/api/api.service';
+import { ApiService } from '@core/services/api.service';
 import { CategoryDto, CategoryCreateRequest, CategoryUpdateRequest } from '@core/models/category.model';
 
 @Injectable({

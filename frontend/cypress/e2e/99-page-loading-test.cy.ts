@@ -45,10 +45,10 @@ describe('Page Loading and Console Error Tests', () => {
 
   pages.forEach((page) => {
     it(`Should load ${page.name} without console errors`, () => {
-      cy.visit(page.url, { timeout: 30000 });
+      cy.visit(page.url, { timeout: 20000 });
       
       // Wait for page to load
-      cy.get('body', { timeout: 10000 }).should('be.visible');
+      cy.get('body', { timeout: 2000 }).should('be.visible');
       
       // Wait for any async operations to complete
       cy.wait(3000);
@@ -80,7 +80,7 @@ describe('Page Loading and Console Error Tests', () => {
       });
       
       // Check if page has loaded (has some content)
-      cy.get('body', { timeout: 10000 }).should(($body) => {
+      cy.get('body', { timeout: 2000 }).should(($body) => {
         const hasContent = $body.find('h1, .admin-page-header, mat-card-title, .admin-page-container').length > 0;
         expect(hasContent).to.be.true;
       });
@@ -115,7 +115,7 @@ describe('Page Loading and Console Error Tests', () => {
     }).as('apiRequests');
 
     pages.slice(0, 5).forEach((page) => {
-      cy.visit(page.url, { timeout: 30000 });
+      cy.visit(page.url, { timeout: 20000 });
       cy.wait(3000);
     });
 

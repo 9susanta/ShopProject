@@ -100,7 +100,7 @@ import { CategoryDto } from '@core/models/category.model';
                   }
                 </td>
               </ng-container>
-              <ng-container matColumnDef="taxSlab">
+              <ng-container matColumnDef="tax-slab">
                 <th mat-header-cell *matHeaderCellDef>Tax Slab</th>
                 <td mat-cell *matCellDef="let category">
                   @if (category.taxSlab) {
@@ -128,8 +128,8 @@ import { CategoryDto } from '@core/models/category.model';
                   </div>
                 </td>
               </ng-container>
-              <tr mat-header-row *matHeaderRowDef="['name', 'taxSlab', 'status', 'actions']"></tr>
-              <tr mat-row *matRowDef="let row; columns: ['name', 'taxSlab', 'status', 'actions']"></tr>
+              <tr mat-header-row *matHeaderRowDef="['name', 'tax-slab', 'status', 'actions']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['name', 'tax-slab', 'status', 'actions']"></tr>
             </table>
           }
         </mat-card-content>

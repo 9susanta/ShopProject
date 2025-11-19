@@ -7,15 +7,15 @@ describe('Reports & Analytics Tests', () => {
   it('TC-REPT-001: Daily Sales Report - Should generate daily sales report', () => {
     // Navigate via dropdown or direct
     cy.visit('/admin/dashboard');
-    cy.wait(1000);
+    ;
     
     // Try to navigate via Reports dropdown
     cy.get('body').then(($body) => {
       if ($body.find('.dropdown-trigger').length > 0) {
-        cy.contains('.dropdown-trigger, .nav-link', 'Reports', { matchCase: false, timeout: 5000 })
+        cy.contains('.dropdown-trigger, .nav-link', 'Reports', { matchCase: false, timeout: 2000 })
           .should('be.visible')
           .click();
-        cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
+        cy.get('.dropdown-menu', { timeout: 2000 }).should('be.visible');
         cy.get('.dropdown-item').contains('Daily Sales', { matchCase: false }).click();
       } else {
         cy.visit('/admin/reports/daily-sales');
@@ -23,13 +23,13 @@ describe('Reports & Analytics Tests', () => {
     });
     
     // Wait for page to load
-    cy.get('h1, .admin-page-header', { timeout: 10000 }).should('be.visible');
+    cy.get('h1, .admin-page-header', { timeout: 2000 }).should('be.visible');
     
     // Select date (default is today) - use datepicker toggle
     cy.get('body').then(($body) => {
       if ($body.find('mat-datepicker-toggle').length > 0) {
         cy.get('mat-datepicker-toggle').first().click();
-        cy.wait(500);
+        ;
         // Try to click today button if available
         cy.get('body').then(($b) => {
           if ($b.find('button').filter((i, el) => el.textContent?.toLowerCase().includes('today')).length > 0) {
@@ -48,32 +48,32 @@ describe('Reports & Analytics Tests', () => {
       if (loadBtn.length > 0) {
         cy.wrap(loadBtn.first()).click();
       } else {
-        cy.contains('button', 'Load', { matchCase: false, timeout: 5000 }).click();
+        cy.contains('button', 'Load', { matchCase: false, timeout: 2000 }).click();
       }
     });
     
     // Verify report displayed
-    cy.contains('Sales', 'Revenue', 'Total', { timeout: 10000 }).should('be.visible');
+    cy.contains('Sales', 'Revenue', 'Total', { timeout: 2000 }).should('be.visible');
   });
 
   it('TC-REPT-002: GST Summary Report - Should generate GST report', () => {
     // Navigate via dropdown or direct
     cy.visit('/admin/dashboard');
-    cy.wait(1000);
+    ;
     
     cy.get('body').then(($body) => {
       if ($body.find('.dropdown-trigger').length > 0) {
-        cy.contains('.dropdown-trigger, .nav-link', 'Reports', { matchCase: false, timeout: 5000 })
+        cy.contains('.dropdown-trigger, .nav-link', 'Reports', { matchCase: false, timeout: 2000 })
           .should('be.visible')
           .click();
-        cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
+        cy.get('.dropdown-menu', { timeout: 2000 }).should('be.visible');
         cy.get('.dropdown-item').contains('GST Monthly', { matchCase: false }).click();
       } else {
         cy.visit('/admin/reports/gst-summary');
       }
     });
     
-    cy.wait(1000);
+    ;
     
     // Load report button
     cy.get('body').then(($body) => {
@@ -87,7 +87,7 @@ describe('Reports & Analytics Tests', () => {
     });
     
     // Verify GST breakdown
-    cy.contains('GST', 'CGST', 'SGST', { timeout: 10000, matchCase: false }).should('be.visible');
+    cy.contains('GST', 'CGST', 'SGST', { timeout: 2000, matchCase: false }).should('be.visible');
   });
 
   it('TC-REPT-003: GSTR-1 Export - Should export GSTR-1 Excel file', () => {
@@ -111,7 +111,7 @@ describe('Reports & Analytics Tests', () => {
 
   it('TC-REPT-004: Fast-Moving Products - Should show top-selling products', () => {
     cy.visit('/admin/reports/fast-moving');
-    cy.wait(1000);
+    ;
     
     // Load report - it should auto-load or have a load button
     cy.get('body').then(($body) => {
@@ -125,11 +125,11 @@ describe('Reports & Analytics Tests', () => {
     });
     
     // Verify products listed or empty state
-    cy.get('body', { timeout: 10000 }).then(($body) => {
+    cy.get('body', { timeout: 2000 }).then(($body) => {
       if ($body.find('table tbody tr, .product-item').length > 0) {
         cy.get('table tbody tr, .product-item').should('have.length.at.least', 0);
       } else {
-        cy.contains('No products', 'No data', { matchCase: false, timeout: 5000 }).should('exist');
+        cy.contains('No products', 'No data', { matchCase: false, timeout: 2000 }).should('exist');
       }
     });
   });
@@ -137,21 +137,21 @@ describe('Reports & Analytics Tests', () => {
   it('TC-REPT-005: Low Stock Report - Should list low stock products', () => {
     // Navigate via dropdown or direct
     cy.visit('/admin/dashboard');
-    cy.wait(1000);
+    ;
     
     cy.get('body').then(($body) => {
       if ($body.find('.dropdown-trigger').length > 0) {
-        cy.contains('.dropdown-trigger, .nav-link', 'Reports', { matchCase: false, timeout: 5000 })
+        cy.contains('.dropdown-trigger, .nav-link', 'Reports', { matchCase: false, timeout: 2000 })
           .should('be.visible')
           .click();
-        cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
+        cy.get('.dropdown-menu', { timeout: 2000 }).should('be.visible');
         cy.get('.dropdown-item').contains('Low Stock', { matchCase: false }).click();
       } else {
         cy.visit('/admin/reports/low-stock');
       }
     });
     
-    cy.wait(1000);
+    ;
     
     // Report should auto-load, or click generate if available
     cy.get('body').then(($body) => {
@@ -165,11 +165,11 @@ describe('Reports & Analytics Tests', () => {
     });
     
     // Verify low stock products listed or empty state
-    cy.get('body', { timeout: 10000 }).then(($body) => {
+    cy.get('body', { timeout: 2000 }).then(($body) => {
       if ($body.find('table tbody tr, .product-item').length > 0) {
         cy.get('table tbody tr, .product-item').should('have.length.at.least', 0);
       } else {
-        cy.contains('No products', 'No data', { matchCase: false, timeout: 5000 }).should('exist');
+        cy.contains('No products', 'No data', { matchCase: false, timeout: 2000 }).should('exist');
       }
     });
   });
@@ -177,21 +177,21 @@ describe('Reports & Analytics Tests', () => {
   it('TC-REPT-006: Expiry Report - Should list expiring batches', () => {
     // Navigate via dropdown or direct
     cy.visit('/admin/dashboard');
-    cy.wait(1000);
+    ;
     
     cy.get('body').then(($body) => {
       if ($body.find('.dropdown-trigger').length > 0) {
-        cy.contains('.dropdown-trigger, .nav-link', 'Reports', { matchCase: false, timeout: 5000 })
+        cy.contains('.dropdown-trigger, .nav-link', 'Reports', { matchCase: false, timeout: 2000 })
           .should('be.visible')
           .click();
-        cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
+        cy.get('.dropdown-menu', { timeout: 2000 }).should('be.visible');
         cy.get('.dropdown-item').contains('Expiry', { matchCase: false }).click();
       } else {
         cy.visit('/admin/reports/expiry');
       }
     });
     
-    cy.wait(1000);
+    ;
     
     // Set days threshold if input exists
     cy.get('body').then(($body) => {
@@ -213,11 +213,11 @@ describe('Reports & Analytics Tests', () => {
     });
     
     // Verify expiring batches listed or empty state
-    cy.get('body', { timeout: 10000 }).then(($body) => {
+    cy.get('body', { timeout: 2000 }).then(($body) => {
       if ($body.find('table tbody tr, .batch-item').length > 0) {
         cy.get('table tbody tr, .batch-item').should('have.length.at.least', 0);
       } else {
-        cy.contains('No batches', 'No data', 'No items', { matchCase: false, timeout: 5000 }).should('exist');
+        cy.contains('No batches', 'No data', 'No items', { matchCase: false, timeout: 2000 }).should('exist');
       }
     });
   });

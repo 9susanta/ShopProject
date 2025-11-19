@@ -10,7 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BarcodePrintService } from '@core/services/barcode-print.service';
-import { ProductService } from '../../admin/products/services/product.service';
+import { ProductService } from '@core/services/product.service';
 import { ToastService } from '@core/toast/toast.service';
 import { Product } from '@core/models/product.model';
 import { startWith, map } from 'rxjs/operators';

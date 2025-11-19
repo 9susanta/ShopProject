@@ -9,7 +9,7 @@ describe('Authentication Tests', () => {
     //   method: 'POST',
     //   url: `${apiUrl}/test/reset-seed`,
     //   failOnStatusCode: false,
-    //   timeout: 10000,
+    //   timeout: 2000,
     // });
   });
 
@@ -18,9 +18,9 @@ describe('Authentication Tests', () => {
     cy.request({
       url: 'http://localhost:4200',
       failOnStatusCode: false,
-      timeout: 30000,
+      timeout: 20000,
     });
-    cy.visit('/login', { timeout: 30000 });
+    cy.visit('/login', { timeout: 20000 });
   });
 
   it('TC-AUTH-001: Admin Login - Should login with valid credentials', () => {
@@ -31,7 +31,7 @@ describe('Authentication Tests', () => {
     // Wait for navigation and check URL
     cy.url({ timeout: 15000 }).should('include', '/admin/dashboard');
     // Check for dashboard heading
-    cy.get('h1').contains('Dashboard', { timeout: 10000 }).should('be.visible');
+    cy.get('h1').contains('Dashboard', { timeout: 2000 }).should('be.visible');
   });
 
   it('TC-AUTH-001-SUPER: SuperAdmin Login - Should login with super admin credentials', () => {
@@ -41,7 +41,7 @@ describe('Authentication Tests', () => {
     cy.get('button.login-button, button[type="submit"]').contains('Login').should('be.visible').click();
     
     cy.url({ timeout: 15000 }).should('include', '/admin/dashboard');
-    cy.get('h1').contains('Dashboard', { timeout: 10000 }).should('be.visible');
+    cy.get('h1').contains('Dashboard', { timeout: 2000 }).should('be.visible');
   });
 
   it('TC-AUTH-001-STAFF: Staff Login - Should login with staff credentials', () => {
@@ -60,7 +60,7 @@ describe('Authentication Tests', () => {
     // If redirected to dashboard, check for heading
     cy.url().then((url) => {
       if (url.includes('/admin/dashboard')) {
-        cy.get('h1').contains('Dashboard', { timeout: 10000 }).should('be.visible');
+        cy.get('h1').contains('Dashboard', { timeout: 2000 }).should('be.visible');
       }
     });
   });
@@ -72,7 +72,7 @@ describe('Authentication Tests', () => {
     cy.get('button.login-button, button[type="submit"]').contains('Login').should('be.visible').click();
     
     // Wait for error message to appear
-    cy.get('.error-message', { timeout: 5000 }).should('be.visible').and('contain.text', 'Invalid');
+    cy.get('.error-message', { timeout: 2000 }).should('be.visible').and('contain.text', 'Invalid');
     cy.url().should('include', '/login');
   });
 
@@ -94,11 +94,11 @@ describe('Authentication Tests', () => {
     cy.url({ timeout: 15000 }).should('include', '/admin/dashboard');
 
     // Click on profile container to open menu
-    cy.get('.profile-container', { timeout: 10000 }).should('be.visible').click();
+    cy.get('.profile-container', { timeout: 2000 }).should('be.visible').click();
     
     // Wait for profile menu to be visible and logout button to be ready
-    cy.get('.profile-menu', { timeout: 5000 }).should('be.visible');
-    cy.get('button.profile-menu-item.logout', { timeout: 5000 })
+    cy.get('.profile-menu', { timeout: 2000 }).should('be.visible');
+    cy.get('button.profile-menu-item.logout', { timeout: 2000 })
       .should('be.visible')
       .should('not.be.disabled');
     

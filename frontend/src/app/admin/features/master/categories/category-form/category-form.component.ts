@@ -10,10 +10,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CategoryService } from '@core/services/category.service';
-import { TaxSlabService } from '@core/services/taxslab.service';
+import { TaxSlabService } from '@core/services/tax-slab.service';
 import { ToastService } from '@core/toast/toast.service';
 import { CategoryCreateRequest, CategoryUpdateRequest } from '@core/models/category.model';
-import { TaxSlabDto } from '@core/models/taxslab.model';
+import { TaxSlabDto } from '@core/models/tax-slab.model';
 
 @Component({
   selector: 'grocery-category-form',
@@ -110,7 +110,7 @@ import { TaxSlabDto } from '@core/models/taxslab.model';
 export class CategoryFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private categoryService = inject(CategoryService);
-  private taxSlabService = inject(TaxSlabService);
+  private TaxSlabService = inject(TaxSlabService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private toastService = inject(ToastService);
@@ -142,7 +142,7 @@ export class CategoryFormComponent implements OnInit {
   }
 
   loadTaxSlabs(): void {
-    this.taxSlabService.getTaxSlabs().subscribe({
+    this.TaxSlabService.getTaxSlabs().subscribe({
       next: (taxSlabs) => {
         this.taxSlabs.set(taxSlabs);
       },

@@ -14,7 +14,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { InventoryService } from '../services/inventory.service';
 import { PurchasingService } from '@core/services/purchasing.service';
-import { ProductService } from '../../admin/products/services/product.service';
+import { ProductService } from '@core/services/product.service';
 import { ToastService } from '@core/toast/toast.service';
 import { LowStockProduct } from '@core/models/inventory-batch.model';
 

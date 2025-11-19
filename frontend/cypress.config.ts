@@ -8,15 +8,22 @@ export default defineConfig({
     },
     viewportWidth: 1280,
     viewportHeight: 720,
-    video: false,
+    video: false, // Disabled for speed
     screenshotOnRunFailure: true,
-    defaultCommandTimeout: 10000,
-    requestTimeout: 10000,
-    responseTimeout: 10000,
+    // Reduced timeouts for faster execution
+    defaultCommandTimeout: 5000,
+    requestTimeout: 5000,
+    responseTimeout: 5000,
+    pageLoadTimeout: 10000,
+    // Enable parallel execution
+    numTestsKeptInMemory: 0, // Reduce memory usage
     env: {
       apiUrl: 'http://localhost:5120/api',
     },
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
+    // Faster execution settings
+    execTimeout: 60000,
+    taskTimeout: 60000,
   },
 });
 

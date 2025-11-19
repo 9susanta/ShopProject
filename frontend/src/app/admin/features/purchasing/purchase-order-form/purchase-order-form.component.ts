@@ -17,7 +17,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { PurchasingService } from '@core/services/purchasing.service';
-import { ProductService } from '../../admin/products/services/product.service';
+import { ProductService } from '@core/services/product.service';
 import { ToastService } from '@core/toast/toast.service';
 import { BarcodeScannerService } from '@core/services/barcode-scanner.service';
 import { MasterDataService } from '@core/services/master-data.service';

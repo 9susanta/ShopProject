@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { AdminGuard } from '@core/auth/admin.guard';
+import { AdminGuard } from '@core/guards/auth.guard';
 
 export const masterRoutes: Routes = [
   {
@@ -29,19 +29,19 @@ export const masterRoutes: Routes = [
   {
     path: 'tax-slabs',
     loadComponent: () =>
-      import('./tax-slabs/taxslab-list/taxslab-list.component').then(m => m.TaxSlabListComponent),
+      import('./tax-slabs/tax-slab-list/tax-slab-list.component').then(m => m.TaxSlabListComponent),
     canActivate: [AdminGuard],
   },
   {
     path: 'tax-slabs/new',
     loadComponent: () =>
-      import('./tax-slabs/taxslab-form/taxslab-form.component').then(m => m.TaxSlabFormComponent),
+      import('./tax-slabs/tax-slab-form/tax-slab-form.component').then(m => m.TaxSlabFormComponent),
     canActivate: [AdminGuard],
   },
   {
     path: 'tax-slabs/edit/:id',
     loadComponent: () =>
-      import('./tax-slabs/taxslab-form/taxslab-form.component').then(m => m.TaxSlabFormComponent),
+      import('./tax-slabs/tax-slab-form/tax-slab-form.component').then(m => m.TaxSlabFormComponent),
     canActivate: [AdminGuard],
   },
   {

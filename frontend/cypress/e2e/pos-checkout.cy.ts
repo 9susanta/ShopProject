@@ -10,7 +10,7 @@ describe('POS Checkout E2E', () => {
 
   it('should add product to cart', () => {
     // Wait for products to load
-    cy.wait(1000);
+    ;
     
     // Click first product tile's add button
     cy.get('.product-tile').first().click();

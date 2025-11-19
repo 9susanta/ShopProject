@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
-import { AuthGuard } from './core/auth/auth.guard';
-import { AdminGuard } from './core/auth/admin.guard';
+import { AuthGuard, AdminGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -16,13 +15,13 @@ export const routes: Routes = [
   {
     path: 'admin-imports-legacy',
     loadComponent: () =>
-      import('./admin/features/admin/imports/import-upload/import-upload.component').then(m => m.ImportUploadComponent),
+      import('./admin/features/imports/import-upload/import-upload.component').then(m => m.ImportUploadComponent),
   },
   {
     path: 'admin',
     canActivate: [AdminGuard],
     loadChildren: () =>
-      import('./admin/features/admin/admin.routes').then(m => m.adminRoutes),
+      import('./admin/features/admin.routes').then(m => m.adminRoutes),
   },
   {
     path: 'pos',

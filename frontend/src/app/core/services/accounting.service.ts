@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiService } from '../api/api.service';
+import { ApiService } from './api.service';
 
 export interface DailyClosingSummary {
   date: string;

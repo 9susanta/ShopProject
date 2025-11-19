@@ -18,7 +18,7 @@ describe('Offline Functionality Tests', () => {
     });
 
     // Verify offline indicator appears
-    cy.get('.offline-indicator, [data-cy="offline-indicator"]', { timeout: 5000 }).should('be.visible');
+    cy.get('.offline-indicator, [data-cy="offline-indicator"]', { timeout: 2000 }).should('be.visible');
   });
 
   it('TC-OFF-002: Offline Sale Queue - Should queue sales when offline', () => {
@@ -38,7 +38,7 @@ describe('Offline Functionality Tests', () => {
     cy.contains('Complete Sale', 'Complete', 'button').click();
     
     // Verify sale queued (check for queue indicator or message)
-    cy.contains('queued', 'offline', { matchCase: false, timeout: 5000 }).should('be.visible');
+    cy.contains('queued', 'offline', { matchCase: false, timeout: 2000 }).should('be.visible');
     
     // Simulate online
     cy.window().then((win) => {
@@ -51,7 +51,7 @@ describe('Offline Functionality Tests', () => {
     
     // Verify sale synced (check sales list)
     cy.visit('/admin/sales');
-    cy.contains('Sales', { timeout: 10000 }).should('be.visible');
+    cy.contains('Sales', { timeout: 2000 }).should('be.visible');
   });
 });
 

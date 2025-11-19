@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiService } from '@core/api/api.service';
+import { ApiService } from '@core/services/api.service';
 import { Inventory, InventoryListResponse, InventoryFilters, InventoryAdjustRequest } from '@core/models/inventory.model';
 import {
   ProductInventory,

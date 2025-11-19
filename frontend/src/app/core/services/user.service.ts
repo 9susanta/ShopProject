@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiService } from '../api/api.service';
+import { ApiService } from './api.service';
 import { User, UserRole } from '@core/models/user.model';
 
 export interface UserListResponse {

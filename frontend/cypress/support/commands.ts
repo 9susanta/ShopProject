@@ -46,47 +46,45 @@ declare global {
 // Helper command to navigate through dropdown menu
 Cypress.Commands.add('navigateViaDropdown', (menuName: string, itemText: string) => {
   // Click the dropdown trigger
-  cy.contains('.dropdown-trigger, .nav-link', menuName, { matchCase: false, timeout: 10000 })
+  cy.contains('.dropdown-trigger, .nav-link', menuName, { matchCase: false, timeout: 5000 })
     .should('be.visible')
     .click();
   
   // Wait for dropdown menu to be visible
-  cy.get('.dropdown-menu', { timeout: 3000 }).should('be.visible');
+  cy.get('.dropdown-menu', { timeout: 2000 }).should('be.visible');
   
   // Click the menu item
   cy.get('.dropdown-item')
-    .contains(itemText, { matchCase: false, timeout: 3000 })
+    .contains(itemText, { matchCase: false, timeout: 2000 })
     .should('be.visible')
     .click();
   
-  // Wait for navigation
-  cy.wait(500);
+  // Reduced wait - just ensure URL changes
+  cy.url({ timeout: 5000 }).should('not.include', '/admin/dashboard');
 });
 
 Cypress.Commands.add('loginUI', (email: string, password: string) => {
-  cy.visit('/login', { timeout: 30000 });
+  cy.visit('/login', { timeout: 15000 });
   
   // Wait for login form to be ready
-  cy.get('#email', { timeout: 10000 }).should('be.visible').clear().type(email);
-  cy.get('#password', { timeout: 10000 }).should('be.visible').clear().type(password);
+  cy.get('#email', { timeout: 5000 }).should('be.visible').clear().type(email);
+  cy.get('#password', { timeout: 5000 }).should('be.visible').clear().type(password);
   
   // Click login button - wait for it to be enabled
-  cy.get('button.login-button, button[type="submit"]', { timeout: 5000 })
+  cy.get('button.login-button, button[type="submit"]', { timeout: 3000 })
     .should('be.visible')
     .should('not.be.disabled')
     .contains('Login')
     .click();
   
   // Wait for navigation to dashboard
-  cy.url({ timeout: 20000 }).should('include', '/admin/dashboard');
+  cy.url({ timeout: 10000 }).should('include', '/admin/dashboard');
   
   // Wait for dashboard to load - be flexible with heading
-  cy.get('body', { timeout: 10000 }).should(($body) => {
+  cy.get('body', { timeout: 5000 }).should(($body) => {
     expect($body.find('h1, .admin-page-header, mat-card-title').length).to.be.greaterThan(0);
   });
-  
-  // Small wait for page to fully render
-  cy.wait(1000);
+  // Removed unnecessary wait
 });
 
 Cypress.Commands.add('loginAPI', (email: string, password: string) => {
