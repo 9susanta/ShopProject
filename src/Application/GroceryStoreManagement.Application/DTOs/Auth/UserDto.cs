@@ -26,6 +26,22 @@ public class UserDto
     /// </summary>
     [JsonConverter(typeof(JsonNullableDateTimeConverter))]
     public DateTime? LastLoginAt { get; set; }
+    
+    /// <summary>
+    /// Number of failed login attempts
+    /// </summary>
+    public int FailedLoginAttempts { get; set; }
+    
+    /// <summary>
+    /// Lockout expiration timestamp (serialized as ISO 8601 string, or null)
+    /// </summary>
+    [JsonConverter(typeof(JsonNullableDateTimeConverter))]
+    public DateTime? LockoutUntil { get; set; }
+    
+    /// <summary>
+    /// Whether the account is currently locked
+    /// </summary>
+    public bool IsLocked { get; set; }
 }
 
 /// <summary>

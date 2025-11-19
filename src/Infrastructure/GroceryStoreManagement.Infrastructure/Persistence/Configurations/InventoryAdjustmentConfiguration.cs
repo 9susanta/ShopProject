@@ -35,12 +35,12 @@ public class InventoryAdjustmentConfiguration : IEntityTypeConfiguration<Invento
             .IsRequired()
             .HasMaxLength(200);
 
-        builder.HasOne<Inventory>()
+        builder.HasOne(a => a.Inventory)
             .WithMany()
             .HasForeignKey(a => a.InventoryId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne<Product>()
+        builder.HasOne(a => a.Product)
             .WithMany()
             .HasForeignKey(a => a.ProductId)
             .OnDelete(DeleteBehavior.NoAction);

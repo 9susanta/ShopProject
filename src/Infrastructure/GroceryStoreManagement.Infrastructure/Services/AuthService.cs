@@ -66,11 +66,24 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Invalid email or password");
         }
 
-        // Check if account is locked
-        if (user.IsLocked())
+        // Check if account is locked (auto-unlock if lockout period has expired)
+        if (user.LockoutUntil.HasValue)
         {
-            _logger.LogWarning("Login attempt for locked account: {Email} from IP: {Ip}", request.Email, clientIp);
-            throw new InvalidOperationException($"Account is locked until {user.LockoutUntil:yyyy-MM-dd HH:mm:ss} UTC");
+            if (DateTime.UtcNow < user.LockoutUntil.Value)
+            {
+                // Still locked - show remaining time
+                var remainingMinutes = (int)Math.Ceiling((user.LockoutUntil.Value - DateTime.UtcNow).TotalMinutes);
+                _logger.LogWarning("Login attempt for locked account: {Email} from IP: {Ip}. Remaining: {Minutes} minutes", 
+                    request.Email, clientIp, remainingMinutes);
+                throw new InvalidOperationException($"Account is locked. Please try again in {remainingMinutes} minute(s).");
+            }
+            else
+            {
+                // Lockout period expired - auto-unlock
+                user.UnlockAccount();
+                await _context.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Account auto-unlocked for {Email} - lockout period expired", user.Email);
+            }
         }
 
         // Verify password using stored iterations (may be slow for old 100k iterations)
@@ -275,22 +288,32 @@ public class AuthService : IAuthService
     {
         var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
         if (user == null)
-            throw new InvalidOperationException("User not found");
+        {
+            throw new KeyNotFoundException("User not found");
+        }
+
+        if (!user.LockoutUntil.HasValue)
+        {
+            _logger.LogInformation("Account unlock requested for {Email} but account is not locked", user.Email);
+            return; // Already unlocked
+        }
 
         user.UnlockAccount();
         await _context.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Account unlocked for user {UserId}", userId);
+        _logger.LogInformation("Account unlocked for user {Email}", user.Email);
     }
 
     public async Task ResetFailedLoginAttemptsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
         if (user == null)
-            throw new InvalidOperationException("User not found");
+        {
+            throw new KeyNotFoundException("User not found");
+        }
 
         user.ResetFailedLoginAttempts();
         await _context.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Failed login attempts reset for user {UserId}", userId);
+        _logger.LogInformation("Failed login attempts reset for user {Email}", user.Email);
     }
 
     /// <summary>

@@ -83,21 +83,35 @@ public static class SeedData
             await context.SaveChangesAsync();
         }
 
+        // Seed Units (only if they don't exist)
+        var essentialUnitNames = new[] { "Kilogram", "Gram", "Litre", "Piece", "Pack" };
+        var existingUnits = await context.Units.Where(u => essentialUnitNames.Contains(u.Name)).ToListAsync();
+        var existingUnitNames = existingUnits.Select(u => u.Name).ToHashSet();
+        
+        var unitsToAdd = new List<Unit>();
+        if (!existingUnitNames.Contains("Kilogram"))
+            unitsToAdd.Add(new Unit("Kilogram", "kg", UnitType.Kilogram, 10));
+        if (!existingUnitNames.Contains("Gram"))
+            unitsToAdd.Add(new Unit("Gram", "gm", UnitType.Gram, 20));
+        if (!existingUnitNames.Contains("Litre"))
+            unitsToAdd.Add(new Unit("Litre", "L", UnitType.Litre, 30));
+        if (!existingUnitNames.Contains("Piece"))
+            unitsToAdd.Add(new Unit("Piece", "pcs", UnitType.Piece, 40));
+        if (!existingUnitNames.Contains("Pack"))
+            unitsToAdd.Add(new Unit("Pack", "pack", UnitType.Pack, 50));
+
+        if (unitsToAdd.Any())
+        {
+            await context.Units.AddRangeAsync(unitsToAdd);
+            await context.SaveChangesAsync();
+        }
+
+        // Get all units (existing + newly added) for use in products
+        var allUnits = await context.Units.Where(u => essentialUnitNames.Contains(u.Name)).ToListAsync();
+        var units = allUnits.OrderBy(u => u.Name).ToList();
+
         if (context.Categories.Any())
             return; // Database already seeded
-
-        // Seed Units
-        var units = new List<Unit>
-        {
-            new Unit("Kilogram", "kg", UnitType.Kilogram, 10),
-            new Unit("Gram", "gm", UnitType.Gram, 20),
-            new Unit("Litre", "L", UnitType.Litre, 30),
-            new Unit("Piece", "pcs", UnitType.Piece, 40),
-            new Unit("Pack", "pack", UnitType.Pack, 50)
-        };
-
-        await context.Units.AddRangeAsync(units);
-        await context.SaveChangesAsync();
 
         // Seed Tax Slabs (Indian GST rates)
         var taxSlabs = new List<TaxSlab>
@@ -128,33 +142,40 @@ public static class SeedData
         // Seed Suppliers
         var suppliers = new List<Supplier>
         {
-            new Supplier("Fresh Foods Inc", "John Doe", "john@freshfoods.com", "555-0101", "123 Main St"),
-            new Supplier("Dairy Delights", "Jane Smith", "jane@dairydelights.com", "555-0102", "456 Oak Ave"),
-            new Supplier("Beverage Co", "Bob Johnson", "bob@beverageco.com", "555-0103", "789 Pine Rd")
+            new Supplier("Fresh Foods Inc", "John Doe", "john@freshfoods.com", "5550101234", "123 Main St"),
+            new Supplier("Dairy Delights", "Jane Smith", "jane@dairydelights.com", "5550102234", "456 Oak Ave"),
+            new Supplier("Beverage Co", "Bob Johnson", "bob@beverageco.com", "5550103234", "789 Pine Rd")
         };
 
         await context.Suppliers.AddRangeAsync(suppliers);
         await context.SaveChangesAsync();
 
-        // Seed Customers (Phone is required)
+        // Seed Customers (Phone is required - must be 10 digits)
         var customers = new List<Customer>
         {
-            new Customer("Alice Brown", "5550201", "alice@email.com", "100 Elm St"),
-            new Customer("Charlie Wilson", "5550202", "charlie@email.com", "200 Maple Dr")
+            new Customer("Alice Brown", "5550201234", "alice@email.com", "100 Elm St"),
+            new Customer("Charlie Wilson", "5550202234", "charlie@email.com", "200 Maple Dr")
         };
 
         await context.Customers.AddRangeAsync(customers);
         await context.SaveChangesAsync();
 
         // Seed Products (with MRP, SalePrice, UnitId, TaxSlabId)
+        // Find units by name to ensure correct mapping
+        var kilogramUnit = units.FirstOrDefault(u => u.Name == "Kilogram") ?? units.First();
+        var gramUnit = units.FirstOrDefault(u => u.Name == "Gram") ?? units.First();
+        var litreUnit = units.FirstOrDefault(u => u.Name == "Litre") ?? units.First();
+        var pieceUnit = units.FirstOrDefault(u => u.Name == "Piece") ?? units.First();
+        var packUnit = units.FirstOrDefault(u => u.Name == "Pack") ?? units.First();
+        
         var products = new List<Product>
         {
-            new Product("Apple", "FRUIT-001", 2.00m, 1.50m, categories[0].Id, units[3].Id, "Red delicious apples", "1234567890123", null, 20, false, null, taxSlabs[0].Id),
-            new Product("Banana", "FRUIT-002", 1.00m, 0.75m, categories[0].Id, units[3].Id, "Fresh bananas", "1234567890124", null, 30, false, null, taxSlabs[0].Id),
-            new Product("Carrot", "VEG-001", 1.20m, 1.00m, categories[1].Id, units[1].Id, "Fresh carrots", "1234567890125", null, 25, false, null, taxSlabs[0].Id),
-            new Product("Milk", "DAIRY-001", 4.00m, 3.50m, categories[2].Id, units[2].Id, "Whole milk 1 litre", "1234567890126", null, 15, false, null, taxSlabs[1].Id),
-            new Product("Coca Cola", "BEV-001", 2.50m, 2.00m, categories[3].Id, units[3].Id, "12 oz can", "1234567890127", null, 50, false, null, taxSlabs[2].Id),
-            new Product("Potato Chips", "SNACK-001", 4.50m, 3.99m, categories[4].Id, units[4].Id, "Classic flavor", "1234567890128", null, 40, false, null, taxSlabs[2].Id)
+            new Product("Apple", "FRUIT-001", 2.00m, 1.50m, categories[0].Id, pieceUnit.Id, "Red delicious apples", "1234567890123", null, 20, false, null, taxSlabs[0].Id),
+            new Product("Banana", "FRUIT-002", 1.00m, 0.75m, categories[0].Id, pieceUnit.Id, "Fresh bananas", "1234567890124", null, 30, false, null, taxSlabs[0].Id),
+            new Product("Carrot", "VEG-001", 1.20m, 1.00m, categories[1].Id, gramUnit.Id, "Fresh carrots", "1234567890125", null, 25, false, null, taxSlabs[0].Id),
+            new Product("Milk", "DAIRY-001", 4.00m, 3.50m, categories[2].Id, litreUnit.Id, "Whole milk 1 litre", "1234567890126", null, 15, false, null, taxSlabs[1].Id),
+            new Product("Coca Cola", "BEV-001", 2.50m, 2.00m, categories[3].Id, pieceUnit.Id, "12 oz can", "1234567890127", null, 50, false, null, taxSlabs[2].Id),
+            new Product("Potato Chips", "SNACK-001", 4.50m, 3.99m, categories[4].Id, packUnit.Id, "Classic flavor", "1234567890128", null, 40, false, null, taxSlabs[2].Id)
         };
 
         await context.Products.AddRangeAsync(products);

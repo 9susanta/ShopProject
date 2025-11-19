@@ -60,7 +60,11 @@
             },
             "MediatR": {
               "target": "Package",
-              "version": "[13.1.0, )"
+              "version": "[12.1.1, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
             }
           },
           "imports": [
@@ -131,7 +135,7 @@
           "dependencies": {
             "MediatR": {
               "target": "Package",
-              "version": "[13.1.0, )"
+              "version": "[12.1.1, )"
             }
           },
           "imports": [
@@ -241,9 +245,21 @@
               "target": "Package",
               "version": "[10.0.0, )"
             },
+            "QuestPDF": {
+              "target": "Package",
+              "version": "[2024.10.3, )"
+            },
             "Serilog.AspNetCore": {
               "target": "Package",
               "version": "[9.0.0, )"
+            },
+            "System.IO.Ports": {
+              "target": "Package",
+              "version": "[10.0.0, )"
+            },
+            "ZXing.Net": {
+              "target": "Package",
+              "version": "[0.16.11, )"
             }
           },
           "imports": [

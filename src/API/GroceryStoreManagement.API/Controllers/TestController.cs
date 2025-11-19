@@ -1,4 +1,6 @@
 using GroceryStoreManagement.API.Scripts;
+using GroceryStoreManagement.Application.Interfaces;
+using GroceryStoreManagement.Domain.Enums;
 using GroceryStoreManagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -50,6 +52,63 @@ public class TestController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "Error resetting database", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Update test user passwords to use new 10k iterations (simpler than full reset)
+    /// </summary>
+    [HttpPost("update-passwords")]
+    public async Task<IActionResult> UpdatePasswords()
+    {
+        try
+        {
+            var passwordHasher = _serviceProvider.GetRequiredService<IPasswordHasher>();
+            var updatedCount = 0;
+
+            // Update SuperAdmin password
+            var superAdmin = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == "superadmin@test.com" || u.Role == UserRole.SuperAdmin);
+            if (superAdmin != null)
+            {
+                var superAdminResult = passwordHasher.HashPassword("SuperAdmin123!");
+                superAdmin.ChangePassword(superAdminResult.Hash);
+                superAdmin.SetPasswordMetadata(superAdminResult.Algorithm, superAdminResult.Salt, superAdminResult.Iterations);
+                updatedCount++;
+            }
+
+            // Update Admin password
+            var admin = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == "admin@test.com" || u.Role == UserRole.Admin);
+            if (admin != null)
+            {
+                var adminResult = passwordHasher.HashPassword("Admin123!");
+                admin.ChangePassword(adminResult.Hash);
+                admin.SetPasswordMetadata(adminResult.Algorithm, adminResult.Salt, adminResult.Iterations);
+                updatedCount++;
+            }
+
+            // Update Staff password
+            var staff = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == "staff@test.com" || u.Role == UserRole.Staff);
+            if (staff != null)
+            {
+                var staffResult = passwordHasher.HashPassword("Staff123!");
+                staff.ChangePassword(staffResult.Hash);
+                staff.SetPasswordMetadata(staffResult.Algorithm, staffResult.Salt, staffResult.Iterations);
+                updatedCount++;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { 
+                message = $"Passwords updated successfully for {updatedCount} user(s).", 
+                updatedCount = updatedCount 
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error updating passwords", error = ex.Message });
         }
     }
 }

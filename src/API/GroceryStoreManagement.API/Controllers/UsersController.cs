@@ -5,6 +5,7 @@ using GroceryStoreManagement.Domain.Entities;
 using GroceryStoreManagement.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using System.Security.Claims;
 
 namespace GroceryStoreManagement.API.Controllers;
@@ -49,8 +50,11 @@ public class UsersController : ControllerBase
             Role = u.Role,
             Phone = u.Phone,
             IsActive = u.IsActive,
-            LastLoginAt = u.LastLoginAt
-        }));
+            LastLoginAt = u.LastLoginAt,
+            FailedLoginAttempts = u.FailedLoginAttempts,
+            LockoutUntil = u.LockoutUntil,
+            IsLocked = u.IsLocked()
+        }).ToList());
     }
 
     /// <summary>
@@ -73,7 +77,10 @@ public class UsersController : ControllerBase
             Role = user.Role,
             Phone = user.Phone,
             IsActive = user.IsActive,
-            LastLoginAt = user.LastLoginAt
+            LastLoginAt = user.LastLoginAt,
+            FailedLoginAttempts = user.FailedLoginAttempts,
+            LockoutUntil = user.LockoutUntil,
+            IsLocked = user.IsLocked()
         });
     }
 
@@ -195,7 +202,10 @@ public class UsersController : ControllerBase
             Role = user.Role,
             Phone = user.Phone,
             IsActive = user.IsActive,
-            LastLoginAt = user.LastLoginAt
+            LastLoginAt = user.LastLoginAt,
+            FailedLoginAttempts = user.FailedLoginAttempts,
+            LockoutUntil = user.LockoutUntil,
+            IsLocked = user.IsLocked()
         });
     }
 
@@ -266,6 +276,85 @@ public class UsersController : ControllerBase
         _logger.LogInformation("Password changed for user {Email} by {CurrentUser}", user.Email, User.FindFirst(ClaimTypes.Email)?.Value);
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Unlock a locked user account
+    /// </summary>
+    [HttpPost("{id}/unlock")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult> UnlockAccount(Guid id, CancellationToken cancellationToken)
+    {
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        if (!user.LockoutUntil.HasValue)
+        {
+            return Ok(new { message = "Account is not locked" });
+        }
+
+        var authService = HttpContext.RequestServices.GetRequiredService<IAuthService>();
+        await authService.UnlockAccountAsync(id, cancellationToken);
+
+        _logger.LogInformation("Account unlocked for user {Email} by {CurrentUser}", 
+            user.Email, User.FindFirst(ClaimTypes.Email)?.Value);
+
+        return Ok(new { message = "Account unlocked successfully" });
+    }
+
+    /// <summary>
+    /// Reset failed login attempts for a user
+    /// </summary>
+    [HttpPost("{id}/reset-failed-attempts")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult> ResetFailedLoginAttempts(Guid id, CancellationToken cancellationToken)
+    {
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        var authService = HttpContext.RequestServices.GetRequiredService<IAuthService>();
+        await authService.ResetFailedLoginAttemptsAsync(id, cancellationToken);
+
+        _logger.LogInformation("Failed login attempts reset for user {Email} by {CurrentUser}", 
+            user.Email, User.FindFirst(ClaimTypes.Email)?.Value);
+
+        return Ok(new { message = "Failed login attempts reset successfully" });
+    }
+
+    /// <summary>
+    /// Get user lockout status
+    /// </summary>
+    [HttpGet("{id}/lockout-status")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult<object>> GetLockoutStatus(Guid id, CancellationToken cancellationToken)
+    {
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        var isLocked = user.IsLocked();
+        var remainingMinutes = 0;
+        if (user.LockoutUntil.HasValue && isLocked)
+        {
+            remainingMinutes = (int)Math.Ceiling((user.LockoutUntil.Value - DateTime.UtcNow).TotalMinutes);
+        }
+
+        return Ok(new
+        {
+            isLocked,
+            failedLoginAttempts = user.FailedLoginAttempts,
+            lockoutUntil = user.LockoutUntil,
+            remainingMinutes = isLocked ? remainingMinutes : 0,
+            willAutoUnlock = user.LockoutUntil.HasValue && !isLocked
+        });
     }
 }
 

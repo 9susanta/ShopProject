@@ -13,24 +13,28 @@ public static class CleanDatabase
 
         // Delete all data except Users
         // Delete in order to respect foreign key constraints
+        // Use raw SQL for tables with shadow property issues (InventoryId1, ProductId1)
         
         // 1. Delete Sale Returns and Refunds
         context.Refunds.RemoveRange(context.Refunds);
         context.SaleReturnItems.RemoveRange(context.SaleReturnItems);
         context.SaleReturns.RemoveRange(context.SaleReturns);
+        await context.SaveChangesAsync();
         
         // 2. Delete Sales
         context.SaleItems.RemoveRange(context.SaleItems);
         context.Sales.RemoveRange(context.Sales);
+        await context.SaveChangesAsync();
         
         // 3. Delete Supplier Returns
         context.SupplierReturnItems.RemoveRange(context.SupplierReturnItems);
         context.SupplierReturns.RemoveRange(context.SupplierReturns);
+        await context.SaveChangesAsync();
         
         // 4. Delete Supplier Payments (if table exists)
         try
         {
-            context.SupplierPayments.RemoveRange(context.SupplierPayments);
+            await context.Database.ExecuteSqlRawAsync("DELETE FROM SupplierPayments");
         }
         catch
         {
@@ -40,18 +44,22 @@ public static class CleanDatabase
         // 5. Delete GRNs
         context.GRNItems.RemoveRange(context.GRNItems);
         context.GoodsReceiveNotes.RemoveRange(context.GoodsReceiveNotes);
+        await context.SaveChangesAsync();
         
         // 6. Delete Purchase Orders
         context.PurchaseOrderItems.RemoveRange(context.PurchaseOrderItems);
         context.PurchaseOrders.RemoveRange(context.PurchaseOrders);
+        await context.SaveChangesAsync();
         
-        // 7. Delete Inventory related
-        context.InventoryBatches.RemoveRange(context.InventoryBatches);
-        context.InventoryAdjustments.RemoveRange(context.InventoryAdjustments);
-        context.InventoryAudits.RemoveRange(context.InventoryAudits);
-        context.Inventories.RemoveRange(context.Inventories);
+        // 7. Delete Inventory related - USE RAW SQL ONLY
+        // These tables have shadow properties (InventoryId1, ProductId1) from old migrations
+        // Raw SQL bypasses EF Core model validation
+        await context.Database.ExecuteSqlRawAsync("DELETE FROM InventoryBatches");
+        await context.Database.ExecuteSqlRawAsync("DELETE FROM InventoryAdjustments");
+        await context.Database.ExecuteSqlRawAsync("DELETE FROM InventoryAudits");
+        await context.Database.ExecuteSqlRawAsync("DELETE FROM Inventories");
         
-        // 8. Delete Products
+        // 8. Delete Products (after inventories are deleted)
         context.Products.RemoveRange(context.Products);
         
         // 9. Delete Categories

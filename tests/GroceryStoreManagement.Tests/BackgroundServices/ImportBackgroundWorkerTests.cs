@@ -89,7 +89,7 @@ public class ImportBackgroundWorkerTests
         mockMasterDataCache.Setup(c => c.GetUnitsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, string>());
         mockMasterDataCache.Setup(c => c.GetTaxSlabsAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, (decimal, decimal)>());
+            .ReturnsAsync(new Dictionary<Guid, decimal>());
 
         mockCategoryRepository.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Category>());

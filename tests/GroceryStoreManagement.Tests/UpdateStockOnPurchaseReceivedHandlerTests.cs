@@ -32,7 +32,11 @@ public class UpdateStockOnPurchaseReceivedHandlerTests
         var mediator = new Mock<IMediator>();
         var logger = new Mock<ILogger<UpdateStockOnPurchaseReceivedHandler>>();
 
-        var category = new Category("Test Category");
+        var taxSlab = new TaxSlab("5% GST", 5m, false);
+        await context.TaxSlabs.AddAsync(taxSlab);
+        await context.SaveChangesAsync();
+
+        var category = new Category("Test Category", taxSlab.Id);
         await context.Categories.AddAsync(category);
         await context.SaveChangesAsync();
 
@@ -40,11 +44,7 @@ public class UpdateStockOnPurchaseReceivedHandlerTests
         await context.Units.AddAsync(unit);
         await context.SaveChangesAsync();
 
-        var taxSlab = new TaxSlab("5% GST", 2.5m, 2.5m);
-        await context.TaxSlabs.AddAsync(taxSlab);
-        await context.SaveChangesAsync();
-
-        var product = new Product("Test Product", "SKU-001", 12.00m, 10.00m, category.Id, unit.Id, taxSlab.Id);
+        var product = new Product("Test Product", "SKU-001", 12.00m, 10.00m, category.Id, unit.Id, description: null, barcode: null, imageUrl: null, lowStockThreshold: 10, isWeightBased: false, weightPerUnit: null, taxSlabId: taxSlab.Id);
         await context.Products.AddAsync(product);
         await context.SaveChangesAsync();
 
