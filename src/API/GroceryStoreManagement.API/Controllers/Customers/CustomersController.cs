@@ -20,7 +20,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<ActionResult<Application.DTOs.CustomerListResponseDto>> GetCustomers(
         [FromQuery] string? search = null,
         [FromQuery] bool? isActive = null,
@@ -39,7 +39,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<ActionResult<Application.DTOs.CustomerDto>> GetCustomer(Guid id)
     {
         var query = new GetCustomerByIdQuery { Id = id };
@@ -65,7 +65,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<ActionResult<Application.DTOs.CustomerDto>> CreateCustomer([FromBody] CreateCustomerCommand command)
     {
         var customer = await _mediator.Send(command);
@@ -73,7 +73,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<ActionResult<Application.DTOs.CustomerDto>> UpdateCustomer(Guid id, [FromBody] UpdateCustomerCommand command)
     {
         if (id != command.Id)
@@ -158,7 +158,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPut("{id}/pay-later-settings")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<ActionResult<Application.DTOs.CustomerDto>> UpdatePayLaterSettings(
         Guid id,
         [FromBody] UpdateCustomerPayLaterSettingsCommand command)

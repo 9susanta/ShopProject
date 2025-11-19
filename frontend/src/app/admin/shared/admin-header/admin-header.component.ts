@@ -58,7 +58,8 @@ export class AdminHeaderComponent implements OnDestroy {
     // Close menu when clicking outside
     this.clickHandler = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!target.closest('.header-profile')) {
+      // Don't close if clicking on profile menu or logout button
+      if (!target.closest('.header-profile') && !target.closest('.profile-menu')) {
         this.closeProfileMenu();
       }
       // Only close dropdown if click is outside both the trigger and the menu
@@ -101,6 +102,14 @@ export class AdminHeaderComponent implements OnDestroy {
     this.isProfileMenuOpen.set(false);
   }
 
+  handleOverlayClick(event: MouseEvent): void {
+    // Only close if the click is not on the profile menu
+    const target = event.target as HTMLElement;
+    if (target && !target.closest('.profile-menu')) {
+      this.closeProfileMenu();
+    }
+  }
+
   setPointerCursor(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (target) {
@@ -108,8 +117,21 @@ export class AdminHeaderComponent implements OnDestroy {
     }
   }
 
+  handleLogout(event: Event): void {
+    // Prevent event propagation and default behavior immediately
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
+    
+    // Execute logout immediately - don't wait
+    // The menu will close as part of logout process
+    this.logout();
+  }
+
   logout(): void {
-    // Close profile menu
+    // Close profile menu first
     this.closeProfileMenu();
     
     // Logout user first (clears tokens and user data)
@@ -238,14 +260,18 @@ export class AdminHeaderComponent implements OnDestroy {
     if (!user) return false;
 
     const role = user.role;
-    const isAdmin = role === 'Admin' || role === 'SuperAdmin';
-
-    // Admin/SuperAdmin can access everything
-    if (isAdmin) {
+    
+    // SuperAdmin can access everything
+    if (role === 'SuperAdmin') {
       return true;
     }
 
-    // Staff permissions
+    // Admin can access everything except restricted menus
+    if (role === 'Admin') {
+      return true;
+    }
+
+    // Staff permissions - limited access
     if (role === 'Staff') {
       const allowedMenus = ['inventory', 'purchasing', 'sales', 'reports'];
       return allowedMenus.includes(menu);

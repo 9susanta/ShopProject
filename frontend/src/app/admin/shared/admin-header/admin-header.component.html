@@ -73,6 +73,17 @@
         </div>
       }
 
+      <!-- Customers (Single Item) -->
+      <a 
+        routerLink="/admin/customers" 
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{exact: false}"
+        class="nav-link"
+        (click)="closeMobileMenu()">
+        <span class="material-icons nav-icon">people</span>
+        <span class="nav-label">Customers</span>
+      </a>
+
       <!-- Inventory (Dropdown) -->
       <div class="nav-dropdown" 
            [class.open]="openDropdown() === 'inventory'"
@@ -355,11 +366,11 @@
             </div>
           </div>
           <div class="profile-menu-divider"></div>
-          <button class="profile-menu-item" (click)="navigateToProfile()">
+          <button class="profile-menu-item" (click)="navigateToProfile(); $event.stopPropagation()">
             <span class="material-icons">person</span>
             <span>My Profile</span>
           </button>
-          <button class="profile-menu-item" (click)="navigateToProfile()">
+          <button class="profile-menu-item" (click)="navigateToProfile(); $event.stopPropagation()">
             <span class="material-icons">settings</span>
             <span>Account Settings</span>
           </button>
@@ -367,7 +378,8 @@
           <button 
             class="profile-menu-item logout" 
             type="button" 
-            (click)="logout(); $event.stopPropagation()"
+            (click)="handleLogout($event)"
+            [disabled]="false"
             aria-label="Logout">
             <span class="material-icons">logout</span>
             <span>Logout</span>
@@ -378,8 +390,6 @@
   </div>
 </header>
 
-<!-- Click outside to close menu -->
-@if (isProfileMenuOpen()) {
-  <div class="menu-overlay" (click)="closeProfileMenu()"></div>
-}
+<!-- Click outside to close menu - Removed overlay as it was blocking logout button clicks -->
+<!-- Using document click handler instead (see component.ts) -->
 

@@ -173,11 +173,17 @@ html, body {
   font-family: 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   background-color: var(--gray-100);
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Angular.dev Official Color System */

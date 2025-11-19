@@ -13,7 +13,11 @@
   justify-content: space-between;
   padding: 0 24px;
   height: 64px;
+  width: 100%;
   max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 /* Brand Section */
@@ -74,10 +78,13 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  flex: 1;
-  justify-content: center;
+  flex: 1 1 auto;
+  justify-content: flex-start;
   overflow: visible;
-  max-width: calc(100% - 300px);
+  min-width: 0;
+  flex-wrap: nowrap;
+  max-width: none;
+  flex-shrink: 1;
 }
 
 .nav-link {
@@ -157,10 +164,11 @@
   visibility: hidden;
   transform: translateY(-10px);
   transition: all 0.2s ease-out;
-  z-index: 1000;
+  z-index: 1001;
   padding: 8px 0;
   pointer-events: none;
   margin-top: 4px; /* Small gap to allow mouse movement */
+  display: block;
 }
 
 .nav-dropdown.open .dropdown-menu {
@@ -168,6 +176,7 @@
   visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
+  display: block;
 }
 
 /* Dropdown Items */
@@ -201,6 +210,7 @@
 /* Profile Section */
 .header-profile {
   position: relative;
+  z-index: 1003;
   flex-shrink: 0;
 }
 
@@ -214,6 +224,10 @@
   cursor: pointer;
   transition: all 0.2s;
   backdrop-filter: blur(10px);
+  max-width: 300px;
+  min-width: 0;
+  flex-shrink: 1;
+  box-sizing: border-box;
 }
 
 .profile-container:hover {
@@ -239,6 +253,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .profile-name {
@@ -246,12 +263,20 @@
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  line-height: 1.2;
 }
 
 .profile-role {
   color: rgba(255, 255, 255, 0.8);
   font-size: 12px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  line-height: 1.2;
 }
 
 .dropdown-icon {
@@ -273,8 +298,8 @@
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-  z-index: 1001;
+  overflow: visible;
+  z-index: 1002;
   animation: slideDown 0.2s ease-out;
   pointer-events: auto;
 }
@@ -367,6 +392,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.5;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1;
 }
 
 .profile-menu-item,
@@ -408,6 +436,8 @@
 button.profile-menu-item.logout {
   cursor: pointer !important;
   pointer-events: auto !important;
+  position: relative;
+  z-index: 1003;
 }
 
 button.profile-menu-item.logout,
@@ -416,6 +446,7 @@ button.profile-menu-item.logout:active,
 button.profile-menu-item.logout:focus {
   cursor: pointer !important;
   pointer-events: auto !important;
+  z-index: 1003;
 }
 
 button.profile-menu-item.logout *,
@@ -424,6 +455,8 @@ button.profile-menu-item.logout:active *,
 button.profile-menu-item.logout:focus * {
   cursor: pointer !important;
   pointer-events: auto !important;
+  position: relative;
+  z-index: 1004;
 }
 
 button.profile-menu-item.logout span,
@@ -432,6 +465,8 @@ button.profile-menu-item.logout:hover span,
 button.profile-menu-item.logout:hover .material-icons {
   cursor: pointer !important;
   pointer-events: auto !important;
+  position: relative;
+  z-index: 1004;
 }
 
 .profile-menu-item.logout .material-icons {
@@ -451,16 +486,8 @@ button.profile-menu-item.logout:hover .material-icons {
   background: var(--red-100);
 }
 
-/* Menu Overlay */
-.menu-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
-  background: transparent;
-}
+/* Menu Overlay - Removed as it was blocking logout button clicks */
+/* Using document click handler instead for better control */
 
 /* Responsive Design */
 @media (max-width: 768px) {
